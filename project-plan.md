@@ -4,6 +4,7 @@
 > **Purpose:** Simple point-of-sale for small stores with team access and a built-in Buy Now Pay Later (BNPL) system.  
 > **Default locale:** Thailand · THB (฿) — per-store currency is fully customisable  
 > **Last updated:** 2026-03-23 (rev 3 — renamed to CHO-HUAI POS, Thai context, per-store currency settings)
+> **Rev 4:** Removed Supabase Edge Functions and `installment_status` DB column — overdue state is calculated on the frontend from `due_date`
 
 ---
 
@@ -25,23 +26,23 @@
 14. [Reports](#14-reports)
 15. [App Router — Pages & Routes](#15-app-router--pages--routes)
 16. [API Routes (Server Actions / Route Handlers)](#16-api-routes-server-actions--route-handlers)
-17. [Edge Functions (Supabase)](#17-edge-functions-supabase)
-18. [State Management](#18-state-management)
-19. [Key UI Components](#19-key-ui-components)
-20. [Environment Variables](#20-environment-variables)
-21. [Development Conventions](#21-development-conventions)
-22. [Milestones & Build Order](#22-milestones--build-order)
+17. [State Management](#17-state-management)
+18. [Key UI Components](#18-key-ui-components)
+19. [Environment Variables](#19-environment-variables)
+20. [Development Conventions](#20-development-conventions)
+21. [Milestones & Build Order](#21-milestones--build-order)
 
 ---
 
 ## 1. Project Overview
 
-CHO-HUAI POS is a lightweight, web-based point-of-sale system designed for small retail stores (sari-sari stores, boutiques, food stalls, etc.). The product is opinionated and focused — it does not try to compete with enterprise POS systems. Its key differentiators are:
+CHO-HUAI POS is a lightweight, web-based point-of-sale system designed for small retail stores (convenience stores, boutiques, food stalls, market vendors, etc.). The product is opinionated and focused — it does not try to compete with enterprise POS systems. Its primary market is Thailand, with THB (฿) as the default currency and 0 decimal places, but every store independently configures its own currency to support multi-currency operation. Its key differentiators are:
 
 - **Simplicity first** — any store owner should be able to set up and start selling within minutes.
 - **Team access** — additional staff can be invited with scoped permissions (owner, manager, cashier, viewer).
 - **Built-in BNPL** — stores can manage their own informal credit / installment system for trusted customers, entirely within the app. No third-party fintech integration required.
-- **QR Transfer payment** — store owners upload a static QR code image (GCash, Maya, bank QR Ph, etc.) per payment channel. At checkout the POS displays the QR with the exact amount overlaid, so the customer scans and pays the correct amount without the cashier typing anything. Zero API integration, zero transaction fees.
+- **QR Transfer payment** — store owners upload a static QR code image (PromptPay, TrueMoney, bank QR, etc.) per payment channel. At checkout the POS displays the QR with the exact amount overlaid, so the customer scans and pays the correct amount without the cashier typing anything. Zero API integration, zero transaction fees.
+- **Per-store currency** — each store sets its own currency code (ISO 4217), display symbol, and decimal precision independently. Default is THB / ฿ / 0 decimals; any store can override this (e.g. USD / $ / 2 decimals for a foreign-owned shop).
 
 ### Target Users
 
@@ -58,10 +59,11 @@ CHO-HUAI POS is a lightweight, web-based point-of-sale system designed for small
 
 ### 2.1 Store Setup
 
-- Create a store with name, logo, address, currency, and tax rate
+- Create a store with name, logo, address, and tax rate
+- **Currency settings** — each store independently sets: ISO currency code (default `THB`), display symbol (default `฿`), decimal places (default `0`), and symbol position (prefix/suffix). These settings flow through all price displays, receipts, and the QR amount overlay.
 - Receipt customization (header message, footer note, show/hide tax line)
 - One user can own multiple stores (store switcher in nav)
-- **QR Transfer channels** — upload and label one or more QR code images (e.g. "GCash", "Maya", "BDO QR Ph"). Each channel can be enabled or disabled independently.
+- **QR Transfer channels** — upload and label one or more QR code images (e.g. "PromptPay", "TrueMoney", "KBank"). Each channel can be enabled or disabled independently.
 
 ### 2.2 POS Terminal
 
@@ -93,20 +95,20 @@ CHO-HUAI POS is a lightweight, web-based point-of-sale system designed for small
 - Credit limit per customer account
 - Installment scheduling with due dates
 - Payment recording against installments
-- Overdue detection via nightly Edge Function
+- Overdue detection calculated on the frontend from `due_date` — no backend scheduler needed
 - Account freeze / close capability
 
 ### 2.6 QR Transfer Payment _(key differentiator)_
 
-- Owner uploads one or more static QR code images in Settings (GCash, Maya, BDO QR Ph, UnionBank, etc.)
+- Owner uploads one or more static QR code images in Settings (PromptPay, TrueMoney, KBank, SCB, etc.)
 - Each QR channel has a label, an image, and an enabled/disabled toggle
 - At checkout, if the cashier selects QR Transfer, they choose the channel and the POS renders a fullscreen display showing:
   - The QR code image (large, scannable by the customer's phone)
   - The exact amount to pay, overlaid prominently below the QR
-  - The channel label (e.g. "GCash — scan to pay")
+  - The channel label (e.g. "PromptPay — scan to pay")
 - No API calls, no webhooks — payment confirmation is manual (cashier taps "Confirm received")
 - The reference number field is optional but recommended for reconciliation
-- Works for any QR standard (QR Ph, proprietary e-wallet QR, etc.) since it is purely image-based
+- Works for any QR standard (Thai QR standard, proprietary e-wallet QR, etc.) since it is purely image-based
 
 ### 2.7 Reports
 
@@ -120,20 +122,19 @@ CHO-HUAI POS is a lightweight, web-based point-of-sale system designed for small
 
 ## 3. Tech Stack & Tooling
 
-| Layer          | Choice                  | Notes                                          |
-| -------------- | ----------------------- | ---------------------------------------------- |
-| Framework      | Next.js 16              | App Router, Server & Client Components         |
-| Styling        | Tailwind CSS v4         | CSS-first config via `@theme` in `globals.css` |
-| Database       | Supabase (Postgres)     | RLS for multi-tenant isolation                 |
-| Auth           | Supabase Auth           | Email/password; optionally Google OAuth        |
-| Storage        | Supabase Storage        | Product images bucket; QR code images bucket   |
-| Edge Functions | Supabase Edge Functions | Deno-based; used for scheduled BNPL jobs       |
-| State          | Zustand                 | Cart state for POS terminal                    |
-| Forms          | react-hook-form + zod   | Validation on all forms                        |
-| Date handling  | date-fns                | Installment due-date calculations              |
-| Charts         | Recharts                | Reports dashboard                              |
-| Notifications  | react-hot-toast         | In-app feedback                                |
-| ORM / query    | Supabase JS client v2   | `@supabase/ssr` for server-side usage          |
+| Layer         | Choice                | Notes                                          |
+| ------------- | --------------------- | ---------------------------------------------- |
+| Framework     | Next.js 16            | App Router, Server & Client Components         |
+| Styling       | Tailwind CSS v4       | CSS-first config via `@theme` in `globals.css` |
+| Database      | Supabase (Postgres)   | RLS for multi-tenant isolation                 |
+| Auth          | Supabase Auth         | Email/password; optionally Google OAuth        |
+| Storage       | Supabase Storage      | Product images bucket; QR code images bucket   |
+| State         | Zustand               | Cart state for POS terminal                    |
+| Forms         | react-hook-form + zod | Validation on all forms                        |
+| Date handling | date-fns              | Installment due-date calculations              |
+| Charts        | Recharts              | Reports dashboard                              |
+| Notifications | react-hot-toast       | In-app feedback                                |
+| ORM / query   | Supabase JS client v2 | `@supabase/ssr` for server-side usage          |
 
 ### Key Packages
 
@@ -150,7 +151,10 @@ CHO-HUAI POS is a lightweight, web-based point-of-sale system designed for small
     "recharts": "^2.x",
     "react-hot-toast": "^2.x",
     "@dnd-kit/core": "^6.x",
-    "@dnd-kit/sortable": "^8.x"
+    "@dnd-kit/sortable": "^8.x",
+    "class-variance-authority": "^0.x",
+    "tailwind-merge": "^2.x",
+    "clsx": "^2.x"
   }
 }
 ```
@@ -250,19 +254,16 @@ CHO-HUAI POS is a lightweight, web-based point-of-sale system designed for small
 │   │   ├── order.ts
 │   │   └── bnpl.ts
 │   └── utils/
-│       ├── currency.ts
+│       ├── currency.ts                  # formatCurrency(amount, store) — respects per-store settings
 │       ├── receipt.ts
 │       ├── qr.ts                        # QR display helpers (amount formatting, image URL resolution)
 │       └── permissions.ts
 │
 ├── supabase/
-│   ├── migrations/
-│   │   ├── 001_initial_schema.sql
-│   │   ├── 002_rls_policies.sql
-│   │   └── 003_functions_triggers.sql
-│   └── functions/
-│       └── bnpl-overdue/
-│           └── index.ts
+│   └── migrations/
+│       ├── 001_initial_schema.sql
+│       ├── 002_rls_policies.sql
+│       └── 003_functions_triggers.sql
 │
 ├── middleware.ts                        # Next.js middleware for auth
 ├── .env.local
@@ -290,18 +291,24 @@ create table profiles (
 
 ```sql
 create table stores (
-  id          uuid primary key default gen_random_uuid(),
-  owner_id    uuid not null references auth.users(id),
-  name        text not null,
-  logo_url    text,
-  address     text,
-  currency    text not null default 'PHP',
-  tax_rate    numeric(5,2) not null default 0,
-  receipt_header text,
-  receipt_footer text,
-  created_at  timestamptz default now()
+  id                uuid primary key default gen_random_uuid(),
+  owner_id          uuid not null references auth.users(id),
+  name              text not null,
+  logo_url          text,
+  address           text,
+  -- Currency settings (fully customisable per store)
+  currency_code     text not null default 'THB',    -- ISO 4217 code, e.g. 'THB', 'USD', 'EUR'
+  currency_symbol   text not null default '฿',      -- display symbol, e.g. '฿', '$', '€'
+  currency_decimals integer not null default 0,     -- decimal places; THB = 0, USD = 2
+  symbol_position   text not null default 'prefix', -- 'prefix' or 'suffix'
+  tax_rate          numeric(5,2) not null default 0,
+  receipt_header    text,
+  receipt_footer    text,
+  created_at        timestamptz default now()
 );
 ```
+
+> **Currency note for AI coding assistants:** Never hardcode `฿` or `THB` in components. Always read `store.currency_symbol`, `store.currency_code`, and `store.currency_decimals` from the store context and pass them down. Use a shared `formatCurrency(amount, store)` utility (see `lib/utils/currency.ts`) for all price rendering — POS terminal, receipts, BNPL screens, and QR amount overlay.
 
 ### 5.3 store_members
 
@@ -455,7 +462,9 @@ create table bnpl_accounts (
 ### 5.11 bnpl_installments
 
 ```sql
-create type installment_status as enum ('pending', 'paid', 'overdue', 'waived');
+create type installment_status as enum ('pending', 'paid', 'waived');
+-- Note: 'overdue' is intentionally excluded — it is derived on the frontend
+-- by comparing due_date to today's date. No backend scheduler required.
 
 create table bnpl_installments (
   id          uuid primary key default gen_random_uuid(),
@@ -464,6 +473,8 @@ create table bnpl_installments (
   amount      numeric(12,2) not null,
   due_date    date not null,
   status      installment_status not null default 'pending',
+  -- Overdue is NOT stored. Derive it in the frontend:
+  -- const isOverdue = (i) => i.status === 'pending' && new Date(i.due_date) < new Date()
   notes       text,
   created_at  timestamptz default now()
 );
@@ -486,13 +497,13 @@ create table bnpl_payments (
 
 ### 5.13 qr_channels
 
-Stores the owner-uploaded QR code images and their display configuration. Each row represents one payment channel (e.g. GCash, Maya, BDO QR Ph).
+Stores the owner-uploaded QR code images and their display configuration. Each row represents one payment channel (e.g. PromptPay, TrueMoney, KBank).
 
 ```sql
 create table qr_channels (
   id          uuid primary key default gen_random_uuid(),
   store_id    uuid not null references stores(id) on delete cascade,
-  label       text not null,             -- e.g. "GCash", "Maya", "BDO QR Ph"
+  label       text not null,             -- e.g. "PromptPay", "TrueMoney", "KBank"
   image_url   text not null,             -- Supabase Storage public URL
   is_enabled  boolean not null default true,
   sort_order  integer not null default 0,-- display order in the payment channel picker
@@ -600,7 +611,7 @@ create policy "owner can manage qr channels"
   using (get_my_role(store_id) = 'owner');
 ```
 
-> **Note for AI coding assistants:** Every new table must have RLS enabled and a minimum read policy scoped to `store_id`. Service-role key usage (in Edge Functions) bypasses RLS — use it only for scheduled background tasks.
+> **Note for AI coding assistants:** Every new table must have RLS enabled and a minimum read policy scoped to `store_id`.
 
 ---
 
@@ -812,7 +823,7 @@ Every adjustment is written to `stock_adjustments` before updating `products.sto
 
 ## 11. BNPL System
 
-This is the primary unique feature of CHO-HUAI POS. It models the informal credit arrangements common in small Thai Cho Huai stores in a structured, trackable way.
+This is a primary unique feature of CHO-HUAI POS. It models the informal credit arrangements common in small Thai shops and markets in a structured, trackable way.
 
 ### Data flow
 
@@ -875,7 +886,7 @@ create trigger bnpl_payment_inserted
 - **Credit limit enforcement:** Blocked at both client and server level. The server action checks `balance_due + order_total <= credit_limit` before committing.
 - **Account freeze:** Owner/manager can set `status = 'frozen'`, blocking future BNPL purchases. Existing installments are still visible and payable.
 - **Account settled:** When `balance_due = 0` and all installments are paid, status can be set to `settled`.
-- **Overdue detection:** A scheduled Edge Function runs nightly and sets `installment_status = 'overdue'` for any installment past its `due_date` with status still `pending`.
+- **Overdue detection:** Derived on the frontend — `const isOverdue = (i) => i.status === 'pending' && new Date(i.due_date) < new Date()`. No stored status, no scheduler.
 
 ### BNPL account status transitions
 
@@ -892,25 +903,25 @@ any    → closed   (owner explicitly closes)
 
 ### Design philosophy
 
-This feature is intentionally zero-integration. The store owner uploads a static QR code image (screenshot from their banking app, GCash merchant QR, QR Ph sticker photo, etc.) and the POS takes care of displaying it with the correct amount at checkout. No API keys, no webhooks, no transaction fees — just an image and a number.
+This feature is intentionally zero-integration. The store owner uploads a static QR code image (screenshot from their banking app, PromptPay QR, bank app QR screenshot, etc.) and the POS takes care of displaying it with the correct amount at checkout. No API keys, no webhooks, no transaction fees — just an image and a number.
 
 ### Setup flow (owner, in Settings → QR Channels)
 
 1. Owner navigates to **Settings → QR Transfer Channels**.
-2. Taps **Add channel** → enters a label (e.g. "GCash") and uploads the QR image.
+2. Taps **Add channel** → enters a label (e.g. "PromptPay") and uploads the QR image.
 3. The image is uploaded to Supabase Storage bucket `qr-codes` under the path `{store_id}/{uuid}.{ext}`.
 4. A `qr_channels` row is created with the public image URL.
 5. Owner can reorder channels (drag), enable/disable them, or delete them.
-6. Multiple channels are supported (e.g. GCash + Maya + BDO QR Ph all active at once).
+6. Multiple channels are supported (e.g. PromptPay + TrueMoney + KBank all active at once).
 
 ### Checkout flow (cashier, in POS)
 
 1. Cashier taps **QR Transfer** in the payment method selector.
-2. If more than one QR channel is enabled, a channel picker is shown (e.g. "GCash · Maya · BDO"). Cashier selects the one the customer wants to use.
+2. If more than one QR channel is enabled, a channel picker is shown (e.g. "PromptPay · TrueMoney · KBank"). Cashier selects the one the customer wants to use.
 3. The `QrPaymentScreen` component mounts in fullscreen / modal-overlay mode showing:
    - The QR code image, sized to fill the available width (max ~400px) for easy phone scanning.
-   - The **exact amount to pay** displayed in large type directly below the QR (e.g. "₱ 245.00").
-   - The channel label ("Pay via GCash") and store name as context.
+   - The **exact amount to pay** displayed in large type directly below the QR, formatted using the store's currency settings (e.g. "฿ 245" for THB with 0 decimals).
+   - The channel label ("Pay via PromptPay") and store name as context.
    - An optional instruction line: _"Show your payment confirmation to the cashier."_
 4. Customer scans with their phone and completes payment in their app.
 5. Customer shows the cashier their payment confirmation screen.
@@ -923,15 +934,19 @@ This feature is intentionally zero-integration. The store owner uploads a static
 // components/pos/QrPaymentScreen.tsx
 interface QrPaymentScreenProps {
   channel: QrChannel; // { label, image_url }
-  amount: number; // exact order total
-  currency: string; // store currency symbol, e.g. "₱"
+  amount: number; // exact order total (raw number, unformatted)
+  store: Pick<
+    Store,
+    "currency_symbol" | "currency_decimals" | "symbol_position"
+  >;
   onConfirm: (referenceNumber?: string) => void;
   onCancel: () => void;
 }
 
 // Rendering notes:
+// - Amount display: use formatCurrency(amount, store) — never hardcode the symbol or decimal places
 // - image: next/image with unoptimized={true} (it's a user upload, not a known domain)
-// - amount: rendered at ~48px font weight 600, currency symbol at ~24px
+// - amount: rendered at ~48px font weight 600
 // - reference number: optional <input> below the QR, not required to confirm
 // - "Confirm payment received" button is the primary CTA, full width, bottom of screen
 // - "Cancel" link sits above or beside the confirm button
@@ -996,7 +1011,8 @@ export async function deleteQrChannel(id: string): Promise<void>;
 ### UX considerations
 
 - **Image quality warning:** If the uploaded image is smaller than 300×300 px, show a warning: _"This image may be hard to scan. Consider uploading a higher-resolution version."_
-- **No amount encoding in QR:** The amount is displayed as a text overlay only — it is not encoded into the QR itself, since static QR codes for most PH e-wallets do not support dynamic amounts. The customer manually enters the amount in their app after scanning.
+- **No amount encoding in QR:** The amount is displayed as a text overlay only — it is not encoded into the QR itself, since static QR codes for most Thai e-wallets and PromptPay do not support dynamic amounts. The customer manually enters the amount in their app after scanning.
+- **Currency-aware display:** The amount overlay must use the store's `currency_symbol`, `currency_decimals`, and `symbol_position` — e.g. Thai stores show `฿ 245` (0 decimals, prefix), while a USD store would show `$ 12.50` (2 decimals, prefix).
 - **Instruction clarity:** The screen should make clear to the customer exactly how much to type in their app. Large, unambiguous amount display is the primary UX goal.
 - **Receipt:** When `payment_method = 'qr_transfer'`, the receipt shows the channel label and reference number (if entered) in the payment details section.
 
@@ -1046,15 +1062,15 @@ create table activity_log (
 
 ### Available reports
 
-| Report                     | Data source                                   | Notes                                                         |
-| -------------------------- | --------------------------------------------- | ------------------------------------------------------------- |
-| Daily sales summary        | `orders` grouped by date                      | Subtotal, discounts, tax, total                               |
-| Sales by payment method    | `orders.payment_method`                       | Bar chart breakdown; QR Transfer broken down by channel label |
-| Best-selling products      | `order_items` grouped by product              | Top 10 by quantity or revenue                                 |
-| BNPL receivables           | `bnpl_accounts` where balance_due > 0         | Sortable by amount or overdue                                 |
-| Overdue installments       | `bnpl_installments` where status = overdue    | List with customer contact                                    |
-| Staff performance          | `orders` grouped by cashier_id                | Orders count, total sales, voids                              |
-| QR Transfer reconciliation | `orders` where payment_method = 'qr_transfer' | Channel, amount, reference number per transaction             |
+| Report                     | Data source                                                                          | Notes                                                         |
+| -------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------- |
+| Daily sales summary        | `orders` grouped by date                                                             | Subtotal, discounts, tax, total                               |
+| Sales by payment method    | `orders.payment_method`                                                              | Bar chart breakdown; QR Transfer broken down by channel label |
+| Best-selling products      | `order_items` grouped by product                                                     | Top 10 by quantity or revenue                                 |
+| BNPL receivables           | `bnpl_accounts` where balance_due > 0                                                | Sortable by amount or overdue                                 |
+| Overdue installments       | `bnpl_installments` where status = `pending` — filtered client-side by `isOverdue()` | List with customer contact                                    |
+| Staff performance          | `orders` grouped by cashier_id                                                       | Orders count, total sales, voids                              |
+| QR Transfer reconciliation | `orders` where payment_method = 'qr_transfer'                                        | Channel, amount, reference number per transaction             |
 
 ### Report queries use Supabase Server Components to avoid exposing raw data to the client. All queries include `store_id` filtering enforced by RLS.
 
@@ -1146,51 +1162,23 @@ export async function updateQrChannel(
 ): Promise<QrChannel>;
 export async function deleteQrChannel(id: string): Promise<void>;
 // deleteQrChannel also removes the image file from Supabase Storage
+
+export async function updateStoreCurrency(
+  storeId: string,
+  data: {
+    currency_code: string; // ISO 4217, e.g. 'THB', 'USD', 'SGD'
+    currency_symbol: string; // display symbol, e.g. '฿', '$', 'S$'
+    currency_decimals: number; // 0 for THB, 2 for USD/SGD
+    symbol_position: "prefix" | "suffix";
+  },
+): Promise<Store>;
+// Only callable by owner. Validates currency_decimals is 0–4.
+// After update, revalidatePath('/settings') and revalidatePath('/pos').
 ```
 
 ---
 
-## 17. Edge Functions (Supabase)
-
-### `bnpl-overdue` (scheduled, runs nightly)
-
-```ts
-// supabase/functions/bnpl-overdue/index.ts
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-Deno.serve(async () => {
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-  );
-
-  // Mark overdue installments
-  const { data, error } = await supabase
-    .from("bnpl_installments")
-    .update({ status: "overdue" })
-    .lt("due_date", new Date().toISOString().split("T")[0])
-    .eq("status", "pending")
-    .select("id, account_id, amount, due_date");
-
-  if (error) return new Response(JSON.stringify({ error }), { status: 500 });
-
-  // TODO: trigger notifications for overdue accounts
-  // e.g. send SMS via Semaphore (PH) or similar service
-
-  return new Response(JSON.stringify({ updated: data?.length ?? 0 }));
-});
-```
-
-**Schedule:** Set in `supabase/config.toml`:
-
-```toml
-[functions.bnpl-overdue]
-schedule = "0 1 * * *"   # 1:00 AM daily
-```
-
----
-
-## 18. State Management
+## 17. State Management
 
 ### POS cart (Zustand)
 
@@ -1250,7 +1238,7 @@ export const useCart = create<CartStore>((set, get) => ({
 
 ---
 
-## 19. Key UI Components
+## 18. Key UI Components
 
 ### Tailwind CSS v4 theme tokens (`app/globals.css`)
 
@@ -1266,6 +1254,37 @@ export const useCart = create<CartStore>((set, get) => ({
   --radius-md: 0.5rem;
   --radius-lg: 0.75rem;
 }
+```
+
+### `formatCurrency` utility
+
+All price and amount rendering throughout the app (POS terminal, receipts, BNPL screens, QR overlay, reports) must use this shared utility. Never hardcode `฿` or `THB` in components.
+
+```ts
+// lib/utils/currency.ts
+interface CurrencyStore {
+  currency_symbol: string; // e.g. "฿", "$", "€"
+  currency_decimals: number; // e.g. 0 for THB, 2 for USD
+  symbol_position: "prefix" | "suffix";
+}
+
+export function formatCurrency(amount: number, store: CurrencyStore): string {
+  const fixed = amount.toFixed(store.currency_decimals);
+  const formatted = Number(fixed).toLocaleString(undefined, {
+    minimumFractionDigits: store.currency_decimals,
+    maximumFractionDigits: store.currency_decimals,
+  });
+  return store.symbol_position === "prefix"
+    ? `${store.currency_symbol}${formatted}`
+    : `${formatted} ${store.currency_symbol}`;
+}
+
+// Default store currency values (used during onboarding and as fallback)
+export const DEFAULT_CURRENCY: CurrencyStore = {
+  currency_symbol: "฿",
+  currency_decimals: 0,
+  symbol_position: "prefix",
+};
 ```
 
 ### POS ProductCard
@@ -1293,12 +1312,12 @@ A multi-step modal:
 ```tsx
 // components/pos/QrPaymentScreen.tsx
 // Fullscreen overlay shown after cashier selects QR Transfer channel.
-// Props: channel (label + image_url), amount (number), currency (string),
+// Props: channel (label + image_url), amount (number), store (currency settings),
 //        onConfirm(referenceNumber?: string), onCancel()
 // Layout (top → bottom):
-//   - Channel label ("Pay via GCash")
+//   - Channel label ("Pay via PromptPay")
 //   - QR code image — next/image unoptimized, max-width ~400px, centered
-//   - Amount in large type (e.g. "₱ 245.00") — 48px, weight 600
+//   - Amount via formatCurrency(amount, store) in large type — 48px, weight 600
 //   - Instruction: "Enter this amount in your app, then scan"
 //   - Optional reference number input (label: "Reference no. (optional)")
 //   - Primary CTA: "Confirm payment received" (full width)
@@ -1319,12 +1338,13 @@ A multi-step modal:
 
 ```tsx
 // Renders a colored pill for bnpl_account_status
-// active → green, frozen → amber, overdue → red, settled → blue, closed → gray
+// active → green, frozen → amber, settled → blue, closed → gray
+// Overdue is not a stored status — derive it with isOverdue(installment) and apply red styling at the installment row level, not the account level
 ```
 
 ---
 
-## 20. Environment Variables
+## 19. Environment Variables
 
 ```bash
 # .env.local
@@ -1337,56 +1357,276 @@ SUPABASE_SERVICE_ROLE_KEY=<service-role-key>      # Server only, never expose to
 # App
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 
-# Optional: SMS notifications for BNPL reminders (e.g. Semaphore PH)
-SEMAPHORE_API_KEY=<key>
-SEMAPHORE_SENDER_NAME=...
+# Default store currency (applied to new stores at creation time; overridable per store in Settings)
+NEXT_PUBLIC_DEFAULT_CURRENCY_CODE=THB
+NEXT_PUBLIC_DEFAULT_CURRENCY_SYMBOL=฿
+NEXT_PUBLIC_DEFAULT_CURRENCY_DECIMALS=0
+NEXT_PUBLIC_DEFAULT_SYMBOL_POSITION=prefix
+
+# Optional: SMS notifications for BNPL reminders (e.g. Thaibulk SMS or similar Thai provider)
+THAIBULKSMS_API_KEY=<key>
+THAIBULKSMS_SENDER_NAME=CHOHUAIPOS
 ```
 
 ---
 
-## 21. Development Conventions
+## 20. Development Conventions
+
+> These are **firm project decisions**, not suggestions. All contributors and AI coding assistants must follow them consistently throughout the codebase.
+
+---
 
 ### Naming
 
 - Database: `snake_case` for all table and column names
 - TypeScript: `PascalCase` for types/interfaces, `camelCase` for variables and functions
 - Files: `PascalCase` for components, `camelCase` for utilities and hooks
-- Zustand stores: `use<Name>Store` (e.g. `useCartStore`)
-
-### Data fetching pattern
-
-- Server Components fetch data directly via Supabase server client
-- Client Components receive data as props from their Server Component parent, or use Server Actions for mutations
-- Avoid `useEffect` + `fetch` patterns; prefer Server Actions and `revalidatePath`
-
-### Error handling
-
-- All Server Actions return `{ data, error }` shaped responses
-- Use `react-hot-toast` to surface errors and success messages to the user
-- Database constraint errors are caught and returned as user-friendly messages
-
-### Type safety
-
-- Generate Supabase types: `supabase gen types typescript --local > lib/supabase/types.ts`
-- Use generated types throughout; avoid `any`
-- Zod schemas for all form inputs and Server Action payloads
-
-### Migrations
-
-- One migration file per logical change
-- Never edit a migration that has already been applied to production
-- Run locally with `supabase db reset` during development
+- Zustand stores: `use<n>Store` (e.g. `useCartStore`)
+- Custom hooks: `use<n>` prefix, colocated in the feature folder they belong to
 
 ---
 
-## 22. Milestones & Build Order
+### File & folder structure — feature folders
+
+Each feature owns its own slice of the codebase. Do **not** place components, hooks, or actions in global folders unless they are genuinely shared across more than one feature.
+
+```
+features/
+  pos/
+    components/       # ProductGrid, CartPanel, PaymentModal, QrPaymentScreen…
+    hooks/            # useCartTotals, useProductSearch…
+    actions.ts        # createOrder, voidOrder
+  bnpl/
+    components/       # AccountCard, InstallmentRow, PaymentForm…
+    hooks/            # useBnplAccount, useIsOverdue…
+    actions.ts        # createBnplAccount, recordPayment, updateAccountStatus
+  inventory/
+    components/       # ProductForm, StockAdjustModal…
+    hooks/            # useStockLevel…
+    actions.ts        # createProduct, updateProduct, adjustStock
+  team/
+    components/       # MemberRow, InviteForm…
+    actions.ts        # sendInvite, removeMember, updateMemberRole
+  settings/
+    components/       # QrChannelCard, QrChannelForm, CurrencyForm…
+    actions.ts        # saveQrChannel, updateQrChannel, deleteQrChannel, updateStoreCurrency
+components/
+  ui/                 # Only truly shared primitives: Button, Input, Modal, Badge, Table, Avatar
+lib/
+  supabase/           # client.ts, server.ts, middleware.ts
+  utils/              # currency.ts, receipt.ts, permissions.ts, cn.ts
+  store/              # cart.ts (Zustand)
+```
+
+**Rule:** if a component, hook, or action is used by exactly one feature, it lives inside that feature's folder. It only moves to `components/ui/` or `lib/` when a second feature needs it.
+
+---
+
+### Data fetching — Server Components for reads, Server Actions for mutations
+
+- **Reads → Server Components.** Fetch data directly with the Supabase server client inside `page.tsx` or layout Server Components. Pass data down as props to child components.
+- **Mutations → Server Actions.** All creates, updates, deletes, and side-effectful operations go through Server Actions in the feature's `actions.ts`. Call `revalidatePath()` at the end of each action so the page re-fetches fresh data.
+- **Never use** `useEffect` + `fetch` for data loading. Never create Route Handlers (`/api/...`) just to proxy Supabase calls — Server Actions replace that pattern entirely.
+- **Client Components** receive their initial data as props from a Server Component parent. They may call Server Actions for mutations but do not fetch data independently.
+
+```ts
+// ✅ Correct — Server Component reads, Server Action mutates
+// app/(store)/bnpl/page.tsx (Server Component)
+const accounts = await supabase.from('bnpl_accounts').select('*').eq('store_id', storeId)
+return <BnplList accounts={accounts.data} />
+
+// features/bnpl/actions.ts (Server Action)
+'use server'
+export async function recordPayment(data: BnplPaymentInput) {
+  await supabase.from('bnpl_payments').insert(data)
+  revalidatePath('/bnpl')
+}
+
+// ❌ Wrong — Client Component fetching its own data
+useEffect(() => { fetch('/api/bnpl/accounts').then(...) }, [])
+```
+
+---
+
+### Styling — Tailwind + cva for component variants
+
+Use Tailwind utility classes for all styling. For any component that has more than one visual variant (size, intent, state), use `cva` (class-variance-authority) to define them explicitly rather than inline ternaries.
+
+```ts
+// ✅ Correct — cva for a Button with variant + size
+import { cva, type VariantProps } from 'class-variance-authority'
+
+const button = cva(
+  'inline-flex items-center justify-center rounded-md font-medium transition-colors',
+  {
+    variants: {
+      variant: {
+        primary:   'bg-brand text-white hover:bg-brand/90',
+        secondary: 'bg-transparent border border-input hover:bg-accent',
+        danger:    'bg-red-600 text-white hover:bg-red-700',
+      },
+      size: {
+        sm: 'h-8 px-3 text-sm',
+        md: 'h-10 px-4 text-base',
+        lg: 'h-12 px-6 text-lg',
+      },
+    },
+    defaultVariants: { variant: 'primary', size: 'md' },
+  }
+)
+
+interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof button> {}
+
+export function Button({ variant, size, className, ...props }: ButtonProps) {
+  return <button className={button({ variant, size, className })} {...props} />
+}
+
+// ❌ Wrong — inline ternaries for variants
+className={`px-4 py-2 ${isDelete ? 'bg-red-600' : 'bg-brand'} ${large ? 'text-lg' : 'text-sm'}`}
+```
+
+Add `class-variance-authority` and `tailwind-merge` to dependencies. Use `cn()` for conditional class merging:
+
+```ts
+// lib/utils/cn.ts
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+```
+
+---
+
+### TypeScript — strict, no `any`, no non-null assertions
+
+`tsconfig.json` must have `"strict": true`. Two additional rules beyond that:
+
+- **No `any`** — if the type is genuinely unknown, use `unknown` and narrow it. If a library type is missing, write a local declaration file rather than casting to `any`.
+- **No non-null assertions (`!`)** — use optional chaining (`?.`), nullish coalescing (`??`), or explicit early returns instead.
+
+```ts
+// ✅ Correct
+const name = store?.name ?? "Unnamed store";
+if (!user) return null;
+
+// ❌ Wrong
+const name = store!.name;
+const user = getUser() as User;
+```
+
+Generate and commit Supabase types after every migration:
+
+```bash
+supabase gen types typescript --local > lib/supabase/types.ts
+```
+
+Use Zod schemas for all form inputs and Server Action payloads. The inferred Zod type is the single source of truth — do not duplicate type definitions manually.
+
+```ts
+// features/bnpl/schemas.ts
+export const BnplPaymentSchema = z.object({
+  installment_id: z.string().uuid(),
+  amount_paid: z.number().positive(),
+  payment_method: z.enum(["cash", "qr_transfer", "card"]),
+  notes: z.string().optional(),
+});
+export type BnplPaymentInput = z.infer<typeof BnplPaymentSchema>;
+```
+
+---
+
+### State management — React Context for simple, Zustand for complex
+
+- **React Context** — for read-mostly shared state that doesn't change frequently. Primary use: `StoreContext` (current store record + user role) provided at `(store)/layout.tsx`.
+- **Zustand** — for client state that changes frequently or is mutated from multiple places. Currently only the POS cart (`useCartStore`). Before adding a new Zustand store, confirm the state can't live in URL params or React Context.
+- **URL state (`searchParams`)** — preferred for filters, pagination, and tab state. Keeps the UI shareable and bookmarkable.
+- Avoid deeply nested prop drilling — if a value crosses more than two component levels, reach for Context or URL state before adding a new Zustand store.
+
+---
+
+### Error handling — return `{ data, error }` for validation, throw for fatal errors
+
+Two distinct patterns depending on the nature of the failure:
+
+- **Validation & business logic failures** (bad input, credit limit exceeded, duplicate SKU) → return `{ data: null, error: string }`. These are expected, recoverable, and should surface as toast messages — not crash the page.
+- **Fatal / unexpected failures** (database unreachable, auth session missing, unrecoverable server state) → `throw new Error(...)`. These propagate to the nearest `error.tsx` boundary, which shows a generic error page.
+
+```ts
+// Shared result type for recoverable actions
+type ActionResult<T> = { data: T; error: null } | { data: null; error: string };
+
+export async function recordPayment(
+  input: BnplPaymentInput,
+): Promise<ActionResult<BnplPayment>> {
+  // Validation failure → return error (recoverable, show to user)
+  const parsed = BnplPaymentSchema.safeParse(input);
+  if (!parsed.success)
+    return { data: null, error: parsed.error.issues[0].message };
+
+  // Business logic failure → return error (recoverable, show to user)
+  const account = await getAccount(parsed.data.installment_id);
+  if (!account) return { data: null, error: "Account not found." };
+
+  const { data, error } = await supabase
+    .from("bnpl_payments")
+    .insert(parsed.data)
+    .select()
+    .single();
+
+  // Fatal DB failure → throw (unexpected, crash to error.tsx)
+  if (error) throw new Error(`DB insert failed: ${error.message}`);
+
+  revalidatePath("/bnpl");
+  return { data, error: null };
+}
+
+// Surface recoverable errors in the Client Component via react-hot-toast
+const result = await recordPayment(formData);
+if (result.error) toast.error(result.error);
+else toast.success("Payment recorded");
+```
+
+**Decision rule for which to use:**
+
+| Scenario                                           | Pattern                        |
+| -------------------------------------------------- | ------------------------------ |
+| Zod validation failed                              | `return { data: null, error }` |
+| Business rule violated (credit limit, stock empty) | `return { data: null, error }` |
+| Record not found (expected possibility)            | `return { data: null, error }` |
+| Supabase insert/update returned an error           | `throw new Error(...)`         |
+| Auth session missing mid-action                    | `throw new Error(...)`         |
+| Completely unexpected state                        | `throw new Error(...)`         |
+
+---
+
+### Currency rendering
+
+- **Never hardcode** `฿`, `THB`, or any currency symbol/code anywhere in components or templates.
+- Always call `formatCurrency(amount, store)` from `lib/utils/currency.ts` for every displayed price — POS cart totals, receipts, BNPL balances, QR amount overlay, and report figures.
+- The `store` object is available via `StoreContext`. Pass it as a prop to child components that render prices rather than re-reading context deep in the tree.
+- `DEFAULT_CURRENCY` (`THB` / `฿` / `0` decimals / `prefix`) is used only during onboarding, before a `stores` row exists.
+
+---
+
+### Migrations
+
+- One migration file per logical change — never bundle unrelated schema changes.
+- Never edit a migration that has already been applied to production; write a new one instead.
+- Run locally with `supabase db reset` during development.
+- Re-generate types after every migration: `supabase gen types typescript --local > lib/supabase/types.ts`.
+
+## 21. Milestones & Build Order
 
 ### Phase 1 — Foundation (Week 1–2)
 
 - [ ] Supabase project setup, initial schema migration, RLS policies
 - [ ] Next.js project init with Tailwind v4 and Supabase SSR
 - [ ] Auth: sign up, login, session middleware
-- [ ] Store creation flow (owner onboarding)
+- [ ] Store creation flow (owner onboarding) — includes currency settings step (default THB / ฿ / 0 dp)
+- [ ] `formatCurrency` utility and `StoreContext` wired up
 - [ ] Basic layout shell with navigation
 
 ### Phase 2 — Core POS (Week 3–4)
@@ -1410,7 +1650,7 @@ SEMAPHORE_SENDER_NAME=...
 - [ ] BNPL payment method in POS
 - [ ] Installment schedule management
 - [ ] Payment recording + balance trigger
-- [ ] Overdue Edge Function
+- [ ] Overdue display logic (frontend `isOverdue` helper + red badge on InstallmentRow)
 
 ### Phase 5 — Reports & Polish (Week 8)
 
@@ -1418,7 +1658,7 @@ SEMAPHORE_SENDER_NAME=...
 - [ ] BNPL receivables report
 - [ ] QR Transfer reconciliation report (reference numbers + amounts)
 - [ ] Low-stock dashboard alerts
-- [ ] Settings page (store config, receipt customization, QR channel management)
+- [ ] Settings page — store config, receipt customization, QR channel management, currency settings
 - [ ] Mobile responsiveness pass
 
 ### Phase 6 — Launch Prep

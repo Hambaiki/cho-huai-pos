@@ -12,6 +12,7 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    "src/lib/supabase/types.ts", // Supabase auto-generated types (binary encoded)
   ]),
 ]);
 

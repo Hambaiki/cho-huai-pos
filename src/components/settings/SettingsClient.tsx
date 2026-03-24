@@ -1,0 +1,450 @@
+"use client";
+
+import { useActionState, useState, useTransition } from "react";
+import { useStoreContext } from "@/lib/store-context";
+import type {
+  QrChannelRow,
+  SettingsActionResult,
+} from "@/lib/actions/settingsActions";
+import {
+  updateStoreSettingsAction,
+  createQrChannelAction,
+  toggleQrChannelAction,
+  deleteQrChannelAction,
+} from "@/lib/actions/settingsActions";
+import { PageHeader } from "@/components/ui/PageHeader";
+
+interface StoreData {
+  id: string;
+  name: string;
+  address: string | null;
+  tax_rate: number;
+  receipt_header: string | null;
+  receipt_footer: string | null;
+  currency_code: string;
+  currency_symbol: string;
+  currency_decimals: number;
+  symbol_position: "prefix" | "suffix";
+}
+
+interface SettingsClientProps {
+  qrChannels: QrChannelRow[];
+  storeId: string;
+  role: "owner" | "manager" | "cashier" | "viewer";
+  store: StoreData;
+}
+
+const TABS = ["general", "qr_channels"] as const;
+type Tab = (typeof TABS)[number];
+
+const TAB_LABELS: Record<Tab, string> = {
+  general: "General",
+  qr_channels: "QR Channels",
+};
+
+export default function SettingsClient({
+  qrChannels,
+  storeId,
+  role,
+  store,
+}: SettingsClientProps) {
+  const ctx = useStoreContext();
+  const [activeTab, setActiveTab] = useState<Tab>("general");
+
+  return (
+    <section className="space-y-6">
+      <PageHeader
+        title="Settings"
+        description="Manage your store configuration and team"
+      />
+
+      <div className="border-b border-neutral-200">
+        <nav className="flex gap-6">
+          {TABS.map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`pb-3 px-1 font-medium text-sm transition-colors border-b-2 ${
+                activeTab === tab
+                  ? "border-brand-600 text-brand-700"
+                  : "border-transparent text-neutral-500 hover:text-neutral-800"
+              }`}
+            >
+              {TAB_LABELS[tab]}
+            </button>
+          ))}
+        </nav>
+      </div>
+
+      {activeTab === "general" && (
+        <GeneralSettingsTab
+          store={store}
+          storeId={storeId}
+          role={role}
+          storeName={ctx.storeName}
+        />
+      )}
+      {activeTab === "qr_channels" && (
+        <QrChannelsTab channels={qrChannels} storeId={storeId} role={role} />
+      )}
+    </section>
+  );
+}
+
+// ─── General Settings ─────────────────────────────────────────────────────────
+
+function GeneralSettingsTab({
+  store,
+  storeId,
+  role,
+}: {
+  store: StoreData;
+  storeId: string;
+  role: string;
+  storeName: string;
+}) {
+  const isOwner = role === "owner";
+  const [state, formAction, isPending] = useActionState<
+    SettingsActionResult,
+    FormData
+  >(updateStoreSettingsAction, { data: null, error: null });
+
+  return (
+    <form action={formAction} className="space-y-6">
+      <input type="hidden" name="storeId" value={storeId} />
+
+      <div className="bg-white border border-neutral-200 rounded-lg p-6 space-y-6">
+        <h2 className="text-lg font-semibold text-neutral-900">
+          Store Details
+        </h2>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 mb-1">
+              Store Name <span className="text-danger-600">*</span>
+            </label>
+            <input
+              name="name"
+              defaultValue={store.name}
+              disabled={!isOwner}
+              required
+              className="w-full px-3 py-2 border border-neutral-200 rounded-md text-sm disabled:bg-neutral-50 disabled:text-neutral-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 mb-1">
+              Tax Rate (%)
+            </label>
+            <input
+              name="taxRate"
+              type="number"
+              min={0}
+              max={100}
+              step={0.01}
+              defaultValue={store.tax_rate}
+              disabled={!isOwner}
+              className="w-full px-3 py-2 border border-neutral-200 rounded-md text-sm disabled:bg-neutral-50 disabled:text-neutral-500"
+            />
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-neutral-700 mb-1">
+            Address
+          </label>
+          <textarea
+            name="address"
+            defaultValue={store.address ?? ""}
+            disabled={!isOwner}
+            rows={2}
+            className="w-full px-3 py-2 border border-neutral-200 rounded-md text-sm disabled:bg-neutral-50 disabled:text-neutral-500"
+          />
+        </div>
+      </div>
+
+      <div className="bg-white border border-neutral-200 rounded-lg p-6 space-y-4">
+        <h2 className="text-lg font-semibold text-neutral-900">Currency</h2>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 mb-1">
+              Code (ISO 4217)
+            </label>
+            <input
+              name="currencyCode"
+              defaultValue={store.currency_code}
+              disabled={!isOwner}
+              maxLength={3}
+              placeholder="THB"
+              className="w-full px-3 py-2 border border-neutral-200 rounded-md text-sm uppercase disabled:bg-neutral-50 disabled:text-neutral-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 mb-1">
+              Symbol
+            </label>
+            <input
+              name="currencySymbol"
+              defaultValue={store.currency_symbol}
+              disabled={!isOwner}
+              maxLength={10}
+              placeholder="฿"
+              className="w-full px-3 py-2 border border-neutral-200 rounded-md text-sm disabled:bg-neutral-50 disabled:text-neutral-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 mb-1">
+              Decimal Places
+            </label>
+            <input
+              name="currencyDecimals"
+              type="number"
+              min={0}
+              max={4}
+              defaultValue={store.currency_decimals}
+              disabled={!isOwner}
+              className="w-full px-3 py-2 border border-neutral-200 rounded-md text-sm disabled:bg-neutral-50 disabled:text-neutral-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 mb-1">
+              Symbol Position
+            </label>
+            <select
+              name="symbolPosition"
+              defaultValue={store.symbol_position}
+              disabled={!isOwner}
+              className="w-full px-3 py-2 border border-neutral-200 rounded-md text-sm disabled:bg-neutral-50 disabled:text-neutral-500"
+            >
+              <option value="prefix">Prefix (฿100)</option>
+              <option value="suffix">Suffix (100฿)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white border border-neutral-200 rounded-lg p-6 space-y-4">
+        <h2 className="text-lg font-semibold text-neutral-900">Receipt</h2>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 mb-1">
+              Header message
+            </label>
+            <textarea
+              name="receiptHeader"
+              defaultValue={store.receipt_header ?? ""}
+              disabled={!isOwner}
+              rows={2}
+              placeholder="e.g. Thank you for shopping with us!"
+              className="w-full px-3 py-2 border border-neutral-200 rounded-md text-sm disabled:bg-neutral-50 disabled:text-neutral-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 mb-1">
+              Footer note
+            </label>
+            <textarea
+              name="receiptFooter"
+              defaultValue={store.receipt_footer ?? ""}
+              disabled={!isOwner}
+              rows={2}
+              placeholder="e.g. No refunds after 7 days"
+              className="w-full px-3 py-2 border border-neutral-200 rounded-md text-sm disabled:bg-neutral-50 disabled:text-neutral-500"
+            />
+          </div>
+        </div>
+      </div>
+
+      {state.error && (
+        <p className="text-sm text-danger-700 bg-danger-50 rounded-lg px-3 py-2">
+          {state.error}
+        </p>
+      )}
+
+      {isOwner && (
+        <div className="flex justify-end">
+          <button
+            type="submit"
+            disabled={isPending}
+            className="px-5 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium hover:bg-brand-700 disabled:opacity-50"
+          >
+            {isPending ? "Saving…" : "Save changes"}
+          </button>
+        </div>
+      )}
+    </form>
+  );
+}
+
+// ─── QR Channels ─────────────────────────────────────────────────────────────
+
+function QrChannelsTab({
+  channels,
+  storeId,
+  role,
+}: {
+  channels: QrChannelRow[];
+  storeId: string;
+  role: string;
+}) {
+  const isOwner = role === "owner";
+  const [showAdd, setShowAdd] = useState(false);
+  const [createState, createAction, isCreating] = useActionState<
+    SettingsActionResult,
+    FormData
+  >(createQrChannelAction, { data: null, error: null });
+  const [, startTransition] = useTransition();
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-semibold text-neutral-900">
+            QR Transfer Channels
+          </h2>
+          <p className="text-sm text-neutral-500 mt-0.5">
+            Upload QR code images for PromptPay, TrueMoney, bank QR, etc.
+          </p>
+        </div>
+        {isOwner && (
+          <button
+            onClick={() => setShowAdd(!showAdd)}
+            className="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium hover:bg-brand-700"
+          >
+            + Add channel
+          </button>
+        )}
+      </div>
+
+      {showAdd && (
+        <form
+          action={createAction}
+          className="bg-neutral-50 border border-neutral-200 rounded-lg p-4 space-y-3"
+        >
+          <input type="hidden" name="storeId" value={storeId} />
+          <h3 className="font-medium text-neutral-900 text-sm">
+            New QR Channel
+          </h3>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label className="block text-xs font-medium text-neutral-600 mb-1">
+                Label
+              </label>
+              <input
+                name="label"
+                required
+                placeholder="e.g. PromptPay"
+                className="w-full px-3 py-2 border border-neutral-200 rounded-md text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-neutral-600 mb-1">
+                QR Image URL
+              </label>
+              <input
+                name="imageUrl"
+                required
+                type="url"
+                placeholder="https://…"
+                className="w-full px-3 py-2 border border-neutral-200 rounded-md text-sm"
+              />
+            </div>
+          </div>
+          {createState.error && (
+            <p className="text-xs text-danger-700">{createState.error}</p>
+          )}
+          <div className="flex gap-2">
+            <button
+              type="submit"
+              disabled={isCreating}
+              className="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium hover:bg-brand-700 disabled:opacity-50"
+            >
+              {isCreating ? "Adding…" : "Add channel"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowAdd(false)}
+              className="px-4 py-2 border border-neutral-200 text-neutral-600 rounded-lg text-sm hover:bg-neutral-50"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
+
+      {channels.length === 0 ? (
+        <div className="rounded-lg border border-dashed border-neutral-300 py-12 text-center">
+          <p className="text-neutral-500 text-sm">No QR channels yet.</p>
+          {isOwner && (
+            <p className="text-neutral-400 text-xs mt-1">
+              Add a channel above to enable QR Transfer payments.
+            </p>
+          )}
+        </div>
+      ) : (
+        <div className="divide-y divide-neutral-100 rounded-lg border border-neutral-200 bg-white">
+          {channels.map((ch) => (
+            <div key={ch.id} className="flex items-center gap-4 px-5 py-4">
+              <div className="h-12 w-12 rounded-lg border border-neutral-200 overflow-hidden shrink-0 bg-neutral-50">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={ch.image_url}
+                  alt={ch.label}
+                  className="h-full w-full object-contain"
+                />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-neutral-900 text-sm">
+                  {ch.label}
+                </p>
+                <p className="text-xs text-neutral-400 truncate">
+                  {ch.image_url}
+                </p>
+              </div>
+              <span
+                className={`text-xs px-2 py-0.5 rounded-full ${
+                  ch.is_enabled
+                    ? "bg-success-100 text-success-700"
+                    : "bg-neutral-100 text-neutral-500"
+                }`}
+              >
+                {ch.is_enabled ? "Active" : "Disabled"}
+              </span>
+              {isOwner && (
+                <div className="flex items-center gap-3 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      startTransition(() => {
+                        toggleQrChannelAction(ch.id, storeId, !ch.is_enabled);
+                      })
+                    }
+                    className={`relative inline-flex h-5 w-9 rounded-full transition-colors ${
+                      ch.is_enabled ? "bg-brand-600" : "bg-neutral-300"
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 mt-0.5 rounded-full bg-white shadow transition-transform ${
+                        ch.is_enabled ? "translate-x-4" : "translate-x-0.5"
+                      }`}
+                    />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      startTransition(() => {
+                        if (confirm(`Delete "${ch.label}"?`)) {
+                          deleteQrChannelAction(ch.id, storeId);
+                        }
+                      })
+                    }
+                    className="text-xs text-danger-600 hover:text-danger-800"
+                  >
+                    Delete
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

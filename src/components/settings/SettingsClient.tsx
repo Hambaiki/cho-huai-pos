@@ -23,6 +23,16 @@ import {
   ModalHeader,
 } from "@/components/ui/Modal";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { Button } from "@/components/ui/Button";
+import {
+  FormField,
+  FormLabel,
+  FormInput,
+  FormSelect,
+  FormTextarea,
+  FormError,
+} from "@/components/ui/form";
+import { cn } from "@/lib/utils/cn";
 
 interface StoreData {
   id: string;
@@ -76,12 +86,14 @@ export default function SettingsClient({
           {TABS.map((tab) => (
             <button
               key={tab}
+              type="button"
               onClick={() => setActiveTab(tab)}
-              className={`pb-3 px-1 font-medium text-sm transition-colors border-b-2 ${
+              className={cn(
+                `h-auto rounded-none border-b-2 px-1 pb-3 text-sm hover:bg-transparent transition cursor-pointer`,
                 activeTab === tab
                   ? "border-brand-600 text-brand-700"
-                  : "border-transparent text-neutral-500 hover:text-neutral-800"
-              }`}
+                  : "border-transparent text-neutral-500 hover:text-neutral-800",
+              )}
             >
               {TAB_LABELS[tab]}
             </button>
@@ -134,23 +146,22 @@ function GeneralSettingsTab({
           Store Details
         </h2>
         <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-1">
-              Store Name <span className="text-danger-600">*</span>
-            </label>
-            <input
+          <FormField>
+            <FormLabel htmlFor="name" required>
+              Store Name
+            </FormLabel>
+            <FormInput
+              id="name"
               name="name"
               defaultValue={store.name}
               disabled={!isOwner}
               required
-              className="w-full px-3 py-2 border border-neutral-200 rounded-md text-sm disabled:bg-neutral-50 disabled:text-neutral-500"
             />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-1">
-              Tax Rate (%)
-            </label>
-            <input
+          </FormField>
+          <FormField>
+            <FormLabel htmlFor="taxRate">Tax Rate (%)</FormLabel>
+            <FormInput
+              id="taxRate"
               name="taxRate"
               type="number"
               min={0}
@@ -158,131 +169,109 @@ function GeneralSettingsTab({
               step={0.01}
               defaultValue={store.tax_rate}
               disabled={!isOwner}
-              className="w-full px-3 py-2 border border-neutral-200 rounded-md text-sm disabled:bg-neutral-50 disabled:text-neutral-500"
             />
-          </div>
+          </FormField>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-neutral-700 mb-1">
-            Address
-          </label>
-          <textarea
+        <FormField>
+          <FormLabel htmlFor="address">Address</FormLabel>
+          <FormTextarea
+            id="address"
             name="address"
             defaultValue={store.address ?? ""}
             disabled={!isOwner}
             rows={2}
-            className="w-full px-3 py-2 border border-neutral-200 rounded-md text-sm disabled:bg-neutral-50 disabled:text-neutral-500"
           />
-        </div>
+        </FormField>
       </div>
 
       <div className="bg-white border border-neutral-200 rounded-lg p-6 space-y-4">
         <h2 className="text-lg font-semibold text-neutral-900">Currency</h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-1">
-              Code (ISO 4217)
-            </label>
-            <input
+          <FormField>
+            <FormLabel htmlFor="currencyCode">Code (ISO 4217)</FormLabel>
+            <FormInput
+              id="currencyCode"
               name="currencyCode"
               defaultValue={store.currency_code}
               disabled={!isOwner}
               maxLength={3}
               placeholder="THB"
-              className="w-full px-3 py-2 border border-neutral-200 rounded-md text-sm uppercase disabled:bg-neutral-50 disabled:text-neutral-500"
+              className="uppercase"
             />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-1">
-              Symbol
-            </label>
-            <input
+          </FormField>
+          <FormField>
+            <FormLabel htmlFor="currencySymbol">Symbol</FormLabel>
+            <FormInput
+              id="currencySymbol"
               name="currencySymbol"
               defaultValue={store.currency_symbol}
               disabled={!isOwner}
               maxLength={10}
               placeholder="฿"
-              className="w-full px-3 py-2 border border-neutral-200 rounded-md text-sm disabled:bg-neutral-50 disabled:text-neutral-500"
             />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-1">
-              Decimal Places
-            </label>
-            <input
+          </FormField>
+          <FormField>
+            <FormLabel htmlFor="currencyDecimals">Decimal Places</FormLabel>
+            <FormInput
+              id="currencyDecimals"
               name="currencyDecimals"
               type="number"
               min={0}
               max={4}
               defaultValue={store.currency_decimals}
               disabled={!isOwner}
-              className="w-full px-3 py-2 border border-neutral-200 rounded-md text-sm disabled:bg-neutral-50 disabled:text-neutral-500"
             />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-1">
-              Symbol Position
-            </label>
-            <select
+          </FormField>
+          <FormField>
+            <FormLabel htmlFor="symbolPosition">Symbol Position</FormLabel>
+            <FormSelect
+              id="symbolPosition"
               name="symbolPosition"
               defaultValue={store.symbol_position}
               disabled={!isOwner}
-              className="w-full px-3 py-2 border border-neutral-200 rounded-md text-sm disabled:bg-neutral-50 disabled:text-neutral-500"
             >
               <option value="prefix">Prefix (฿100)</option>
               <option value="suffix">Suffix (100฿)</option>
-            </select>
-          </div>
+            </FormSelect>
+          </FormField>
         </div>
       </div>
 
       <div className="bg-white border border-neutral-200 rounded-lg p-6 space-y-4">
         <h2 className="text-lg font-semibold text-neutral-900">Receipt</h2>
         <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-1">
-              Header message
-            </label>
-            <textarea
+          <FormField>
+            <FormLabel htmlFor="receiptHeader">Header message</FormLabel>
+            <FormTextarea
+              id="receiptHeader"
               name="receiptHeader"
               defaultValue={store.receipt_header ?? ""}
               disabled={!isOwner}
               rows={2}
               placeholder="e.g. Thank you for shopping with us!"
-              className="w-full px-3 py-2 border border-neutral-200 rounded-md text-sm disabled:bg-neutral-50 disabled:text-neutral-500"
             />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-1">
-              Footer note
-            </label>
-            <textarea
+          </FormField>
+          <FormField>
+            <FormLabel htmlFor="receiptFooter">Footer note</FormLabel>
+            <FormTextarea
+              id="receiptFooter"
               name="receiptFooter"
               defaultValue={store.receipt_footer ?? ""}
               disabled={!isOwner}
               rows={2}
               placeholder="e.g. No refunds after 7 days"
-              className="w-full px-3 py-2 border border-neutral-200 rounded-md text-sm disabled:bg-neutral-50 disabled:text-neutral-500"
             />
-          </div>
+          </FormField>
         </div>
       </div>
 
-      {state.error && (
-        <p className="text-sm text-danger-700 bg-danger-50 rounded-lg px-3 py-2">
-          {state.error}
-        </p>
-      )}
+      <FormError message={state.error} />
 
       {isOwner && (
         <div className="flex justify-end">
-          <button
-            type="submit"
-            disabled={isPending}
-            className="px-5 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium hover:bg-brand-700 disabled:opacity-50"
-          >
+          <Button type="submit" isLoading={isPending}>
             {isPending ? "Saving…" : "Save changes"}
-          </button>
+          </Button>
         </div>
       )}
     </form>
@@ -320,7 +309,9 @@ function CategoriesTab({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-neutral-900">Product Categories</h2>
+          <h2 className="text-xl font-semibold text-neutral-900">
+            Product Categories
+          </h2>
           <p className="mt-0.5 text-sm text-neutral-500">
             Configure product types used in inventory forms and filters.
           </p>
@@ -328,38 +319,42 @@ function CategoriesTab({
       </div>
 
       {canManage && (
-        <form action={createAction} className="rounded-lg border border-neutral-200 bg-white p-4">
+        <form
+          action={createAction}
+          className="rounded-lg border border-neutral-200 bg-white p-4"
+        >
           <input type="hidden" name="storeId" value={storeId} />
           <div className="grid gap-3 sm:grid-cols-[1fr_130px_auto]">
-            <div>
-              <label className="mb-1 block text-xs font-medium text-neutral-600">Name</label>
-              <input
+            <FormField>
+              <FormLabel htmlFor="categoryName">Name</FormLabel>
+              <FormInput
+                id="categoryName"
                 name="name"
                 required
                 maxLength={80}
                 placeholder="e.g. Beverages"
-                className="w-full rounded-md border border-neutral-200 px-3 py-2 text-sm"
               />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs font-medium text-neutral-600">Sort Order</label>
-              <input
+            </FormField>
+            <FormField>
+              <FormLabel htmlFor="categorySortOrder">Sort Order</FormLabel>
+              <FormInput
+                id="categorySortOrder"
                 name="sortOrder"
                 type="number"
                 min={0}
                 max={9999}
                 defaultValue={nextSortOrder}
-                className="w-full rounded-md border border-neutral-200 px-3 py-2 text-sm"
               />
-            </div>
-            <div className="sm:self-end">
-              <button
+            </FormField>
+            <div className="flex items-end">
+              <Button
                 type="submit"
                 disabled={isCreating}
-                className="w-full rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60"
+                isLoading={isCreating}
+                className="w-full"
               >
-                {isCreating ? "Adding..." : "Add Category"}
-              </button>
+                Add Category
+              </Button>
             </div>
           </div>
           {createState.error && (
@@ -376,49 +371,51 @@ function CategoriesTab({
         ) : (
           <div className="divide-y divide-neutral-100">
             {categories.map((category) => (
-              <form key={category.id} action={updateAction} className="px-4 py-3">
+              <form
+                key={category.id}
+                action={updateAction}
+                className="px-4 py-3"
+              >
                 <input type="hidden" name="storeId" value={storeId} />
                 <input type="hidden" name="categoryId" value={category.id} />
                 <div className="grid gap-3 sm:grid-cols-[1fr_130px_auto]">
-                  <input
+                  <FormInput
                     name="name"
                     defaultValue={category.name}
                     disabled={!canManage}
                     required
                     maxLength={80}
-                    className="w-full rounded-md border border-neutral-200 px-3 py-2 text-sm disabled:bg-neutral-50 disabled:text-neutral-500"
                   />
-                  <input
+                  <FormInput
                     name="sortOrder"
                     type="number"
                     min={0}
                     max={9999}
                     defaultValue={category.sort_order}
                     disabled={!canManage}
-                    className="w-full rounded-md border border-neutral-200 px-3 py-2 text-sm disabled:bg-neutral-50 disabled:text-neutral-500"
                   />
                   <div className="flex items-center justify-end gap-2">
                     {canManage && (
                       <>
-                        <button
-                          type="submit"
-                          className="rounded-md border border-neutral-200 px-3 py-2 text-xs font-medium text-neutral-700 hover:bg-neutral-50"
-                        >
+                        <Button type="submit" variant="outline" size="sm">
                           Save
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                           type="button"
+                          variant="destructive"
+                          size="sm"
                           onClick={() =>
                             startTransition(() => {
-                              if (confirm(`Delete category \"${category.name}\"?`)) {
+                              if (
+                                confirm(`Delete category "${category.name}"?`)
+                              ) {
                                 deleteCategoryAction(category.id, storeId);
                               }
                             })
                           }
-                          className="rounded-md border border-danger-200 px-3 py-2 text-xs font-medium text-danger-700 hover:bg-danger-50"
                         >
                           Delete
-                        </button>
+                        </Button>
                       </>
                     )}
                   </div>
@@ -498,12 +495,7 @@ function QrChannelsTab({
           </p>
         </div>
         {isOwner && (
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium hover:bg-brand-700"
-          >
-            + Add channel
-          </button>
+          <Button onClick={() => setShowAddModal(true)}>+ Add channel</Button>
         )}
       </div>
 
@@ -521,23 +513,24 @@ function QrChannelsTab({
           <ModalBody className="space-y-4">
             <input type="hidden" name="storeId" value={storeId} />
 
-            <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-1">
+            <FormField>
+              <FormLabel htmlFor="label" required>
                 Label
-              </label>
-              <input
+              </FormLabel>
+              <FormInput
+                id="label"
                 name="label"
                 required
                 placeholder="e.g. PromptPay"
-                className="w-full rounded-md border border-neutral-200 px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-brand-200"
               />
-            </div>
+            </FormField>
 
-            <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-1">
+            <FormField>
+              <FormLabel htmlFor="imageFile" required>
                 QR image
-              </label>
+              </FormLabel>
               <input
+                id="imageFile"
                 name="imageFile"
                 type="file"
                 accept="image/*"
@@ -560,12 +553,16 @@ function QrChannelsTab({
               <p className="mt-1 text-xs text-neutral-500">
                 PNG, JPG, or WEBP up to 5MB.
               </p>
-            </div>
+            </FormField>
 
             {selectedFileName && imagePreviewUrl && (
               <div className="rounded-md border border-neutral-200 bg-neutral-50 p-3">
-                <p className="text-xs font-medium text-neutral-700">Selected file</p>
-                <p className="mt-0.5 text-xs text-neutral-500">{selectedFileName}</p>
+                <p className="text-xs font-medium text-neutral-700">
+                  Selected file
+                </p>
+                <p className="mt-0.5 text-xs text-neutral-500">
+                  {selectedFileName}
+                </p>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={imagePreviewUrl}
@@ -575,26 +572,20 @@ function QrChannelsTab({
               </div>
             )}
 
-            {createState.error && (
-              <p className="text-xs text-danger-700">{createState.error}</p>
-            )}
+            <FormError message={createState.error} />
           </ModalBody>
 
           <ModalFooter>
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={resetAddModalState}
-              className="px-4 py-2 border border-neutral-200 text-neutral-600 rounded-lg text-sm hover:bg-neutral-50"
             >
               Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isCreating}
-              className="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium hover:bg-brand-700 disabled:opacity-50"
-            >
-              {isCreating ? "Adding..." : "Add channel"}
-            </button>
+            </Button>
+            <Button type="submit" disabled={isCreating} isLoading={isCreating}>
+              Add channel
+            </Button>
           </ModalFooter>
         </form>
       </Modal>
@@ -629,11 +620,12 @@ function QrChannelsTab({
                 </p>
               </div>
               <span
-                className={`text-xs px-2 py-0.5 rounded-full ${
+                className={cn(
+                  `text-xs px-2 py-0.5 rounded-full`,
                   ch.is_enabled
                     ? "bg-success-100 text-success-700"
-                    : "bg-neutral-100 text-neutral-500"
-                }`}
+                    : "bg-neutral-100 text-neutral-500",
+                )}
               >
                 {ch.is_enabled ? "Active" : "Disabled"}
               </span>
@@ -646,18 +638,24 @@ function QrChannelsTab({
                         toggleQrChannelAction(ch.id, storeId, !ch.is_enabled);
                       })
                     }
-                    className={`relative inline-flex h-5 w-9 rounded-full transition-colors ${
-                      ch.is_enabled ? "bg-brand-600" : "bg-neutral-300"
-                    }`}
+                    className={cn(
+                      `relative inline-flex h-5 w-9 rounded-full p-0 cursor-pointer transition`,
+                      ch.is_enabled
+                        ? "bg-brand-600 hover:bg-brand-700"
+                        : "bg-neutral-300 hover:bg-neutral-400",
+                    )}
                   >
                     <span
-                      className={`inline-block h-4 w-4 mt-0.5 rounded-full bg-white shadow transition-transform ${
-                        ch.is_enabled ? "translate-x-4.5" : "translate-x-0.5"
-                      }`}
+                      className={cn(
+                        `inline-block h-4 w-4 mt-0.5 rounded-full bg-white shadow transition-transform`,
+                        ch.is_enabled ? "translate-x-4.5" : "translate-x-0.5",
+                      )}
                     />
                   </button>
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="sm"
                     onClick={() =>
                       startTransition(() => {
                         if (confirm(`Delete "${ch.label}"?`)) {
@@ -665,10 +663,12 @@ function QrChannelsTab({
                         }
                       })
                     }
-                    className="text-xs text-danger-600 hover:text-danger-800"
+                    className={cn(
+                      "h-auto px-0 text-xs text-danger-600 hover:text-danger-800",
+                    )}
                   >
                     Delete
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>

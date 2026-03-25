@@ -3,6 +3,13 @@
 import Link from "next/link";
 import { useActionState } from "react";
 import { signInAction, type AuthActionState } from "@/lib/actions/auth";
+import { Button } from "@/components/ui/Button";
+import {
+  FormField,
+  FormLabel,
+  FormInput,
+  FormError,
+} from "@/components/ui/form";
 
 const initialState: AuthActionState = { error: null };
 
@@ -20,50 +27,38 @@ export default function LoginPage() {
         action={action}
         className="mt-8 space-y-4 rounded-2xl border border-slate-200 bg-white p-6"
       >
-        <div className="space-y-1">
-          <label className="text-sm font-medium text-slate-700" htmlFor="email">
-            Email
-          </label>
-          <input
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none ring-brand-200 transition focus:ring-2"
+        <FormField>
+          <FormLabel htmlFor="email">Email</FormLabel>
+          <FormInput
             id="email"
             name="email"
             type="email"
             autoComplete="email"
             required
           />
-        </div>
+        </FormField>
 
-        <div className="space-y-1">
-          <label
-            className="text-sm font-medium text-slate-700"
-            htmlFor="password"
-          >
-            Password
-          </label>
-          <input
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none ring-brand-200 transition focus:ring-2"
+        <FormField>
+          <FormLabel htmlFor="password">Password</FormLabel>
+          <FormInput
             id="password"
             name="password"
             type="password"
             autoComplete="current-password"
             required
           />
-        </div>
+        </FormField>
 
-        {state.error ? (
-          <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">
-            {state.error}
-          </p>
-        ) : null}
+        <FormError message={state.error} />
 
-        <button
-          className="w-full rounded-lg bg-brand-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-800 disabled:cursor-not-allowed disabled:opacity-70"
+        <Button
+          className="w-full"
           disabled={isPending}
           type="submit"
+          isLoading={isPending}
         >
-          {isPending ? "Signing in..." : "Sign in"}
-        </button>
+          Sign in
+        </Button>
       </form>
 
       <p className="mt-4 text-sm text-slate-600">

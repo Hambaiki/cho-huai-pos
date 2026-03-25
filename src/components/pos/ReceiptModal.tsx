@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import { formatCurrency, type CurrencyStore } from "@/lib/utils/currency";
 import { Modal, ModalHeader, ModalFooter } from "@/components/ui/Modal";
+import { Button } from "@/components/ui/Button";
 
 interface ReceiptItem {
   productName: string;
@@ -186,18 +187,19 @@ export function ReceiptModal({
       </div>
 
       <ModalFooter>
-        <button
+        <Button
           onClick={handlePrint}
-          className="flex-1 rounded-lg border border-brand-300 px-3 py-2 text-sm font-medium text-brand-700 transition hover:bg-brand-50"
+          variant="outline"
+          className="flex-1"
         >
           Print Receipt
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={onClose}
-          className="flex-1 rounded-lg bg-brand-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-brand-700"
+          className="flex-1"
         >
           Close & Continue
-        </button>
+        </Button>
       </ModalFooter>
     </Modal>
   );

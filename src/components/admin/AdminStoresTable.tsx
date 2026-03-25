@@ -19,6 +19,7 @@ import {
   ModalFooter,
   ModalHeader,
 } from "@/components/ui/Modal";
+import { Button } from "@/components/ui/Button";
 
 type AdminStore = {
   id: string;
@@ -111,18 +112,15 @@ export function AdminStoresTable({ stores }: AdminStoresTableProps) {
                     {new Date(store.created_at).toLocaleDateString()}
                   </TableCell>
                   <TableCell className="text-right">
-                    <button
+                    <Button
                       type="button"
                       onClick={() => setSelectedStore(store)}
-                      className={`inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium transition ${
-                        store.is_suspended
-                          ? "bg-success-100 text-success-700 hover:bg-success-200"
-                          : "bg-warning-100 text-warning-700 hover:bg-warning-200"
-                      }`}
+                      variant={store.is_suspended ? "success" : "warning"}
+                      size="sm"
+                      icon={store.is_suspended ? <ShieldCheck size={12} /> : <ShieldAlert size={12} />}
                     >
-                      {store.is_suspended ? <ShieldCheck size={12} /> : <ShieldAlert size={12} />}
                       {store.is_suspended ? "Enable Store" : "Disable Store"}
-                    </button>
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))
@@ -146,21 +144,20 @@ export function AdminStoresTable({ stores }: AdminStoresTableProps) {
           {error && <p className="mt-3 text-sm text-danger-700">{error}</p>}
         </ModalBody>
         <ModalFooter>
-          <button
+          <Button
             type="button"
+            variant="outline"
             onClick={closeModal}
-            className="rounded-md border border-neutral-200 px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-50"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            isLoading={isPending}
             onClick={runAction}
-            disabled={isPending}
-            className="rounded-md bg-brand-600 px-3 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60"
           >
             {isPending ? "Saving..." : "Confirm"}
-          </button>
+          </Button>
         </ModalFooter>
       </Modal>
     </>

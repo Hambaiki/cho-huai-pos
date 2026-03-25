@@ -3,6 +3,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { formatCurrency, type CurrencyStore } from "@/lib/utils/currency";
 import { Search } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { FormInput } from "@/components/ui/form";
+import { cn } from "@/lib/utils/cn";
 
 export interface PosProduct {
   id: string;
@@ -110,122 +113,120 @@ export function ProductGrid({ products, currency, onAdd }: ProductGridProps) {
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col rounded-2xl border border-border bg-surface p-4">
+    <div className="flex flex-col h-full min-h-0">
       <div className="flex flex-wrap items-center gap-2">
-        <div className="relative">
+        <div className="relative flex-1">
           <Search
             size={16}
             className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500"
           />
-          <input
+          <FormInput
             ref={searchInputRef}
+            type="text"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Search product name..."
-            className="min-w-55 flex-1 rounded-lg border border-border bg-white px-3 py-2 pl-10 text-sm text-neutral-900 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+            className="min-w-55 pl-10 bg-white"
             aria-label="Search products"
           />
         </div>
         {query.trim().length > 0 ? (
-          <button
+          <Button
             type="button"
+            variant="outline"
+            size="sm"
             onClick={() => setQuery("")}
-            className="rounded-lg border border-border px-3 py-2 text-sm text-neutral-700 transition hover:bg-neutral-50"
           >
             Clear
-          </button>
+          </Button>
         ) : null}
-        <button
+        <Button
           type="button"
+          variant={stockFilter === "all" ? "active" : "outline"}
+          size="sm"
           onClick={() => setStockFilter("all")}
-          className={`rounded-lg border px-3 py-2 text-sm transition ${
-            stockFilter === "all"
-              ? "border-brand-500 bg-brand-50 text-brand-800"
-              : "border-border text-neutral-700 hover:bg-neutral-50"
-          }`}
         >
           Any stock ({products.length})
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant={stockFilter === "in-stock" ? "active" : "outline"}
+          size="sm"
           onClick={() => setStockFilter("in-stock")}
-          className={`rounded-lg border px-3 py-2 text-sm transition ${
-            stockFilter === "in-stock"
-              ? "border-brand-500 bg-brand-50 text-brand-800"
-              : "border-border text-neutral-700 hover:bg-neutral-50"
-          }`}
         >
           In stock ({inStockCount})
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant={stockFilter === "out-of-stock" ? "active" : "outline"}
+          size="sm"
           onClick={() => setStockFilter("out-of-stock")}
-          className={`rounded-lg border px-3 py-2 text-sm transition ${
-            stockFilter === "out-of-stock"
-              ? "border-brand-500 bg-brand-50 text-brand-800"
-              : "border-border text-neutral-700 hover:bg-neutral-50"
-          }`}
         >
           Out of stock ({products.length - inStockCount})
-        </button>
+        </Button>
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        {categoryTabs.map((tab) => (
-          <button
-            key={tab.value}
-            type="button"
-            onClick={() => setCategoryFilter(tab.value)}
-            className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
-              categoryFilter === tab.value
-                ? "border-brand-500 bg-brand-50 text-brand-800"
-                : "border-border text-neutral-700 hover:bg-neutral-50"
-            }`}
-          >
-            {tab.label} ({tab.count})
-          </button>
-        ))}
-      </div>
-
-      <p className="my-4 text-xs text-neutral-500">
+      <p className="mt-3 text-xs text-neutral-500">
         Showing {filteredProducts.length} of {products.length} products. Press /
         to focus search.
       </p>
 
-      {filteredProducts.length === 0 ? (
-        <div className="rounded-2xl border border-border bg-surface p-6 text-sm text-neutral-500">
-          No products matched this search/filter.
+      <div className="flex-1 rounded-2xl border border-border bg-surface p-4 mt-3 space-y-4">
+        <div className="flex flex-wrap items-center gap-2">
+          {categoryTabs.map((tab) => (
+            <Button
+              key={tab.value}
+              type="button"
+              variant={categoryFilter === tab.value ? "active" : "outline"}
+              size="sm"
+              onClick={() => setCategoryFilter(tab.value)}
+            >
+              {tab.label} ({tab.count})
+            </Button>
+          ))}
         </div>
-      ) : (
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 min-h-0 overflow-y-auto pr-1">
-          {filteredProducts.map((product) => {
-            const outOfStock = product.stock_qty <= 0;
 
-            return (
-              <button
-                className="rounded-2xl border border-border bg-surface p-4 text-left transition hover:border-brand-200 disabled:cursor-not-allowed disabled:opacity-50"
-                disabled={outOfStock}
-                key={product.id}
-                onClick={() => onAdd(product)}
-                type="button"
-              >
-                <p className="text-sm font-semibold text-neutral-900">
-                  {product.name}
-                </p>
-                <p className="mt-1 text-sm text-neutral-700">
-                  {formatCurrency(product.price, currency)}
-                </p>
-                <p className="mt-2 text-xs text-neutral-500">
-                  Stock: {product.stock_qty}
-                </p>
-                <p className="mt-3 text-sm font-medium text-brand-700">
-                  {outOfStock ? "Out of stock" : "+ Tap to add"}
-                </p>
-              </button>
-            );
-          })}
-        </div>
-      )}
+        {filteredProducts.length === 0 ? (
+          <div className="rounded-2xl border border-border bg-surface p-6 text-sm text-neutral-500">
+            No products matched this search/filter.
+          </div>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 min-h-0 overflow-y-auto pr-1">
+            {filteredProducts.map((product) => {
+              const outOfStock = product.stock_qty <= 0;
+
+              return (
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className={cn(
+                    "flex flex-col items-start h-auto text-left p-4",
+                    "disabled:cursor-not-allowed disabled:opacity-50",
+                    "transition cursor-pointer disabled:cursor-not-allowed",
+                  )}
+                  disabled={outOfStock}
+                  key={product.id}
+                  onClick={() => onAdd(product)}
+                  type="button"
+                >
+                  <p className="text-sm font-semibold text-neutral-900">
+                    {product.name}
+                  </p>
+                  <p className="mt-1 text-sm text-neutral-700">
+                    {formatCurrency(product.price, currency)}
+                  </p>
+                  <p className="mt-2 text-xs text-neutral-500">
+                    Stock: {product.stock_qty}
+                  </p>
+                  <p className="mt-3 text-sm font-medium text-brand-700">
+                    {outOfStock ? "Out of stock" : "+ Tap to add"}
+                  </p>
+                </Button>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

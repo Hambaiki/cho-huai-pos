@@ -6,6 +6,14 @@ import {
   type CreateStoreActionState,
 } from "@/lib/actions/onboarding";
 import { DEFAULT_CURRENCY } from "@/lib/utils/currency";
+import {
+  FormField,
+  FormLabel,
+  FormInput,
+  FormSelect,
+  FormTextarea,
+  FormError,
+} from "@/components/ui/form";
 
 const initialState: CreateStoreActionState = { error: null };
 
@@ -20,52 +28,48 @@ export function CreateStoreForm({
 
   return (
     <form action={action} className="space-y-4">
-      <div className="space-y-1">
-        <label className="text-sm font-medium text-slate-700" htmlFor="name">
+      <FormField>
+        <FormLabel htmlFor="name" required>
           Store name
-        </label>
-        <input
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none ring-brand-200 transition focus:ring-2"
+        </FormLabel>
+        <FormInput
           id="name"
           name="name"
           required
           type="text"
         />
-      </div>
+      </FormField>
 
-      <div className="space-y-1">
-        <label className="text-sm font-medium text-slate-700" htmlFor="address">
-          Address
-        </label>
-        <textarea
-          className="min-h-20 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none ring-brand-200 transition focus:ring-2"
+      <FormField>
+        <FormLabel htmlFor="address">Address</FormLabel>
+        <FormTextarea
           id="address"
           name="address"
+          rows={5}
         />
-      </div>
+      </FormField>
 
       <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1">
-          <label className="text-sm font-medium text-slate-700" htmlFor="currency_code">
+        <FormField>
+          <FormLabel htmlFor="currency_code" required>
             Currency code
-          </label>
-          <input
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm uppercase outline-none ring-brand-200 transition focus:ring-2"
+          </FormLabel>
+          <FormInput
             defaultValue={DEFAULT_CURRENCY.currency_code}
             id="currency_code"
             maxLength={3}
             name="currency_code"
             required
             type="text"
+            className="uppercase"
           />
-        </div>
+        </FormField>
 
-        <div className="space-y-1">
-          <label className="text-sm font-medium text-slate-700" htmlFor="currency_symbol">
+        <FormField>
+          <FormLabel htmlFor="currency_symbol" required>
             Currency symbol
-          </label>
-          <input
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none ring-brand-200 transition focus:ring-2"
+          </FormLabel>
+          <FormInput
             defaultValue={DEFAULT_CURRENCY.currency_symbol}
             id="currency_symbol"
             maxLength={6}
@@ -73,16 +77,15 @@ export function CreateStoreForm({
             required
             type="text"
           />
-        </div>
+        </FormField>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1">
-          <label className="text-sm font-medium text-slate-700" htmlFor="currency_decimals">
+        <FormField>
+          <FormLabel htmlFor="currency_decimals" required>
             Decimal places
-          </label>
-          <input
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none ring-brand-200 transition focus:ring-2"
+          </FormLabel>
+          <FormInput
             defaultValue={DEFAULT_CURRENCY.currency_decimals}
             id="currency_decimals"
             max={4}
@@ -91,27 +94,24 @@ export function CreateStoreForm({
             required
             type="number"
           />
-        </div>
+        </FormField>
 
-        <div className="space-y-1">
-          <label className="text-sm font-medium text-slate-700" htmlFor="symbol_position">
+        <FormField>
+          <FormLabel htmlFor="symbol_position" required>
             Symbol position
-          </label>
-          <select
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none ring-brand-200 transition focus:ring-2"
+          </FormLabel>
+          <FormSelect
             defaultValue={DEFAULT_CURRENCY.symbol_position}
             id="symbol_position"
             name="symbol_position"
           >
             <option value="prefix">Prefix</option>
             <option value="suffix">Suffix</option>
-          </select>
-        </div>
+          </FormSelect>
+        </FormField>
       </div>
 
-      {state.error ? (
-        <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{state.error}</p>
-      ) : null}
+      <FormError message={state.error} />
 
       <button
         className="w-full rounded-lg bg-brand-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-800 disabled:cursor-not-allowed disabled:opacity-70"

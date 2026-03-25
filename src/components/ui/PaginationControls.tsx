@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 
 interface PaginationControlsProps {
   currentPage: number;
@@ -48,15 +49,16 @@ export function PaginationControls({
       </p>
 
       <div className="flex items-center gap-2 self-start sm:self-auto">
-        <button
+        <Button
           type="button"
+          variant="outline"
+          size="sm"
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className="inline-flex items-center gap-1 rounded-lg border border-neutral-300 px-3 py-1.5 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-50"
+          icon={<ChevronLeft size={16} />}
         >
-          <ChevronLeft size={16} />
           Previous
-        </button>
+        </Button>
 
         <div className="flex items-center gap-1">
           {visiblePages.map((page) => {
@@ -69,31 +71,30 @@ export function PaginationControls({
             }
 
             return (
-              <button
+              <Button
                 key={page}
                 type="button"
+                variant={page === currentPage ? "active" : "outline"}
+                size="sm"
                 onClick={() => onPageChange(page)}
-                className={`h-9 min-w-9 rounded-lg px-3 text-sm font-medium transition ${
-                  page === currentPage
-                    ? "bg-brand-600 text-white"
-                    : "border border-neutral-300 text-neutral-700 hover:bg-neutral-50"
-                }`}
               >
                 {page}
-              </button>
+              </Button>
             );
           })}
         </div>
 
-        <button
+        <Button
           type="button"
+          variant="outline"
+          size="sm"
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className="inline-flex items-center gap-1 rounded-lg border border-neutral-300 px-3 py-1.5 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-50"
+          icon={<ChevronRight size={16} />}
+          iconPosition="right"
         >
           Next
-          <ChevronRight size={16} />
-        </button>
+        </Button>
       </div>
     </div>
   );

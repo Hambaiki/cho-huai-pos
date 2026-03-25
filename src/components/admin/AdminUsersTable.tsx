@@ -28,7 +28,7 @@ import {
   ModalFooter,
   ModalHeader,
 } from "@/components/ui/Modal";
-import { cn } from "@/lib/utils/cn";
+import { Button } from "@/components/ui/Button";
 
 type AdminProfile = {
   id: string;
@@ -164,8 +164,10 @@ export function AdminUsersTable({
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
                         {profile.is_super_admin ? (
-                          <button
+                          <Button
                             type="button"
+                            variant="secondary"
+                            size="sm"
                             disabled={isSelf}
                             onClick={() =>
                               setPendingAction({
@@ -174,14 +176,15 @@ export function AdminUsersTable({
                                 nextValue: false,
                               })
                             }
-                            className="inline-flex items-center gap-1 rounded-md bg-neutral-100 px-2.5 py-1 text-xs font-medium text-neutral-700 hover:bg-neutral-200 disabled:cursor-not-allowed disabled:opacity-50"
+                            icon={<ShieldX size={12} />}
                           >
-                            <ShieldX size={12} />
                             Revoke Admin
-                          </button>
+                          </Button>
                         ) : (
-                          <button
+                          <Button
                             type="button"
+                            variant="secondary"
+                            size="sm"
                             onClick={() =>
                               setPendingAction({
                                 kind: "superadmin",
@@ -189,16 +192,19 @@ export function AdminUsersTable({
                                 nextValue: true,
                               })
                             }
-                            className="inline-flex items-center gap-1 rounded-md bg-brand-100 px-2.5 py-1 text-xs font-medium text-brand-700 hover:bg-brand-200"
+                            icon={<Crown size={12} />}
                           >
-                            <Crown size={12} />
                             Make Admin
-                          </button>
+                          </Button>
                         )}
 
                         {!profile.is_super_admin && (
-                          <button
+                          <Button
                             type="button"
+                            variant={
+                              profile.is_suspended ? "success" : "warning"
+                            }
+                            size="sm"
                             onClick={() =>
                               setPendingAction({
                                 kind: "suspend",
@@ -206,23 +212,18 @@ export function AdminUsersTable({
                                 nextValue: !profile.is_suspended,
                               })
                             }
-                            className={cn(
-                              `rounded-md px-2.5 py-1 text-xs font-medium transition`,
-                              "inline-flex items-center gap-1",
-                              profile.is_suspended
-                                ? "bg-success-100 text-success-700 hover:bg-success-200"
-                                : "bg-warning-100 text-warning-700 hover:bg-warning-200",
-                            )}
+                            icon={
+                              profile.is_suspended ? (
+                                <ShieldCheck size={12} />
+                              ) : (
+                                <ShieldAlert size={12} />
+                              )
+                            }
                           >
-                            {profile.is_suspended ? (
-                              <ShieldCheck size={12} />
-                            ) : (
-                              <ShieldAlert size={12} />
-                            )}
                             {profile.is_suspended
                               ? "Approve Access"
                               : "Suspend"}
-                          </button>
+                          </Button>
                         )}
                       </div>
                     </TableCell>
@@ -265,21 +266,20 @@ export function AdminUsersTable({
           {error && <p className="mt-3 text-sm text-danger-700">{error}</p>}
         </ModalBody>
         <ModalFooter>
-          <button
+          <Button
             type="button"
+            variant="outline"
             onClick={closeModal}
-            className="rounded-md border border-neutral-200 px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-50"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            isLoading={isPending}
             onClick={runAction}
-            disabled={isPending}
-            className="rounded-md bg-brand-600 px-3 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60"
           >
             {isPending ? "Saving..." : "Confirm"}
-          </button>
+          </Button>
         </ModalFooter>
       </Modal>
     </>

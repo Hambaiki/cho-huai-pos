@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { Modal } from "@/components/ui/Modal";
+import { Button } from "@/components/ui/Button";
 import { formatCurrency, type CurrencyStore } from "@/lib/utils/currency";
 
 export interface QrChannel {
@@ -75,20 +76,22 @@ export function QrPaymentScreen({
       </div>
 
       <div className="mt-6 w-full max-w-xs space-y-3">
-        <button
+        <Button
           onClick={() => onConfirm(reference.trim() || undefined)}
-          className="w-full rounded-xl bg-brand-700 px-4 py-3 text-sm font-semibold text-white hover:bg-brand-800"
+          size="lg"
+          className="w-full"
           type="button"
         >
           Confirm payment received
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={onCancel}
-          className="w-full text-sm text-neutral-500 hover:text-neutral-700"
+          variant="ghost"
+          className="w-full justify-center"
           type="button"
         >
           Cancel
-        </button>
+        </Button>
       </div>
     </Modal>
   );

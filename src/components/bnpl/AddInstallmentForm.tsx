@@ -4,6 +4,12 @@ import { useActionState } from "react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { createInstallmentAction } from "@/lib/actions/bnpl";
+import {
+  FormField,
+  FormLabel,
+  FormInput,
+  FormError,
+} from "@/components/ui/form";
 
 export default function AddInstallmentForm({
   accountId,
@@ -29,36 +35,34 @@ export default function AddInstallmentForm({
       <input type="hidden" name="accountId" value={accountId} />
       <input type="hidden" name="storeId" value={storeId} />
 
-      <div>
-        <label className="block text-sm font-medium text-neutral-700 mb-1">
-          Amount <span className="text-danger-500">*</span>
-        </label>
-        <input
+      <FormField>
+        <FormLabel htmlFor="amount" required>
+          Amount
+        </FormLabel>
+        <FormInput
+          id="amount"
           name="amount"
           type="number"
           min="1"
           step="1"
           required
-          className="w-full border border-neutral-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
         />
-      </div>
+      </FormField>
 
-      <div>
-        <label className="block text-sm font-medium text-neutral-700 mb-1">
-          Due Date <span className="text-danger-500">*</span>
-        </label>
-        <input
+      <FormField>
+        <FormLabel htmlFor="dueDate" required>
+          Due Date
+        </FormLabel>
+        <FormInput
+          id="dueDate"
           name="dueDate"
           type="date"
           min={today}
           required
-          className="w-full border border-neutral-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
         />
-      </div>
+      </FormField>
 
-      {state.error && (
-        <p className="col-span-2 text-sm text-danger-600">{state.error}</p>
-      )}
+      <FormError message={state.error} className="col-span-2" />
 
       <div className="col-span-2">
         <button

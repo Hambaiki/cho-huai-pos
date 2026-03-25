@@ -9,8 +9,10 @@ import {
   type QrChannel,
 } from "@/components/pos/QrPaymentScreen";
 import { Modal } from "@/components/ui/Modal";
+import { Button } from "@/components/ui/Button";
 import type { BnplAccountSummary } from "@/lib/types/bnpl";
 import { formatCurrency, type CurrencyStore } from "@/lib/utils/currency";
+import { FormField, FormLabel, FormInput } from "@/components/ui/form";
 
 type PaymentMethod = "cash" | "qr_transfer" | "bnpl";
 
@@ -184,13 +186,10 @@ export function PaymentModal({
       <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           {(["cash", "qr_transfer", "bnpl"] as const).map((method) => (
-            <button
-              className={`rounded-lg border px-3 py-2.5 text-xs font-medium transition ${
-                paymentMethod === method
-                  ? "border-brand-700 bg-brand-50 text-brand-700"
-                  : "border-border text-neutral-600 hover:bg-neutral-50"
-              }`}
+            <Button
               key={method}
+              variant={paymentMethod === method ? "active" : "outline"}
+              size="sm"
               onClick={() => {
                 setPaymentMethod(method);
                 setSelectedChannel(null);
@@ -202,7 +201,7 @@ export function PaymentModal({
                 : method === "cash"
                   ? "Cash"
                   : "BNPL"}
-            </button>
+            </Button>
           ))}
         </div>
 
@@ -214,18 +213,15 @@ export function PaymentModal({
               </p>
               <div className="flex flex-wrap gap-2">
                 {quickAmounts.map((quickAmount) => (
-                  <button
+                  <Button
                     key={quickAmount}
                     type="button"
                     onClick={() => setNumpadValue(String(quickAmount))}
-                    className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
-                      amountTendered === quickAmount
-                        ? "border-brand-700 bg-brand-50 text-brand-700"
-                        : "border-border bg-white text-neutral-700 hover:bg-neutral-50"
-                    }`}
+                    variant={amountTendered === quickAmount ? "active" : "outline"}
+                    size="sm"
                   >
                     {formatCurrency(quickAmount, currency)}
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>
@@ -256,28 +252,25 @@ export function PaymentModal({
             </p>
             <div className="grid gap-2">
               {enabledChannels.map((channel) => (
-                <button
+                <Button
                   key={channel.id}
                   type="button"
                   onClick={() => setSelectedChannel(channel)}
-                  className={`flex items-center gap-3 rounded-lg border px-3 py-2 text-left text-sm transition ${
-                    selectedChannel?.id === channel.id
-                      ? "border-brand-700 bg-brand-50 text-brand-700"
-                      : "border-border text-neutral-700 hover:bg-neutral-50"
-                  }`}
+                  variant={selectedChannel?.id === channel.id ? "active" : "outline"}
+                  className="justify-start"
                 >
                   <span className="font-medium">{channel.label}</span>
-                </button>
+                </Button>
               ))}
             </div>
             {selectedChannel && (
-              <button
+              <Button
                 type="button"
                 onClick={() => setShowQrScreen(true)}
-                className="mt-2 w-full rounded-xl bg-brand-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-800"
+                className="mt-2 w-full"
               >
                 Show QR code →
-              </button>
+              </Button>
             )}
           </div>
         )}
@@ -301,24 +294,24 @@ export function PaymentModal({
                 </p>
               </div>
               {canCreateBnplAccount && (
-                <button
+                <Button
                   type="button"
                   onClick={() => setShowCreateBnplModal(true)}
-                  className="rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-sm font-medium text-brand-700 hover:bg-brand-100"
+                  variant="outline"
                 >
                   <span className="whitespace-nowrap">+ Create account</span>
-                </button>
+                </Button>
               )}
             </div>
 
             <label className="relative block">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
-              <input
+              <FormInput
                 type="search"
                 value={bnplSearch}
                 onChange={(event) => setBnplSearch(event.target.value)}
                 placeholder="Search by customer name or phone"
-                className="w-full rounded-xl border border-border bg-white py-2.5 pl-9 pr-3 text-sm text-neutral-900 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+                className="pl-9"
               />
             </label>
 
@@ -400,15 +393,15 @@ export function PaymentModal({
             </div>
 
             <div className="rounded-xl border border-border bg-neutral-50 px-4 py-3">
-              <label className="block text-xs font-medium text-neutral-600">
-                Due date
-              </label>
-              <input
-                type="date"
-                value={bnplDueDate}
-                onChange={(event) => setBnplDueDate(event.target.value)}
-                className="mt-1.5 w-full rounded-lg border border-border bg-white px-3 py-2 text-sm text-neutral-900 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
-              />
+              <FormField>
+                <FormLabel htmlFor="bnplDueDate">Due date</FormLabel>
+                <FormInput
+                  id="bnplDueDate"
+                  type="date"
+                  value={bnplDueDate}
+                  onChange={(event) => setBnplDueDate(event.target.value)}
+                />
+              </FormField>
               <p className="mt-2 text-xs text-neutral-500">
                 Checkout will create one BNPL installment for the full order
                 amount.
@@ -449,16 +442,15 @@ export function PaymentModal({
       </div>
 
       <div className="flex items-center justify-end gap-2 border-t border-border px-5 py-4">
-        <button
-          className="rounded-lg border border-border px-4 py-2.5 text-sm text-neutral-700 hover:bg-neutral-50"
+        <Button
+          variant="outline"
           onClick={onClose}
           type="button"
         >
           Cancel
-        </button>
+        </Button>
         {paymentMethod !== "qr_transfer" && (
-          <button
-            className="rounded-lg bg-brand-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-800 disabled:cursor-not-allowed disabled:opacity-60"
+          <Button
             disabled={
               (paymentMethod === "cash" && amountTendered < amount) ||
               isBnplSelectionInvalid
@@ -478,7 +470,7 @@ export function PaymentModal({
             type="button"
           >
             Confirm payment
-          </button>
+          </Button>
         )}
       </div>
 

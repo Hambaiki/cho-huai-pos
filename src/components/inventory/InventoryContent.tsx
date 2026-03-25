@@ -6,6 +6,7 @@ import { useStoreContext } from "@/lib/store-context";
 import { ProductList } from "./ProductList";
 import { ProductFormModal } from "./ProductFormModal";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { Button } from "@/components/ui/Button";
 
 interface Product {
   id: string;
@@ -80,12 +81,11 @@ export function InventoryContent({
         title="Inventory Management"
         description="Browse and manage products in your catalog"
         actions={
-          <button
+          <Button
             onClick={handleOpenNewProduct}
-            className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-700"
           >
             + New Product
-          </button>
+          </Button>
         }
       />
 

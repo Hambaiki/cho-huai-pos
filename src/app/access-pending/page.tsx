@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { signOutAction } from "@/lib/actions/auth";
+import { Button } from "@/components/ui/Button";
 
 export const metadata = { title: "Access Pending" };
 
@@ -39,12 +40,12 @@ export default async function AccessPendingPage() {
         </p>
 
         <form action={signOutAction} className="mt-6">
-          <button
-            className="rounded-lg bg-amber-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-amber-800"
+          <Button
+            className="bg-amber-700 hover:bg-amber-800"
             type="submit"
           >
             Sign out
-          </button>
+          </Button>
         </form>
       </div>
     </main>

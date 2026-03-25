@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils/cn";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { FilterSelect } from "@/components/ui/FilterSelect";
 import { PaginationControls } from "@/components/ui/PaginationControls";
+import { Button } from "@/components/ui/Button";
 import {
   Table,
   TableBody,
@@ -110,14 +111,14 @@ export function ProductList({
     return (
       <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-6 py-12 text-center">
         <p className="text-neutral-600">No products yet. Create your first product to get started.</p>
-        <button
+        <Button
           type="button"
           onClick={onNewProduct}
-          className="mt-4 inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 font-medium text-white transition hover:bg-brand-700"
+          icon={<CirclePlus size={16} />}
+          className="mt-4"
         >
-          <CirclePlus size={16} />
           Create Product
-        </button>
+        </Button>
       </div>
     );
   }
@@ -250,14 +251,16 @@ export function ProductList({
                     </span>
                   </TableCell>
                   <TableCell className="text-right">
-                    <button
+                    <Button
                       type="button"
                       onClick={() => onEditProduct?.(product)}
-                      className="inline-flex items-center gap-1 font-medium text-brand-600 transition hover:text-brand-700"
+                      variant="ghost"
+                      size="sm"
+                      icon={<PencilLine size={14} />}
+                      className="h-auto px-0 font-medium text-brand-600 transition hover:text-brand-700"
                     >
-                      <PencilLine size={14} />
                       Edit
-                    </button>
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))

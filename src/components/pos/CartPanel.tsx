@@ -5,13 +5,14 @@ import { formatCurrency } from "@/lib/utils/currency";
 import { type CurrencyStore } from "@/lib/utils/currency";
 import { type CartItem } from "@/lib/store/cart";
 import { cn } from "@/lib/utils/cn";
-import { ShoppingCart, Trash } from "lucide-react";
+import { Minus, Plus, ShoppingCart, Trash } from "lucide-react";
 import {
   Modal,
   ModalBody,
   ModalFooter,
   ModalHeader,
 } from "@/components/ui/Modal";
+import { Button } from "@/components/ui/Button";
 
 interface CartPanelProps {
   items: CartItem[];
@@ -68,39 +69,41 @@ export function CartPanel({
                         {formatCurrency(item.unitPrice, currency)} each
                       </p>
                     </div>
-                    <button
-                      className="flex items-center gap-1 text-xs font-medium text-danger-700 transition hover:text-danger-600"
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => onRemove(item.productId)}
                       type="button"
+                      icon={<Trash size={16} />}
+                      className="p-1 text-xs font-medium text-danger-700 hover:text-danger-600"
                     >
-                      <Trash size={16} />
                       Remove
-                    </button>
+                    </Button>
                   </div>
 
                   <div className="mt-3 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <button
-                        className="h-7 w-7 rounded-md border border-border text-sm"
+                      <Button
+                        variant="outline"
+                        size="icon-sm"
                         onClick={() =>
                           onQuantityChange(item.productId, item.quantity - 1)
                         }
                         type="button"
-                      >
-                        -
-                      </button>
+                        icon={<Minus size={16} />}
+                      ></Button>
                       <span className="w-8 text-center text-sm">
                         {item.quantity}
                       </span>
-                      <button
-                        className="h-7 w-7 rounded-md border border-border text-sm"
+                      <Button
+                        variant="outline"
+                        size="icon-sm"
                         onClick={() =>
                           onQuantityChange(item.productId, item.quantity + 1)
                         }
                         type="button"
-                      >
-                        +
-                      </button>
+                        icon={<Plus size={16} />}
+                      ></Button>
                     </div>
                     <p className="text-sm font-semibold text-neutral-900">
                       {formatCurrency(item.unitPrice * item.quantity, currency)}
@@ -120,22 +123,23 @@ export function CartPanel({
             </strong>
           </div>
           <div className="mt-3 grid grid-cols-2 gap-2">
-            <button
-              className="w-full rounded-lg border border-border bg-white px-4 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-60"
+            <Button
+              variant="outline"
+              className="w-full"
               disabled={items.length === 0}
               onClick={() => setShowClearConfirm(true)}
               type="button"
             >
               Clear all
-            </button>
-            <button
-              className="w-full rounded-lg bg-brand-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-800 disabled:cursor-not-allowed disabled:opacity-60"
+            </Button>
+            <Button
+              className="w-full"
               disabled={items.length === 0}
               onClick={onCheckout}
               type="button"
             >
               Checkout
-            </button>
+            </Button>
           </div>
         </div>
       </aside>
@@ -156,23 +160,23 @@ export function CartPanel({
           </p>
         </ModalBody>
         <ModalFooter>
-          <button
+          <Button
             type="button"
+            variant="outline"
             onClick={() => setShowClearConfirm(false)}
-            className="rounded-md border border-neutral-200 px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-50"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="destructive"
             onClick={() => {
               onClearAll();
               setShowClearConfirm(false);
             }}
-            className="rounded-md bg-danger-600 px-3 py-2 text-sm font-medium text-white hover:bg-danger-700"
           >
             Clear all
-          </button>
+          </Button>
         </ModalFooter>
       </Modal>
     </>

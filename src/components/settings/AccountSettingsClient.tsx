@@ -8,6 +8,13 @@ import {
   updateAccountProfileAction,
   type AuthActionState,
 } from "@/lib/actions/auth";
+import { Button } from "@/components/ui/Button";
+import {
+  FormField,
+  FormLabel,
+  FormInput,
+  FormError,
+} from "@/components/ui/form";
 
 interface AccountSettingsClientProps {
   email: string;
@@ -41,23 +48,17 @@ export default function AccountSettingsClient({
         action={profileAction}
         className="rounded-2xl border border-slate-200 bg-white p-6 space-y-5"
       >
-        <div>
-          <label
-            htmlFor="displayName"
-            className="mb-1 block text-sm font-medium text-slate-700"
-          >
-            Display name
-          </label>
-          <input
+        <FormField>
+          <FormLabel htmlFor="displayName" required>Display name</FormLabel>
+          <FormInput
             id="displayName"
             name="displayName"
             type="text"
             defaultValue={displayName}
             required
             maxLength={80}
-            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none ring-brand-200 transition focus:ring-2"
           />
-        </div>
+        </FormField>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
@@ -74,12 +75,7 @@ export default function AccountSettingsClient({
           </div>
         </div>
 
-        {profileState.error ? (
-          <p className="rounded-md bg-danger-50 px-3 py-2 text-sm text-danger-700">
-            {profileState.error}
-          </p>
-        ) : null}
-
+        <FormError message={profileState.error} />
         {profileState.success ? (
           <p className="rounded-md bg-success-50 px-3 py-2 text-sm text-success-700">
             {profileState.success}
@@ -87,13 +83,12 @@ export default function AccountSettingsClient({
         ) : null}
 
         <div className="flex flex-wrap gap-3">
-          <button
+          <Button
             type="submit"
-            disabled={isProfilePending}
-            className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
+            isLoading={isProfilePending}
           >
             {isProfilePending ? "Saving..." : "Save profile"}
-          </button>
+          </Button>
         </div>
       </form>
 
@@ -108,28 +103,18 @@ export default function AccountSettingsClient({
           </p>
         </div>
 
-        <div>
-          <label
-            htmlFor="email"
-            className="mb-1 block text-sm font-medium text-slate-700"
-          >
-            New email
-          </label>
-          <input
+        <FormField>
+          <FormLabel htmlFor="email" required>New email</FormLabel>
+          <FormInput
             id="email"
             name="email"
             type="email"
             defaultValue={email}
             required
-            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none ring-brand-200 transition focus:ring-2"
           />
-        </div>
+        </FormField>
 
-        {emailState.error ? (
-          <p className="rounded-md bg-danger-50 px-3 py-2 text-sm text-danger-700">
-            {emailState.error}
-          </p>
-        ) : null}
+        <FormError message={emailState.error} />
 
         {emailState.success ? (
           <p className="rounded-md bg-success-50 px-3 py-2 text-sm text-success-700">
@@ -137,13 +122,12 @@ export default function AccountSettingsClient({
           </p>
         ) : null}
 
-        <button
+        <Button
           type="submit"
-          disabled={isEmailPending}
-          className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
+          isLoading={isEmailPending}
         >
           {isEmailPending ? "Saving..." : "Update email"}
-        </button>
+        </Button>
       </form>
 
       <form
@@ -158,47 +142,31 @@ export default function AccountSettingsClient({
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label
-              htmlFor="password"
-              className="mb-1 block text-sm font-medium text-slate-700"
-            >
-              New password
-            </label>
-            <input
+          <FormField>
+            <FormLabel htmlFor="password" required>New password</FormLabel>
+            <FormInput
               id="password"
               name="password"
               type="password"
               minLength={8}
               required
               autoComplete="new-password"
-              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none ring-brand-200 transition focus:ring-2"
             />
-          </div>
-          <div>
-            <label
-              htmlFor="confirmPassword"
-              className="mb-1 block text-sm font-medium text-slate-700"
-            >
-              Confirm password
-            </label>
-            <input
+          </FormField>
+          <FormField>
+            <FormLabel htmlFor="confirmPassword" required>Confirm password</FormLabel>
+            <FormInput
               id="confirmPassword"
               name="confirmPassword"
               type="password"
               minLength={8}
               required
               autoComplete="new-password"
-              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none ring-brand-200 transition focus:ring-2"
             />
-          </div>
+          </FormField>
         </div>
 
-        {passwordState.error ? (
-          <p className="rounded-md bg-danger-50 px-3 py-2 text-sm text-danger-700">
-            {passwordState.error}
-          </p>
-        ) : null}
+        <FormError message={passwordState.error} />
 
         {passwordState.success ? (
           <p className="rounded-md bg-success-50 px-3 py-2 text-sm text-success-700">
@@ -206,22 +174,21 @@ export default function AccountSettingsClient({
           </p>
         ) : null}
 
-        <button
+        <Button
           type="submit"
-          disabled={isPasswordPending}
-          className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
+          isLoading={isPasswordPending}
         >
           {isPasswordPending ? "Saving..." : "Update password"}
-        </button>
+        </Button>
       </form>
 
       <form action={signOutAction}>
-        <button
+        <Button
           type="submit"
-          className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+          variant="outline"
         >
           Sign out
-        </button>
+        </Button>
       </form>
     </section>
   );

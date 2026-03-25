@@ -2,6 +2,7 @@
 
 import { CircleX, Search } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import { FormInput } from "@/components/ui/form";
 
 interface SearchInputProps {
   placeholder?: string;
@@ -44,12 +45,12 @@ export function SearchInput({
         size={16}
         className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500"
       />
-      <input
+      <FormInput
         type="text"
         placeholder={placeholder}
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        className="w-full rounded-lg bg-white border border-neutral-300 px-10 py-2 text-sm placeholder-neutral-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 transition"
+        className="pl-10 bg-white"
       />
       {value && (
         <button

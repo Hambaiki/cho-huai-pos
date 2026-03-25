@@ -19,6 +19,7 @@ import {
   updateMemberRoleAction,
 } from "@/lib/actions/settingsActions";
 import { StaffRemovalModal } from "@/components/settings/StaffRemovalModal";
+import { Button } from "@/components/ui/Button";
 import {
   Table,
   TableBody,
@@ -34,6 +35,13 @@ import {
   ModalFooter,
   ModalHeader,
 } from "@/components/ui/Modal";
+import {
+  FormField,
+  FormLabel,
+  FormInput,
+  FormSelect,
+  FormError,
+} from "@/components/ui/form";
 
 interface StaffManagementProps {
   staffMembers: StaffMember[];
@@ -44,14 +52,14 @@ interface StaffManagementProps {
 function InviteStaffButton() {
   const { pending } = useFormStatus();
   return (
-    <button
+    <Button
       type="submit"
       disabled={pending}
-      className="inline-flex items-center gap-2 rounded-md bg-brand-500 px-4 py-2 text-sm text-white hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
+      isLoading={pending}
+      icon={<UserPlus size={16} />}
     >
-      <UserPlus size={16} />
-      {pending ? "Inviting..." : "Send invite"}
-    </button>
+      Send invite
+    </Button>
   );
 }
 
@@ -191,14 +199,13 @@ export function StaffManagement({
             Staff Members
           </h2>
           {isOwnerOrManager && (
-            <button
+            <Button
               type="button"
               onClick={openInviteModal}
-              className="inline-flex items-center gap-2 rounded-md bg-brand-500 px-4 py-2 text-sm text-white hover:bg-brand-600"
+              icon={<UserPlus size={16} />}
             >
-              <UserPlus size={16} />
               Invite Staff
-            </button>
+            </Button>
           )}
         </div>
 
@@ -267,23 +274,27 @@ export function StaffManagement({
                       <TableCell className="text-right">
                         {member.role !== "owner" ? (
                           <div className="flex justify-end gap-3">
-                            <button
+                            <Button
                               type="button"
+                              variant="ghost"
+                              size="sm"
                               disabled={isMutating}
                               onClick={() => openRoleModal(member)}
-                              className="inline-flex items-center gap-1 text-xs text-brand-600 hover:text-brand-800 disabled:cursor-not-allowed disabled:opacity-60"
+                              className="h-auto px-0 text-xs text-brand-600 hover:text-brand-800"
                             >
                               Edit role
-                            </button>
-                            <button
+                            </Button>
+                            <Button
                               type="button"
+                              variant="ghost"
+                              size="sm"
                               disabled={isMutating}
                               onClick={() => openRemovalModal(member)}
-                              className="inline-flex items-center gap-1 text-xs text-danger-600 hover:text-danger-800 disabled:cursor-not-allowed disabled:opacity-60"
+                              icon={<UserMinus size={12} />}
+                              className="h-auto px-0 text-xs text-danger-600 hover:text-danger-800"
                             >
-                              <UserMinus size={12} />
                               Remove
-                            </button>
+                            </Button>
                           </div>
                         ) : null}
                       </TableCell>
@@ -304,71 +315,61 @@ export function StaffManagement({
         />
         <form action={handleInviteSubmit}>
           <ModalBody className="space-y-4">
-            <div>
-              <label className="mb-1 inline-flex items-center gap-2 text-sm font-medium text-neutral-700">
+            <FormField>
+              <FormLabel htmlFor="email" required>
                 <Mail size={16} className="text-neutral-500" />
                 Email
-              </label>
-              <input
+              </FormLabel>
+              <FormInput
+                id="email"
                 type="email"
                 name="email"
                 required
                 placeholder="staff@example.com"
-                className="w-full px-3 py-2 border border-neutral-200 rounded-md text-sm"
               />
               <p className="text-xs text-neutral-500 mt-1">
                 This email must already have an account.
               </p>
-            </div>
-            <div>
-              <label className="mb-1 inline-flex items-center gap-2 text-sm font-medium text-neutral-700">
+            </FormField>
+            <FormField>
+              <FormLabel htmlFor="role" required>
                 <Shield size={16} className="text-neutral-500" />
                 Role
-              </label>
-              <select
+              </FormLabel>
+              <FormSelect
+                id="role"
                 name="role"
                 defaultValue="cashier"
                 required
-                className="w-full px-3 py-2 border border-neutral-200 rounded-md text-sm bg-white"
               >
                 {isOwner && (
                   <option value="manager">Manager - Full store access</option>
                 )}
                 <option value="cashier">Cashier - Sales only</option>
                 <option value="viewer">Viewer - View only</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-1">
-                Note (optional)
-              </label>
-              <input
+              </FormSelect>
+            </FormField>
+            <FormField>
+              <FormLabel htmlFor="note">Note (optional)</FormLabel>
+              <FormInput
+                id="note"
                 type="text"
                 name="note"
                 placeholder="e.g. Weekend cashier"
                 maxLength={255}
-                className="w-full px-3 py-2 border border-neutral-200 rounded-md text-sm"
               />
-            </div>
+            </FormField>
             {actionState.data?.message && !actionState.error && (
               <p className="text-xs text-success-700 bg-success-50 p-2 rounded">
                 {actionState.data.message}
               </p>
             )}
-            {actionState.error && (
-              <p className="text-xs text-danger-700 bg-danger-50 p-2 rounded">
-                {actionState.error}
-              </p>
-            )}
+            <FormError message={actionState.error} />
           </ModalBody>
           <ModalFooter>
-            <button
-              type="button"
-              onClick={closeInviteModal}
-              className="px-4 py-2 text-neutral-600 border border-neutral-200 rounded-md hover:bg-neutral-50 text-sm"
-            >
+            <Button type="button" variant="outline" onClick={closeInviteModal}>
               Cancel
-            </button>
+            </Button>
             <InviteStaffButton />
           </ModalFooter>
         </form>
@@ -413,22 +414,12 @@ export function StaffManagement({
           </p>
         </ModalBody>
         <ModalFooter>
-          <button
-            type="button"
-            onClick={closeRoleModal}
-            disabled={isMutating}
-            className="rounded-md border border-neutral-200 px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-60"
-          >
+          <Button type="button" variant="outline" onClick={closeRoleModal} disabled={isMutating}>
             Cancel
-          </button>
-          <button
-            type="button"
-            onClick={confirmRoleChange}
-            disabled={isMutating}
-            className="inline-flex items-center gap-2 rounded-md bg-brand-600 px-3 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isMutating ? "Saving..." : "Save role"}
-          </button>
+          </Button>
+          <Button type="button" onClick={confirmRoleChange} disabled={isMutating} isLoading={isMutating}>
+            Save role
+          </Button>
         </ModalFooter>
       </Modal>
 

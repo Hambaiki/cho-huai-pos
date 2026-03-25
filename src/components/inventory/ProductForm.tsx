@@ -5,6 +5,13 @@ import { useRouter } from "next/navigation";
 import { createProductAction, updateProductAction } from "@/lib/actions/products";
 import { useStoreContext } from "@/lib/store-context";
 import { cn } from "@/lib/utils/cn";
+import {
+  FormField,
+  FormLabel,
+  FormInput,
+  FormSelect,
+  FormError,
+} from "@/components/ui/form";
 
 interface ProductFormProps {
   product?: {
@@ -73,80 +80,61 @@ export function ProductForm({ product, categories, onSuccess }: ProductFormProps
       action={formAction}
       className="space-y-6 rounded-lg border border-neutral-200 bg-white p-6"
     >
-      {state?.error && (
-        <div className="rounded-lg bg-danger-50 px-4 py-3 text-danger-700">
-          {state.error}
-        </div>
-      )}
+      <FormError message={state?.error} />
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-        <div>
-          <label htmlFor="name" className="block text-sm font-medium text-neutral-700">
-            Product Name *
-          </label>
-          <input
-            type="text"
+        <FormField>
+          <FormLabel htmlFor="name" required>
+            Product Name
+          </FormLabel>
+          <FormInput
             id="name"
             name="name"
             placeholder="e.g., Thai Iced Tea"
             defaultValue={product?.name || ""}
             required
-            className="mt-1 block w-full rounded-md border border-neutral-200 px-3 py-2 text-neutral-900 placeholder-neutral-400 outline-none transition focus:ring-2 focus:ring-brand-200"
           />
-        </div>
+        </FormField>
 
-        <div>
-          <label htmlFor="sku" className="block text-sm font-medium text-neutral-700">
-            SKU
-          </label>
-          <input
-            type="text"
+        <FormField>
+          <FormLabel htmlFor="sku">SKU</FormLabel>
+          <FormInput
             id="sku"
             name="sku"
             placeholder="e.g., THAI-ICE-001"
             defaultValue={product?.sku || ""}
-            className="mt-1 block w-full rounded-md border border-neutral-200 px-3 py-2 text-neutral-900 placeholder-neutral-400 outline-none transition focus:ring-2 focus:ring-brand-200"
           />
-        </div>
+        </FormField>
 
-        <div>
-          <label htmlFor="barcode" className="block text-sm font-medium text-neutral-700">
-            Barcode
-          </label>
-          <input
-            type="text"
+        <FormField>
+          <FormLabel htmlFor="barcode">Barcode</FormLabel>
+          <FormInput
             id="barcode"
             name="barcode"
             placeholder="e.g., 123456789"
             defaultValue={product?.barcode || ""}
-            className="mt-1 block w-full rounded-md border border-neutral-200 px-3 py-2 text-neutral-900 placeholder-neutral-400 outline-none transition focus:ring-2 focus:ring-brand-200"
           />
-        </div>
+        </FormField>
 
-        <div>
-          <label htmlFor="unit" className="block text-sm font-medium text-neutral-700">
-            Unit *
-          </label>
-          <input
-            type="text"
+        <FormField>
+          <FormLabel htmlFor="unit" required>
+            Unit
+          </FormLabel>
+          <FormInput
             id="unit"
             name="unit"
             placeholder="e.g., pc, cup, box"
             defaultValue={product?.unit || "pc"}
             required
-            className="mt-1 block w-full rounded-md border border-neutral-200 px-3 py-2 text-neutral-900 placeholder-neutral-400 outline-none transition focus:ring-2 focus:ring-brand-200"
           />
-        </div>
+        </FormField>
 
-        <div>
-          <label htmlFor="categoryId" className="block text-sm font-medium text-neutral-700">
-            Product Type
-          </label>
-          <select
+        <FormField>
+          <FormLabel htmlFor="categoryId">Product Type</FormLabel>
+          <FormSelect
             id="categoryId"
             name="categoryId"
             defaultValue={product?.categoryId || ""}
-            className="mt-1 block w-full rounded-md border border-neutral-200 px-3 py-2 text-neutral-900 outline-none transition focus:ring-2 focus:ring-brand-200"
           >
             <option value="">Uncategorized</option>
             {categories.map((category) => (
@@ -154,14 +142,14 @@ export function ProductForm({ product, categories, onSuccess }: ProductFormProps
                 {category.label}
               </option>
             ))}
-          </select>
-        </div>
+          </FormSelect>
+        </FormField>
 
-        <div>
-          <label htmlFor="price" className="block text-sm font-medium text-neutral-700">
-            Selling Price *
-          </label>
-          <input
+        <FormField>
+          <FormLabel htmlFor="price" required>
+            Selling Price
+          </FormLabel>
+          <FormInput
             type="number"
             id="price"
             name="price"
@@ -170,15 +158,12 @@ export function ProductForm({ product, categories, onSuccess }: ProductFormProps
             placeholder="0.00"
             defaultValue={product?.price || 0}
             required
-            className="mt-1 block w-full rounded-md border border-neutral-200 px-3 py-2 text-neutral-900 placeholder-neutral-400 outline-none transition focus:ring-2 focus:ring-brand-200"
           />
-        </div>
+        </FormField>
 
-        <div>
-          <label htmlFor="costPrice" className="block text-sm font-medium text-neutral-700">
-            Cost Price
-          </label>
-          <input
+        <FormField>
+          <FormLabel htmlFor="costPrice">Cost Price</FormLabel>
+          <FormInput
             type="number"
             id="costPrice"
             name="costPrice"
@@ -186,15 +171,14 @@ export function ProductForm({ product, categories, onSuccess }: ProductFormProps
             min="0"
             placeholder="0.00"
             defaultValue={product?.costPrice || ""}
-            className="mt-1 block w-full rounded-md border border-neutral-200 px-3 py-2 text-neutral-900 placeholder-neutral-400 outline-none transition focus:ring-2 focus:ring-brand-200"
           />
-        </div>
+        </FormField>
 
-        <div>
-          <label htmlFor="stockQty" className="block text-sm font-medium text-neutral-700">
-            Stock Qty *
-          </label>
-          <input
+        <FormField>
+          <FormLabel htmlFor="stockQty" required>
+            Stock Qty
+          </FormLabel>
+          <FormInput
             type="number"
             id="stockQty"
             name="stockQty"
@@ -203,15 +187,14 @@ export function ProductForm({ product, categories, onSuccess }: ProductFormProps
             placeholder="0"
             defaultValue={product?.stockQty || 0}
             required
-            className="mt-1 block w-full rounded-md border border-neutral-200 px-3 py-2 text-neutral-900 placeholder-neutral-400 outline-none transition focus:ring-2 focus:ring-brand-200"
           />
-        </div>
+        </FormField>
 
-        <div>
-          <label htmlFor="lowStockAt" className="block text-sm font-medium text-neutral-700">
-            Low Stock Alert At *
-          </label>
-          <input
+        <FormField>
+          <FormLabel htmlFor="lowStockAt" required>
+            Low Stock Alert At
+          </FormLabel>
+          <FormInput
             type="number"
             id="lowStockAt"
             name="lowStockAt"
@@ -220,9 +203,8 @@ export function ProductForm({ product, categories, onSuccess }: ProductFormProps
             placeholder="5"
             defaultValue={product?.lowStockAt || 5}
             required
-            className="mt-1 block w-full rounded-md border border-neutral-200 px-3 py-2 text-neutral-900 placeholder-neutral-400 outline-none transition focus:ring-2 focus:ring-brand-200"
           />
-        </div>
+        </FormField>
       </div>
 
       <div className="flex gap-3 pt-2">

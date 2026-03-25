@@ -8,6 +8,7 @@ import type { LucideIcon } from "lucide-react";
 import { signOutAction } from "@/lib/actions/auth";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils/cn";
+import { Button } from "@/components/ui/Button";
 
 export interface BreadcrumbItem {
   label: string;
@@ -66,7 +67,7 @@ export function AppSidebarLayout({
 
   const sidebarContent = (
     <div className="flex h-full flex-col">
-      <div className="flex h-14 items-center justify-start border-b border-neutral-200 px-4 py-4">
+      <div className="flex h-14 items-center justify-between border-b border-neutral-200 px-4 py-4">
         <div>
           <p className="text-lg font-black uppercase tracking-widest text-brand-700">
             Cho-Huai POS
@@ -75,14 +76,16 @@ export function AppSidebarLayout({
             {subtitle}
           </p>
         </div>
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="icon-sm"
           onClick={() => setSidebarOpen(false)}
-          className="rounded-md p-1.5 text-neutral-500 hover:bg-neutral-100 lg:hidden"
+          className="lg:hidden text-neutral-500"
           aria-label="Close menu"
         >
           <X size={18} />
-        </button>
+        </Button>
       </div>
 
       <nav className="flex-1 space-y-4 overflow-y-auto px-2 py-3">
@@ -142,14 +145,15 @@ export function AppSidebarLayout({
 
       <div className="border-t border-neutral-200 px-2 py-3">
         <form action={signOutAction}>
-          <button
+          <Button
             type="submit"
+            variant="ghost"
             onClick={() => setSidebarOpen(false)}
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900"
+            className="h-auto w-full justify-start gap-3 px-3 py-2.5 text-neutral-600 hover:text-neutral-900"
+            icon={<LogOut size={18} />}
           >
-            <LogOut size={18} />
             Logout
-          </button>
+          </Button>
         </form>
       </div>
     </div>
@@ -187,14 +191,16 @@ export function AppSidebarLayout({
 
       <div className="flex h-screen min-w-0 flex-1 flex-col pt-14 lg:pl-56">
         <header className="fixed inset-x-0 top-0 z-20 flex h-14 items-center gap-3 border-b border-neutral-200 bg-white px-6 lg:left-56 lg:right-0">
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon-sm"
             onClick={() => setSidebarOpen(true)}
-            className="rounded-md p-1.5 text-neutral-500 hover:bg-neutral-100 lg:hidden"
+            className="lg:hidden text-neutral-500"
             aria-label="Open menu"
           >
             <Menu size={20} />
-          </button>
+          </Button>
 
           {breadcrumbs.length > 0 && (
             <nav

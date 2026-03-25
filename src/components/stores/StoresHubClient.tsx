@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { ArrowRight, CirclePlus, ShieldAlert, Store } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { Button } from "@/components/ui/Button";
 import { CreateStoreModal } from "./CreateStoreModal";
 
 interface StoreItem {
@@ -39,14 +40,12 @@ export function StoresHubClient({ stores }: StoresHubClientProps) {
             : `${stores.length} store${stores.length > 1 ? "s" : ""} available`
         }
         actions={
-          <button
-            type="button"
+          <Button
+            icon={<CirclePlus size={16} />}
             onClick={() => setIsCreateOpen(true)}
-            className="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-700"
           >
-            <CirclePlus size={16} />
             New Store
-          </button>
+          </Button>
         }
       />
 
@@ -59,14 +58,14 @@ export function StoresHubClient({ stores }: StoresHubClientProps) {
           <p className="mt-1 text-sm text-neutral-500">
             Create your first store to start managing products and sales.
           </p>
-          <button
-            type="button"
+          <Button
+            size="lg"
+            icon={<CirclePlus size={16} />}
             onClick={() => setIsCreateOpen(true)}
-            className="mt-5 inline-flex items-center gap-2 rounded-lg bg-brand-600 px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-700"
+            className="mt-5"
           >
-            <CirclePlus size={16} />
             Create your first store
-          </button>
+          </Button>
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

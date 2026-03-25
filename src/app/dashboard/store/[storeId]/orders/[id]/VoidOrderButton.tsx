@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { voidOrderAction } from "@/lib/actions/orders";
 import { Modal, ModalHeader, ModalBody, ModalFooter } from "@/components/ui/Modal";
+import { Button } from "@/components/ui/Button";
 
 export default function VoidOrderButton({ orderId }: { orderId: string }) {
   const [open, setOpen] = useState(false);
@@ -30,12 +31,12 @@ export default function VoidOrderButton({ orderId }: { orderId: string }) {
 
   return (
     <>
-      <button
+      <Button
         onClick={() => setOpen(true)}
-        className="px-4 py-2 rounded-lg bg-danger-600 text-white text-sm font-medium hover:bg-danger-700 transition-colors"
+        variant="destructive"
       >
         Void Order
-      </button>
+      </Button>
 
       <Modal
         open={open}
@@ -72,23 +73,24 @@ export default function VoidOrderButton({ orderId }: { orderId: string }) {
           {error && <p className="mt-2 text-xs text-danger-600">{error}</p>}
         </ModalBody>
         <ModalFooter>
-          <button
+          <Button
             onClick={() => {
               setOpen(false);
               setError(null);
               setReason("");
             }}
-            className="px-4 py-2 rounded-lg border border-neutral-300 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+            variant="outline"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={handleVoid}
             disabled={isPending}
-            className="px-4 py-2 rounded-lg bg-danger-600 text-white text-sm font-medium hover:bg-danger-700 disabled:opacity-60 transition-colors"
+            variant="destructive"
+            isLoading={isPending}
           >
             {isPending ? "Voiding…" : "Confirm Void"}
-          </button>
+          </Button>
         </ModalFooter>
       </Modal>
     </>

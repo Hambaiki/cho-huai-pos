@@ -14,6 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/Table";
+import { Button } from "@/components/ui/Button";
 import RecordPaymentForm from "./RecordPaymentForm";
 import RecordGeneralPaymentForm from "./RecordGeneralPaymentForm";
 
@@ -67,13 +68,13 @@ export default function InstallmentList({
         <h2 className="font-semibold text-neutral-800">Installments</h2>
         {isManager && accountBalanceDue > 0 && (
           <div className="flex items-center justify-end">
-            <button
+            <Button
               type="button"
+              size="sm"
               onClick={() => setIsGeneralPaymentOpen(true)}
-              className="rounded-lg bg-brand-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-700"
             >
               Pay toward balance
-            </button>
+            </Button>
           </div>
         )}
       </div>
@@ -133,12 +134,15 @@ export default function InstallmentList({
                   </TableCell>
                   <TableCell className="text-right">
                     {isManager && inst.status === "pending" ? (
-                      <button
+                      <Button
                         onClick={() => setPayingId(inst.id)}
-                        className="text-xs font-medium text-brand-600 hover:text-brand-800"
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-auto px-0 text-xs text-brand-600 hover:text-brand-800"
                       >
                         Pay
-                      </button>
+                      </Button>
                     ) : (
                       <span className="text-xs text-neutral-400">-</span>
                     )}

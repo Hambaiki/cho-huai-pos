@@ -1,6 +1,7 @@
 "use client";
 
 import { Modal, ModalBody, ModalFooter, ModalHeader } from "@/components/ui/Modal";
+import { Button } from "@/components/ui/Button";
 
 interface StaffRemovalModalProps {
   open: boolean;
@@ -30,22 +31,23 @@ export function StaffRemovalModal({
         </p>
       </ModalBody>
       <ModalFooter>
-        <button
+        <Button
           type="button"
           onClick={onClose}
           disabled={isPending}
-          className="rounded-md border border-neutral-200 px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-60"
+          variant="outline"
         >
           Cancel
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
           onClick={onConfirm}
           disabled={isPending}
-          className="rounded-md bg-danger-600 px-3 py-2 text-sm font-medium text-white hover:bg-danger-700 disabled:cursor-not-allowed disabled:opacity-60"
+          variant="destructive"
+          isLoading={isPending}
         >
           {isPending ? "Removing..." : "Remove"}
-        </button>
+        </Button>
       </ModalFooter>
     </Modal>
   );

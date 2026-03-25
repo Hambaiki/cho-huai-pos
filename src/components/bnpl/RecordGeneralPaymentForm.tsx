@@ -5,7 +5,9 @@ import { recordGeneralBnplPaymentAction } from "@/lib/actions/bnpl";
 import { Numpad } from "@/components/pos/Numpad";
 import { QrPaymentScreen, type QrChannel } from "@/components/pos/QrPaymentScreen";
 import { Modal } from "@/components/ui/Modal";
+import { Button } from "@/components/ui/Button";
 import { formatCurrency, type CurrencyStore } from "@/lib/utils/currency";
+import { FormField, FormLabel, FormInput, FormError } from "@/components/ui/form";
 
 type PaymentMethod = "cash" | "qr_transfer";
 
@@ -102,13 +104,10 @@ export default function RecordGeneralPaymentForm({
       <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
         <div className="grid grid-cols-2 gap-2">
           {(["cash", "qr_transfer"] as const).map((method) => (
-            <button
-              className={`rounded-lg border px-3 py-2.5 text-xs font-medium transition ${
-                paymentMethod === method
-                  ? "border-brand-700 bg-brand-50 text-brand-700"
-                  : "border-border text-neutral-600 hover:bg-neutral-50"
-              }`}
+            <Button
               key={method}
+              variant={paymentMethod === method ? "active" : "outline"}
+              size="sm"
               onClick={() => {
                 setPaymentMethod(method);
                 if (method === "cash") {
@@ -118,7 +117,7 @@ export default function RecordGeneralPaymentForm({
               type="button"
             >
               {method === "cash" ? "Cash" : "QR Transfer"}
-            </button>
+            </Button>
           ))}
         </div>
 
@@ -128,18 +127,15 @@ export default function RecordGeneralPaymentForm({
               <p className="mb-1.5 text-xs font-medium text-neutral-500">Quick amounts</p>
               <div className="flex flex-wrap gap-2">
                 {quickAmounts.map((quickAmount) => (
-                  <button
+                  <Button
                     key={quickAmount}
                     type="button"
+                    variant={amountPaid === quickAmount ? "active" : "outline"}
+                    size="sm"
                     onClick={() => setNumpadValue(String(quickAmount))}
-                    className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
-                      amountPaid === quickAmount
-                        ? "border-brand-700 bg-brand-50 text-brand-700"
-                        : "border-border bg-white text-neutral-700 hover:bg-neutral-50"
-                    }`}
                   >
                     {formatCurrency(quickAmount, currency)}
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>
@@ -150,16 +146,18 @@ export default function RecordGeneralPaymentForm({
 
         {paymentMethod === "qr_transfer" && enabledChannels.length > 0 && (
           <div className="space-y-2">
-            <label className="block text-xs font-medium text-neutral-600">Amount paid</label>
-            <input
-              type="number"
-              min="0.01"
-              step="0.01"
-              max={maxAmount}
-              value={numpadValue}
-              onChange={(event) => setNumpadValue(event.target.value)}
-              className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
-            />
+            <FormField>
+              <FormLabel htmlFor="qrAmount">Amount paid</FormLabel>
+              <FormInput
+                id="qrAmount"
+                type="number"
+                min="0.01"
+                step="0.01"
+                max={maxAmount}
+                value={numpadValue}
+                onChange={(event) => setNumpadValue(event.target.value)}
+              />
+            </FormField>
 
             <p className="pt-2 text-xs font-medium text-neutral-600">Select channel</p>
             <div className="grid gap-2">
@@ -198,18 +196,18 @@ export default function RecordGeneralPaymentForm({
           </p>
         )}
 
-        <div>
-          <label className="mb-1 block text-sm font-medium text-neutral-700">Note</label>
-          <input
+        <FormField>
+          <FormLabel htmlFor="note">Note</FormLabel>
+          <FormInput
+            id="note"
             name="note"
             value={note}
             onChange={(event) => setNote(event.target.value)}
-            className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
             placeholder="Optional"
           />
-        </div>
+        </FormField>
 
-        {state.error && <p className="text-sm text-danger-600">{state.error}</p>}
+        <FormError message={state.error} />
       </div>
 
       <form action={formAction} className="border-t border-border px-5 py-4">

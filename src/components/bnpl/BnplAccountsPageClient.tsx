@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { BnplAccountCreateModal } from "@/components/bnpl/BnplAccountCreateModal";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { Button } from "@/components/ui/Button";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { FilterSelect } from "@/components/ui/FilterSelect";
 import { PaginationControls } from "@/components/ui/PaginationControls";
@@ -99,13 +100,11 @@ export function BnplAccountsPageClient({
         description="Buy-now-pay-later credit accounts"
         actions={
           isManager ? (
-            <button
-              type="button"
+            <Button
               onClick={() => setIsCreateOpen(true)}
-              className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-700"
             >
               + New Account
-            </button>
+            </Button>
           ) : null
         }
       />
@@ -173,13 +172,13 @@ export function BnplAccountsPageClient({
                     : "No BNPL accounts yet."}
                   {" "}
                   {isManager && totalItems === 0 && (
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
                       onClick={() => setIsCreateOpen(true)}
-                      className="text-brand-600 hover:underline"
                     >
                       Create the first account
-                    </button>
+                    </Button>
                   )}
                 </TableCell>
               </TableRow>

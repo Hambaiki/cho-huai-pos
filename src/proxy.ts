@@ -1,8 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
-import { createClient } from "@/lib/supabase/server";
 
 const authRoutes = ["/login", "/signup"];
+const publicRoutes = ["/confirm-email", "/maintenance"];
 const protectedRoutes = [
   "/access-pending",
   "/dashboard",
@@ -11,10 +11,11 @@ const protectedRoutes = [
 ];
 
 export async function proxy(request: NextRequest) {
-  const { response, user } = await updateSession(request);
+  const { response, user, supabase } = await updateSession(request);
   const { pathname } = request.nextUrl;
 
   const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
+  const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route));
   const isProtectedRoute = protectedRoutes.some((route) =>
     pathname.startsWith(route),
   );
@@ -27,7 +28,6 @@ export async function proxy(request: NextRequest) {
   }
 
   if (user) {
-    const supabase = await createClient();
     const { data } = await supabase
       .from("profiles")
       .select("is_suspended, is_super_admin")
@@ -40,6 +40,22 @@ export async function proxy(request: NextRequest) {
     } | null;
     const isSuspended = Boolean(profile?.is_suspended);
     const isSuperAdmin = Boolean(profile?.is_super_admin);
+
+    if (!isAuthRoute && !isPublicRoute) {
+      const { data: maintenanceSetting } = await supabase
+        .from("site_settings")
+        .select("value")
+        .eq("key", "maintenance_mode")
+        .maybeSingle();
+
+      const isMaintenanceMode = maintenanceSetting?.value === "true";
+      if (isMaintenanceMode && !isSuperAdmin && !pathname.startsWith("/maintenance")) {
+        const maintenanceUrl = request.nextUrl.clone();
+        maintenanceUrl.pathname = "/maintenance";
+        maintenanceUrl.searchParams.delete("next");
+        return NextResponse.redirect(maintenanceUrl);
+      }
+    }
 
     if (
       isSuspended &&
@@ -70,7 +86,6 @@ export async function proxy(request: NextRequest) {
 
   // Admin route — require is_super_admin flag
   if (user && pathname.startsWith("/admin")) {
-    const supabase = await createClient();
     const { data: profile } = await supabase
       .from("profiles")
       .select("is_super_admin")

@@ -15,7 +15,7 @@ export default async function AdminStoresPage() {
 
   const { data: stores } = await supabase
     .from("stores")
-    .select("id, name, currency_code, is_suspended, created_at")
+    .select("id, name, currency_code, is_suspended, staff_limit_override, created_at")
     .order("created_at", { ascending: false });
 
   return (

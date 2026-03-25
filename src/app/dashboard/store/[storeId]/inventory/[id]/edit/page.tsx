@@ -20,7 +20,7 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
 
   const { data: product, error } = await supabase
     .from("products")
-    .select("id, name, sku, barcode, price, cost_price, stock_qty, low_stock_at, unit, category_id")
+    .select("id, name, sku, barcode, image_url, price, cost_price, stock_qty, low_stock_at, unit, category_id")
     .eq("id", id)
     .single();
 
@@ -55,6 +55,7 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
           lowStockAt: product.low_stock_at,
           unit: product.unit,
           categoryId: product.category_id,
+          imageUrl: product.image_url,
         }}
         categories={categories}
       />

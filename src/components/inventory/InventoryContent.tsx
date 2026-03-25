@@ -7,6 +7,7 @@ import { ProductList } from "./ProductList";
 import { ProductFormModal } from "./ProductFormModal";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/Button";
+import { Plus } from "lucide-react";
 
 interface Product {
   id: string;
@@ -21,6 +22,7 @@ interface Product {
   isActive: boolean;
   categoryId: string | null;
   categoryName: string | null;
+  imageUrl: string | null;
 }
 
 interface CategoryOption {
@@ -81,10 +83,8 @@ export function InventoryContent({
         title="Inventory Management"
         description="Browse and manage products in your catalog"
         actions={
-          <Button
-            onClick={handleOpenNewProduct}
-          >
-            + New Product
+          <Button icon={<Plus size={16} />} onClick={handleOpenNewProduct}>
+            New Product
           </Button>
         }
       />
@@ -120,6 +120,7 @@ export function InventoryContent({
                 lowStockAt: selectedProduct.lowStockAt,
                 unit: selectedProduct.unit,
                 categoryId: selectedProduct.categoryId,
+                imageUrl: selectedProduct.imageUrl,
               }
             : undefined
         }

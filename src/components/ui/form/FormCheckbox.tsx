@@ -12,29 +12,31 @@ interface FormCheckboxProps
 const FormCheckbox = forwardRef<HTMLInputElement, FormCheckboxProps>(
   ({ className, label, disabled, ...props }, ref) => {
     return (
-      <label className="inline-flex items-center gap-3 cursor-pointer">
-        <div className="relative">
+      <label
+        className={cn(
+          "inline-flex items-center gap-3 cursor-pointer",
+          disabled && "cursor-not-allowed opacity-60",
+        )}
+      >
+        <div
+          className={cn(
+            "relative flex-shrink-0 w-5 h-5 rounded border-2 border-neutral-300 transition-colors",
+            "has-[input:focus-visible]:ring-2 has-[input:focus-visible]:ring-brand-200 has-[input:focus-visible]:ring-offset-1",
+            "has-[input:checked]:bg-brand-600 has-[input:checked]:border-brand-600",
+            className,
+          )}
+        >
           <input
             ref={ref}
             type="checkbox"
             disabled={disabled}
-            className="sr-only"
+            className="sr-only peer"
             {...props}
           />
-          <div
-            className={cn(
-              "w-5 h-5 rounded border-2 border-neutral-300 transition-colors",
-              "focus-within:ring-2 focus-within:ring-brand-200",
-              "disabled:bg-neutral-100 disabled:cursor-not-allowed",
-              "has-[input:checked]:bg-brand-600 has-[input:checked]:border-brand-600",
-              className,
-            )}
-          >
-            <Check
-              size={16}
-              className="w-full h-full p-0.5 text-white opacity-0 has-[input:checked]:opacity-100 transition-opacity pointer-events-none"
-            />
-          </div>
+          <Check
+            size={16}
+            className="absolute inset-0 w-full h-full p-0.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none"
+          />
         </div>
         {label && (
           <span className="text-sm font-medium text-neutral-900 select-none">

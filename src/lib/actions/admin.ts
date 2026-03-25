@@ -33,6 +33,40 @@ const setStoreSuspensionSchema = z.object({
     .pipe(z.boolean()),
 });
 
+const setStoreStaffLimitOverrideSchema = z.object({
+  storeId: z.string().uuid(),
+  staffLimitOverride: z
+    .string()
+    .trim()
+    .transform((value) => (value.length === 0 ? null : Number(value)))
+    .refine(
+      (value) =>
+        value === null ||
+        (Number.isInteger(value) && Number.isFinite(value) && value > 0),
+      {
+        message: "Staff limit must be a positive integer.",
+      },
+    )
+    .nullable(),
+});
+
+const setUserStoreLimitOverrideSchema = z.object({
+  userId: z.string().uuid(),
+  storeLimitOverride: z
+    .string()
+    .trim()
+    .transform((value) => (value.length === 0 ? null : Number(value)))
+    .refine(
+      (value) =>
+        value === null ||
+        (Number.isInteger(value) && Number.isFinite(value) && value > 0),
+      {
+        message: "Store limit must be a positive integer.",
+      },
+    )
+    .nullable(),
+});
+
 async function requireSuperAdminActor() {
   const supabase = await createClient();
   const {
@@ -185,4 +219,147 @@ export async function setStoreSuspensionAction(
   revalidatePath(`/dashboard/store/${parsed.data.storeId}`);
 
   return { ok: true };
+}
+
+export async function setStoreStaffLimitOverrideAction(
+  formData: FormData,
+): Promise<AdminActionResult> {
+  const parsed = setStoreStaffLimitOverrideSchema.safeParse({
+    storeId: formData.get("storeId"),
+    staffLimitOverride: formData.get("staffLimitOverride") ?? "",
+  });
+
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error:
+        parsed.error.issues[0]?.message ??
+        "Invalid staff limit override value.",
+    };
+  }
+
+  const { supabase, error } = await requireSuperAdminActor();
+
+  if (error) {
+    return { ok: false, error };
+  }
+
+  const { error: updateError } = await supabase
+    .from("stores")
+    .update({ staff_limit_override: parsed.data.staffLimitOverride })
+    .eq("id", parsed.data.storeId);
+
+  if (updateError) {
+    return { ok: false, error: "Unable to update staff limit override." };
+  }
+
+  revalidatePath("/admin/stores");
+  revalidatePath(`/dashboard/store/${parsed.data.storeId}/settings`);
+
+  return { ok: true };
+}
+
+export async function setUserStoreLimitOverrideAction(
+  formData: FormData,
+): Promise<AdminActionResult> {
+  const parsed = setUserStoreLimitOverrideSchema.safeParse({
+    userId: formData.get("userId"),
+    storeLimitOverride: formData.get("storeLimitOverride") ?? "",
+  });
+
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error:
+        parsed.error.issues[0]?.message ??
+        "Invalid store limit override value.",
+    };
+  }
+
+  const { supabase, error } = await requireSuperAdminActor();
+
+  if (error) {
+    return { ok: false, error };
+  }
+
+  const { error: updateError } = await supabase
+    .from("profiles")
+    .update({ store_limit_override: parsed.data.storeLimitOverride })
+    .eq("id", parsed.data.userId);
+
+  if (updateError) {
+    return { ok: false, error: "Unable to update store limit override." };
+  }
+
+  revalidatePath("/admin/users");
+  revalidatePath("/dashboard/stores");
+
+  return { ok: true };
+}
+
+// ─── Sitewide Settings ────────────────────────────────────────────────────────
+
+const updateSitewideSettingsSchema = z.object({
+  maintenanceMode: z
+    .string()
+    .transform((value) => value === "true")
+    .pipe(z.boolean()),
+  announcementText: z.string().max(1000).trim(),
+});
+
+export async function updateSitewideSettingsAction(
+  formData: FormData,
+): Promise<AdminActionResult> {
+  const parsed = updateSitewideSettingsSchema.safeParse({
+    maintenanceMode: formData.get("maintenanceMode"),
+    announcementText: formData.get("announcementText") ?? "",
+  });
+
+  if (!parsed.success) {
+    return { ok: false, error: "Invalid request." };
+  }
+
+  const { supabase, error } = await requireSuperAdminActor();
+
+  if (error) {
+    return { ok: false, error };
+  }
+
+  const updates = [
+    {
+      key: "maintenance_mode",
+      value: String(parsed.data.maintenanceMode),
+    },
+    {
+      key: "announcement_text",
+      value: parsed.data.announcementText,
+    },
+  ];
+
+  for (const update of updates) {
+    await supabase
+      .from("site_settings")
+      .update({ value: update.value, updated_at: new Date().toISOString() })
+      .eq("key", update.key);
+  }
+
+  revalidatePath("/admin/settings");
+  revalidatePath("/admin");
+  return { ok: true };
+}
+
+export async function getSitewideSettings() {
+  const supabase = await createClient();
+
+  const { data: settings } = await supabase
+    .from("site_settings")
+    .select("key, value")
+    .in("key", ["maintenance_mode", "announcement_text"]);
+
+  const settingsMap = new Map((settings ?? []).map((s) => [s.key, s.value]));
+
+  return {
+    maintenanceMode: settingsMap.get("maintenance_mode") === "true",
+    announcementText: settingsMap.get("announcement_text") ?? "",
+  };
 }

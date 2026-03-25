@@ -32,6 +32,7 @@ interface Product {
   isActive: boolean;
   categoryId: string | null;
   categoryName: string | null;
+  imageUrl: string | null;
 }
 
 interface CategoryOption {
@@ -206,11 +207,25 @@ export function ProductList({
               products.map((product) => (
                 <TableRow key={product.id} className="border-neutral-200">
                   <TableCell className="text-neutral-900">
-                    <div>
-                      <div className="font-medium">{product.name}</div>
-                      {product.barcode && (
-                        <div className="text-xs text-neutral-500">{product.barcode}</div>
+                    <div className="flex items-center gap-3">
+                      {product.imageUrl ? (
+                        <img
+                          src={product.imageUrl}
+                          alt={`${product.name} image`}
+                          className="h-10 w-10 rounded object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-10 w-10 items-center justify-center rounded bg-neutral-100 text-xs font-medium text-neutral-500">
+                          N/A
+                        </div>
                       )}
+
+                      <div>
+                        <div className="font-medium">{product.name}</div>
+                        {product.barcode && (
+                          <div className="text-xs text-neutral-500">{product.barcode}</div>
+                        )}
+                      </div>
                     </div>
                   </TableCell>
                   <TableCell className="text-neutral-600">{product.sku || "—"}</TableCell>

@@ -2,6 +2,7 @@
 
 import { useActionState, useRef } from "react";
 import { createProductAction, updateProductAction } from "@/lib/actions/products";
+import { compressImageForUpload } from "@/lib/utils/image-compression";
 import { useStoreContext } from "@/lib/store-context";
 import { Modal, ModalHeader, ModalBody, ModalFooter } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
@@ -24,6 +25,7 @@ interface Product {
   lowStockAt: number;
   unit: string;
   categoryId: string | null;
+  imageUrl: string | null;
 }
 
 interface ProductFormModalProps {
@@ -45,41 +47,32 @@ export function ProductFormModal({
   const isEdit = !!product;
   const formRef = useRef<HTMLFormElement>(null);
 
-  const handleSubmit = async (formData: FormData) => {
-    const data = {
-      name: formData.get("name") as string,
-      sku: (formData.get("sku") as string) || undefined,
-      barcode: (formData.get("barcode") as string) || undefined,
-      price: parseFloat(formData.get("price") as string),
-      costPrice: formData.get("costPrice")
-        ? parseFloat(formData.get("costPrice") as string)
-        : undefined,
-      stockQty: parseInt(formData.get("stockQty") as string, 10),
-      lowStockAt: parseInt(formData.get("lowStockAt") as string, 10),
-      unit: (formData.get("unit") as string) || "pc",
-      categoryId: (formData.get("categoryId") as string) || undefined,
-    };
-
-    if (isEdit) {
-      await updateProductAction(product!.id, data);
-    } else {
-      await createProductAction(store.storeId, data);
-    }
-  };
-
   const [state, formAction, isPending] = useActionState(
     async (
-      _prevState: { data: null; error: null },
+      _prevState: { data: null; error: string | null },
       formData: FormData,
     ) => {
-      await handleSubmit(formData);
+      const imageValue = formData.get("imageFile");
+      if (imageValue instanceof File && imageValue.size > 0) {
+        const compressedImage = await compressImageForUpload(imageValue);
+        formData.set("imageFile", compressedImage);
+      }
+
+      const result = isEdit
+        ? await updateProductAction(product!.id, formData)
+        : await createProductAction(store.storeId, formData);
+
+      if (result.error) {
+        return { data: null, error: result.error };
+      }
+
       if (onSuccess) {
         onSuccess();
       }
       onClose();
       return { data: null, error: null };
     },
-    { data: null, error: null },
+    { data: null, error: null as string | null },
   );
 
   return (
@@ -95,6 +88,35 @@ export function ProductFormModal({
           <FormError message={state?.error} />
 
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <FormField className="sm:col-span-2">
+              <FormLabel htmlFor="imageFile">Item Image</FormLabel>
+              <FormInput
+                id="imageFile"
+                name="imageFile"
+                type="file"
+                accept="image/*"
+              />
+              <p className="mt-1 text-xs text-neutral-500">Optional. Max file size 5MB.</p>
+
+              {product?.imageUrl ? (
+                <div className="mt-3 rounded-md border border-neutral-200 p-3">
+                  <img
+                    src={product.imageUrl}
+                    alt={`${product.name} image`}
+                    className="h-20 w-20 rounded object-cover"
+                  />
+                  <label className="mt-2 flex items-center gap-2 text-sm text-neutral-700">
+                    <input
+                      type="checkbox"
+                      name="removeImage"
+                      className="h-4 w-4 rounded border-neutral-300"
+                    />
+                    Remove current image
+                  </label>
+                </div>
+              ) : null}
+            </FormField>
+
             <FormField>
               <FormLabel htmlFor="name" required>
                 Product Name

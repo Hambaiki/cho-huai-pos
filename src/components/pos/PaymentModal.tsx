@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Search } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import { BnplAccountCreateModal } from "@/components/bnpl/BnplAccountCreateModal";
 import { Numpad } from "@/components/pos/Numpad";
 import {
@@ -217,7 +217,9 @@ export function PaymentModal({
                     key={quickAmount}
                     type="button"
                     onClick={() => setNumpadValue(String(quickAmount))}
-                    variant={amountTendered === quickAmount ? "active" : "outline"}
+                    variant={
+                      amountTendered === quickAmount ? "active" : "outline"
+                    }
                     size="sm"
                   >
                     {formatCurrency(quickAmount, currency)}
@@ -256,7 +258,9 @@ export function PaymentModal({
                   key={channel.id}
                   type="button"
                   onClick={() => setSelectedChannel(channel)}
-                  variant={selectedChannel?.id === channel.id ? "active" : "outline"}
+                  variant={
+                    selectedChannel?.id === channel.id ? "active" : "outline"
+                  }
                   className="justify-start"
                 >
                   <span className="font-medium">{channel.label}</span>
@@ -296,10 +300,11 @@ export function PaymentModal({
               {canCreateBnplAccount && (
                 <Button
                   type="button"
+                  icon={<Plus size={16} />}
                   onClick={() => setShowCreateBnplModal(true)}
                   variant="outline"
                 >
-                  <span className="whitespace-nowrap">+ Create account</span>
+                  <span className="whitespace-nowrap">Create account</span>
                 </Button>
               )}
             </div>
@@ -442,11 +447,7 @@ export function PaymentModal({
       </div>
 
       <div className="flex items-center justify-end gap-2 border-t border-border px-5 py-4">
-        <Button
-          variant="outline"
-          onClick={onClose}
-          type="button"
-        >
+        <Button variant="outline" onClick={onClose} type="button">
           Cancel
         </Button>
         {paymentMethod !== "qr_transfer" && (

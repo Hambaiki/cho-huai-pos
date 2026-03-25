@@ -16,3 +16,4 @@ export {
 } from "./Table";
 export { StatCard } from "./StatCard";
 export { Loader } from "./Loader";
+export { SectionCard } from "./SectionCard";

@@ -1,6 +1,12 @@
 "use client";
 
-import { ArrowLeft, LayoutDashboard, Store, Users } from "lucide-react";
+import {
+  ArrowLeft,
+  LayoutDashboard,
+  Settings,
+  Store,
+  Users,
+} from "lucide-react";
 import {
   AppSidebarLayout,
   type AppSidebarFooterLink,
@@ -19,6 +25,7 @@ const NAV_SECTIONS: AppSidebarNavSection[] = [
       },
       { href: "/admin/stores", label: "Stores", icon: Store },
       { href: "/admin/users", label: "Users", icon: Users },
+      { href: "/admin/settings", label: "Settings", icon: Settings },
     ],
   },
 ];
@@ -41,6 +48,12 @@ function getBreadcrumbs(pathname: string): BreadcrumbItem[] {
       { label: "Dashboard", href: "/dashboard" },
       { label: "Admin", href: "/admin" },
       { label: "Users" },
+    ];
+  if (pathname === "/admin/settings")
+    return [
+      { label: "Dashboard", href: "/dashboard" },
+      { label: "Admin", href: "/admin" },
+      { label: "Settings" },
     ];
   return [];
 }

@@ -28,7 +28,7 @@ export function PageHeader({
               href={backHref}
               className="flex items-center text-sm text-brand-600 hover:text-brand-800"
             >
-              <ChevronLeft className="inline -ml-1"/>
+              <ChevronLeft className="inline -ml-1" />
               {backLabel ?? "Back"}
             </Link>
           )}

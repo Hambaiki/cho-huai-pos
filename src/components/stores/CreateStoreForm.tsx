@@ -4,7 +4,7 @@ import { useActionState } from "react";
 import {
   createStoreAction,
   type CreateStoreActionState,
-} from "@/lib/actions/onboarding";
+} from "@/lib/actions/store";
 import { DEFAULT_CURRENCY } from "@/lib/utils/currency";
 import {
   FormField,

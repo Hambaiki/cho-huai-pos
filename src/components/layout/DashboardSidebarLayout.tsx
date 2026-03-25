@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { LayoutDashboard, Store, UserCog } from "lucide-react";
+import { LayoutDashboard, Shield, Store, UserCog } from "lucide-react";
 import {
   AppSidebarLayout,
   type AppSidebarNavSection,
@@ -11,8 +11,13 @@ import { createClient } from "@/lib/supabase/client";
 
 const BASE_NAV_SECTIONS: AppSidebarNavSection[] = [
   {
-    title: "Workspace",
     items: [
+      {
+        href: "/dashboard/",
+        label: "Overview",
+        icon: LayoutDashboard,
+        exact: true,
+      },
       { href: "/dashboard/stores", label: "Stores", icon: Store, exact: true },
     ],
   },
@@ -26,7 +31,7 @@ const BASE_NAV_SECTIONS: AppSidebarNavSection[] = [
 
 const SUPER_ADMIN_SECTION: AppSidebarNavSection = {
   title: "Administration",
-  items: [{ href: "/admin", label: "Super Admin", icon: LayoutDashboard }],
+  items: [{ href: "/admin", label: "Super Admin", icon: Shield }],
 };
 
 function getBreadcrumbs(pathname: string): BreadcrumbItem[] {

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { formatCurrency, type CurrencyStore } from "@/lib/utils/currency";
-import { Search } from "lucide-react";
+import { ImageOff, Search } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { FormInput } from "@/components/ui/form";
 import { cn } from "@/lib/utils/cn";
@@ -12,6 +12,7 @@ export interface PosProduct {
   name: string;
   price: number;
   stock_qty: number;
+  image_url?: string | null;
   category_id?: string | null;
   category_name?: string | null;
 }
@@ -200,7 +201,7 @@ export function ProductGrid({ products, currency, onAdd }: ProductGridProps) {
                   size="lg"
                   variant="outline"
                   className={cn(
-                    "flex flex-col items-start h-auto text-left p-4",
+                    "grid h-auto grid-cols-1 items-stretch gap-3 p-2.5 text-left",
                     "disabled:cursor-not-allowed disabled:opacity-50",
                     "transition cursor-pointer disabled:cursor-not-allowed",
                   )}
@@ -209,18 +210,50 @@ export function ProductGrid({ products, currency, onAdd }: ProductGridProps) {
                   onClick={() => onAdd(product)}
                   type="button"
                 >
-                  <p className="text-sm font-semibold text-neutral-900">
-                    {product.name}
-                  </p>
-                  <p className="mt-1 text-sm text-neutral-700">
-                    {formatCurrency(product.price, currency)}
-                  </p>
-                  <p className="mt-2 text-xs text-neutral-500">
-                    Stock: {product.stock_qty}
-                  </p>
-                  <p className="mt-3 text-sm font-medium text-brand-700">
-                    {outOfStock ? "Out of stock" : "+ Tap to add"}
-                  </p>
+                  <div className="h-32 w-full overflow-hidden rounded-md border border-neutral-200 bg-neutral-50">
+                    {product.image_url ? (
+                      <div
+                        className="h-full w-full bg-contain bg-center bg-no-repeat"
+                        style={{ backgroundImage: `url(${product.image_url})` }}
+                      />
+                    ) : (
+                      <div className="flex flex-col h-full w-full items-center justify-center text-xs font-medium text-neutral-500">
+                        <ImageOff size={24} />
+                        No image
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex min-w-0 flex-col justify-between gap-1">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-neutral-900">
+                        {product.name}
+                      </p>
+                      <p className="truncate text-xs text-neutral-500">
+                        {product.category_name ?? "Uncategorized"}
+                      </p>
+                    </div>
+
+                    <p className="text-sm font-semibold text-neutral-800">
+                      {formatCurrency(product.price, currency)}
+                    </p>
+
+                    <div className="flex items-center justify-between gap-2">
+                      <span
+                        className={cn(
+                          "rounded-full px-2 py-0.5 text-[11px] font-medium",
+                          outOfStock
+                            ? "bg-danger-100 text-danger-700"
+                            : "bg-success-100 text-success-700",
+                        )}
+                      >
+                        Stock {product.stock_qty}
+                      </span>
+                      <span className="text-xs font-medium text-brand-700">
+                        {outOfStock ? "Out of stock" : "Add to cart"}
+                      </span>
+                    </div>
+                  </div>
                 </Button>
               );
             })}

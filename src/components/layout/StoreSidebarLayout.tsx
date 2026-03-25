@@ -5,7 +5,7 @@ import {
   BarChart2,
   ClipboardList,
   CreditCard,
-  Info,
+  Home,
   Package,
   Settings,
   ShoppingCart,
@@ -20,12 +20,11 @@ import {
 
 const NAV_SECTIONS: AppSidebarNavSection[] = [
   {
-    title: "Overview",
     items: [
       {
         href: "/dashboard",
-        label: "Overview",
-        icon: Info,
+        label: "Store Overview",
+        icon: Home,
         exact: true,
       },
       { href: "/reports", label: "Reports", icon: BarChart2 },

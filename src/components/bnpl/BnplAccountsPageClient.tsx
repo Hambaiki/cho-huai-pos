@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/Table";
 import { formatCurrency, type CurrencyStore } from "@/lib/utils/currency";
 import type { BnplAccountSummary } from "@/lib/types/bnpl";
+import { Plus } from "lucide-react";
 
 const STATUS_CLASSES: Record<string, string> = {
   active: "bg-success-100 text-success-700",
@@ -101,9 +102,10 @@ export function BnplAccountsPageClient({
         actions={
           isManager ? (
             <Button
+              icon={<Plus size={16} />}
               onClick={() => setIsCreateOpen(true)}
             >
-              + New Account
+              New Account
             </Button>
           ) : null
         }
@@ -166,11 +168,13 @@ export function BnplAccountsPageClient({
           <TableBody>
             {accounts.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="py-12 text-center text-neutral-400">
+                <TableCell
+                  colSpan={6}
+                  className="py-12 text-center text-neutral-400"
+                >
                   {hasFilters
                     ? "No BNPL accounts match your filters."
-                    : "No BNPL accounts yet."}
-                  {" "}
+                    : "No BNPL accounts yet."}{" "}
                   {isManager && totalItems === 0 && (
                     <Button
                       type="button"
@@ -188,7 +192,9 @@ export function BnplAccountsPageClient({
                   <TableCell className="font-medium text-neutral-900">
                     {account.customer_name}
                   </TableCell>
-                  <TableCell className="text-neutral-500">{account.phone ?? "—"}</TableCell>
+                  <TableCell className="text-neutral-500">
+                    {account.phone ?? "—"}
+                  </TableCell>
                   <TableCell className="text-right text-neutral-700">
                     {formatCurrency(Number(account.credit_limit), currency)}
                   </TableCell>
@@ -198,7 +204,8 @@ export function BnplAccountsPageClient({
                   <TableCell>
                     <span
                       className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${
-                        STATUS_CLASSES[account.status] ?? "bg-neutral-100 text-neutral-600"
+                        STATUS_CLASSES[account.status] ??
+                        "bg-neutral-100 text-neutral-600"
                       }`}
                     >
                       {account.status}

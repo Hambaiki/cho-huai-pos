@@ -61,7 +61,7 @@ export function PosTerminal({
   );
 
   return (
-    <section className="grid gap-4 lg:h-full lg:grid-cols-[1.35fr_0.9fr]">
+    <section className="grid gap-4 lg:h-full lg:grid-cols-[1.55fr_0.7fr]">
       <div className="flex min-h-0 flex-col space-y-3">
         <PageHeader title="POS Terminal" />
         <ProductGrid

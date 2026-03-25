@@ -20,6 +20,7 @@ type ProductRow = {
   name: string;
   sku: string | null;
   barcode: string | null;
+  image_url: string | null;
   price: number;
   cost_price: number | null;
   stock_qty: number;
@@ -98,6 +99,7 @@ export default async function InventoryPage({
     name: p.name,
     sku: p.sku,
     barcode: p.barcode,
+    imageUrl: p.image_url,
     price: p.price,
     costPrice: p.cost_price,
     stockQty: p.stock_qty,

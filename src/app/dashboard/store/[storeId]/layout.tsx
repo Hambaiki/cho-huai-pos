@@ -6,6 +6,7 @@ import {
   type StoreContextValue,
 } from "@/lib/store-context";
 import { StoreSidebarLayout } from "@/components/layout/StoreSidebarLayout";
+import { StoreSuspendedScreen } from "@/components/stores/StoreSuspendedScreen";
 
 type MembershipRow = {
   role: MemberRole;
@@ -52,7 +53,7 @@ export default async function StoreScopedLayout({
   }
 
   if (membership.stores.is_suspended) {
-    redirect("/dashboard/stores");
+    return <StoreSuspendedScreen storeName={membership.stores.name} />;
   }
 
   const contextValue: StoreContextValue = {

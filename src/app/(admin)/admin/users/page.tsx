@@ -15,7 +15,7 @@ export default async function AdminUsersPage() {
 
   const { data: profiles } = await supabase
     .from("profiles")
-    .select("id, display_name, is_super_admin, is_suspended, created_at")
+    .select("id, display_name, is_super_admin, is_suspended, store_limit_override, created_at")
     .order("created_at", { ascending: false });
 
   return (

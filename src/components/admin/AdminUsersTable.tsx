@@ -1,18 +1,14 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import {
   BadgeCheck,
   Crown,
   ShieldAlert,
   ShieldCheck,
   ShieldX,
+  Store,
 } from "lucide-react";
-import {
-  setUserSuperAdminAction,
-  setUserSuspensionAction,
-} from "@/lib/actions/admin";
 import {
   Table,
   TableBody,
@@ -22,33 +18,19 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/Table";
-import {
-  Modal,
-  ModalBody,
-  ModalFooter,
-  ModalHeader,
-} from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
+import { SuspendUserModal } from "./SuspendUserModal";
+import { SuperAdminModal } from "./SuperAdminModal";
+import { StoreLimitModal } from "./StoreLimitModal";
 
 type AdminProfile = {
   id: string;
   display_name: string | null;
   is_super_admin: boolean;
   is_suspended: boolean;
+  store_limit_override: number | null;
   created_at: string;
 };
-
-type PendingAction =
-  | {
-      kind: "suspend";
-      profile: AdminProfile;
-      nextValue: boolean;
-    }
-  | {
-      kind: "superadmin";
-      profile: AdminProfile;
-      nextValue: boolean;
-    };
 
 interface AdminUsersTableProps {
   profiles: AdminProfile[];
@@ -59,43 +41,37 @@ export function AdminUsersTable({
   profiles,
   currentUserId,
 }: AdminUsersTableProps) {
-  const router = useRouter();
-  const [pendingAction, setPendingAction] = useState<PendingAction | null>(
-    null,
-  );
-  const [error, setError] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
+  // Modal states
+  const [suspendModalOpen, setSuspendModalOpen] = useState(false);
+  const [suspendModalProfile, setSuspendModalProfile] =
+    useState<AdminProfile | null>(null);
+  const [suspendNextValue, setSuspendNextValue] = useState(false);
 
-  const closeModal = () => {
-    setPendingAction(null);
-    setError(null);
+  const [superAdminModalOpen, setSuperAdminModalOpen] = useState(false);
+  const [superAdminModalProfile, setSuperAdminModalProfile] =
+    useState<AdminProfile | null>(null);
+  const [superAdminNextValue, setSuperAdminNextValue] = useState(false);
+
+  const [storeLimitModalOpen, setStoreLimitModalOpen] = useState(false);
+  const [storeLimitModalProfile, setStoreLimitModalProfile] =
+    useState<AdminProfile | null>(null);
+
+  // Modal handlers
+  const openSuspendModal = (profile: AdminProfile, nextValue: boolean) => {
+    setSuspendModalProfile(profile);
+    setSuspendNextValue(nextValue);
+    setSuspendModalOpen(true);
   };
 
-  const runAction = () => {
-    if (!pendingAction) return;
+  const openSuperAdminModal = (profile: AdminProfile, nextValue: boolean) => {
+    setSuperAdminModalProfile(profile);
+    setSuperAdminNextValue(nextValue);
+    setSuperAdminModalOpen(true);
+  };
 
-    setError(null);
-    startTransition(async () => {
-      const formData = new FormData();
-      formData.set("userId", pendingAction.profile.id);
-
-      let result: { ok: boolean; error?: string };
-      if (pendingAction.kind === "suspend") {
-        formData.set("suspend", String(pendingAction.nextValue));
-        result = await setUserSuspensionAction(formData);
-      } else {
-        formData.set("makeSuperAdmin", String(pendingAction.nextValue));
-        result = await setUserSuperAdminAction(formData);
-      }
-
-      if (!result.ok) {
-        setError(result.error ?? "Unable to complete this action.");
-        return;
-      }
-
-      closeModal();
-      router.refresh();
-    });
+  const openStoreLimitModal = (profile: AdminProfile) => {
+    setStoreLimitModalProfile(profile);
+    setStoreLimitModalOpen(true);
   };
 
   return (
@@ -106,6 +82,7 @@ export function AdminUsersTable({
             <TableRow className="hover:bg-transparent">
               <TableHead>Display Name</TableHead>
               <TableHead>Super Admin</TableHead>
+              <TableHead>Store Limit</TableHead>
               <TableHead>Access</TableHead>
               <TableHead>Joined</TableHead>
               <TableHead className="text-right">Actions</TableHead>
@@ -115,7 +92,7 @@ export function AdminUsersTable({
             {profiles.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={5}
+                  colSpan={6}
                   className="py-10 text-center text-neutral-500"
                 >
                   No users yet.
@@ -141,6 +118,16 @@ export function AdminUsersTable({
                       )}
                     </TableCell>
                     <TableCell>
+                      {profile.store_limit_override ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700">
+                          <Store size={12} />
+                          {profile.store_limit_override}
+                        </span>
+                      ) : (
+                        <span className="text-neutral-500">Default</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
                       {profile.is_super_admin ? (
                         <span className="inline-flex items-center gap-1 text-neutral-500">
                           <BadgeCheck size={14} />
@@ -163,19 +150,26 @@ export function AdminUsersTable({
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
+                        {!profile.is_super_admin && (
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => openStoreLimitModal(profile)}
+                            icon={<Store size={12} />}
+                          >
+                            {profile.store_limit_override
+                              ? "Edit Limit"
+                              : "Set Limit"}
+                          </Button>
+                        )}
                         {profile.is_super_admin ? (
                           <Button
                             type="button"
                             variant="secondary"
                             size="sm"
                             disabled={isSelf}
-                            onClick={() =>
-                              setPendingAction({
-                                kind: "superadmin",
-                                profile,
-                                nextValue: false,
-                              })
-                            }
+                            onClick={() => openSuperAdminModal(profile, false)}
                             icon={<ShieldX size={12} />}
                           >
                             Revoke Admin
@@ -185,13 +179,7 @@ export function AdminUsersTable({
                             type="button"
                             variant="secondary"
                             size="sm"
-                            onClick={() =>
-                              setPendingAction({
-                                kind: "superadmin",
-                                profile,
-                                nextValue: true,
-                              })
-                            }
+                            onClick={() => openSuperAdminModal(profile, true)}
                             icon={<Crown size={12} />}
                           >
                             Make Admin
@@ -206,11 +194,7 @@ export function AdminUsersTable({
                             }
                             size="sm"
                             onClick={() =>
-                              setPendingAction({
-                                kind: "suspend",
-                                profile,
-                                nextValue: !profile.is_suspended,
-                              })
+                              openSuspendModal(profile, !profile.is_suspended)
                             }
                             icon={
                               profile.is_suspended ? (
@@ -235,53 +219,43 @@ export function AdminUsersTable({
         </Table>
       </TableContainer>
 
-      <Modal open={Boolean(pendingAction)} onClose={closeModal} size="md">
-        <ModalHeader
-          title={
-            pendingAction?.kind === "suspend"
-              ? pendingAction.nextValue
-                ? "Suspend User"
-                : "Approve User Access"
-              : pendingAction?.nextValue
-                ? "Grant Super Admin"
-                : "Revoke Super Admin"
+      <SuspendUserModal
+        open={suspendModalOpen}
+        onClose={() => setSuspendModalOpen(false)}
+        profile={
+          suspendModalProfile || {
+            id: "",
+            display_name: "",
+            is_suspended: false,
           }
-          description={
-            pendingAction
-              ? `User: ${pendingAction.profile.display_name ?? pendingAction.profile.id.slice(0, 8)}`
-              : undefined
+        }
+        nextValue={suspendNextValue}
+      />
+
+      <SuperAdminModal
+        open={superAdminModalOpen}
+        onClose={() => setSuperAdminModalOpen(false)}
+        profile={
+          superAdminModalProfile || {
+            id: "",
+            display_name: "",
+            is_super_admin: false,
           }
-          onClose={closeModal}
-        />
-        <ModalBody>
-          <p className="text-sm text-neutral-600">
-            {pendingAction?.kind === "suspend"
-              ? pendingAction.nextValue
-                ? "This user will be redirected to Access Pending and blocked from normal app routes."
-                : "This user will regain access to the application."
-              : pendingAction?.nextValue
-                ? "This user will gain access to all superadmin routes and actions."
-                : "This user will lose superadmin access and admin route privileges."}
-          </p>
-          {error && <p className="mt-3 text-sm text-danger-700">{error}</p>}
-        </ModalBody>
-        <ModalFooter>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={closeModal}
-          >
-            Cancel
-          </Button>
-          <Button
-            type="button"
-            isLoading={isPending}
-            onClick={runAction}
-          >
-            {isPending ? "Saving..." : "Confirm"}
-          </Button>
-        </ModalFooter>
-      </Modal>
+        }
+        nextValue={superAdminNextValue}
+      />
+
+      <StoreLimitModal
+        open={storeLimitModalOpen}
+        onClose={() => setStoreLimitModalOpen(false)}
+        profile={
+          storeLimitModalProfile || {
+            id: "",
+            display_name: "",
+            store_limit_override: null,
+          }
+        }
+      />
     </>
   );
 }

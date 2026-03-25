@@ -48,6 +48,43 @@ export async function createStoreAction(
     return { error: "Please sign in again." };
   }
 
+  // Check store limit before creating
+  const { data: userProfile } = await supabase
+    .from("profiles")
+    .select("store_limit_override")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  // Get current store count
+  const { count: currentStoreCount } = await supabase
+    .from("stores")
+    .select("id", { count: "exact", head: true })
+    .eq("owner_id", user.id);
+
+  let effectiveLimit = 3; // Fallback
+
+  // Try to get default from site settings
+  const { data: settings } = await supabase
+    .from("site_settings")
+    .select("value")
+    .eq("key", "default_store_limit_per_account")
+    .maybeSingle();
+
+  if (settings?.value && /^\d+$/.test(settings.value)) {
+    effectiveLimit = parseInt(settings.value, 10);
+  }
+
+  // Override wins if set
+  if (userProfile?.store_limit_override) {
+    effectiveLimit = userProfile.store_limit_override;
+  }
+
+  if ((currentStoreCount ?? 0) >= effectiveLimit) {
+    return {
+      error: `You have reached your store limit (${effectiveLimit} stores). Contact support to increase your limit.`,
+    };
+  }
+
   const { data: store, error: storeError } = await supabase
     .from("stores")
     .insert({

@@ -1,6 +1,7 @@
 "use server";
 
-import { z } from "zod";
+import { revalidatePath } from "next/cache";
+import sharp from "sharp";
 import { createClient } from "@/lib/supabase/server";
 import { productFormSchema } from "@/lib/validations/product";
 
@@ -9,14 +10,158 @@ export interface ProductActionResult {
   error: string | null;
 }
 
+const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
+const MAX_IMAGE_DIMENSION = 1600;
+const WEBP_QUALITY = 80;
+
+function parseProductInput(formData: FormData) {
+  return productFormSchema.safeParse({
+    name: formData.get("name") as string,
+    sku: (formData.get("sku") as string) || undefined,
+    barcode: (formData.get("barcode") as string) || undefined,
+    price: Number.parseFloat(formData.get("price") as string),
+    costPrice: formData.get("costPrice")
+      ? Number.parseFloat(formData.get("costPrice") as string)
+      : undefined,
+    stockQty: Number.parseInt(formData.get("stockQty") as string, 10),
+    lowStockAt: Number.parseInt(formData.get("lowStockAt") as string, 10),
+    unit: (formData.get("unit") as string) || "pc",
+    categoryId: (formData.get("categoryId") as string) || undefined,
+  });
+}
+
+function getImageInput(formData: FormData): {
+  imageFile: File | null;
+  removeImage: boolean;
+  error: string | null;
+} {
+  const fileValue = formData.get("imageFile");
+  const imageFile =
+    fileValue instanceof File && fileValue.size > 0 ? fileValue : null;
+  const removeImage = formData.get("removeImage") === "on";
+
+  if (imageFile && !imageFile.type.startsWith("image/")) {
+    return {
+      imageFile: null,
+      removeImage,
+      error: "Please upload a valid image file.",
+    };
+  }
+
+  if (imageFile && imageFile.size > MAX_IMAGE_SIZE_BYTES) {
+    return {
+      imageFile: null,
+      removeImage,
+      error: "Image must be 5MB or smaller.",
+    };
+  }
+
+  return { imageFile, removeImage, error: null };
+}
+
+async function uploadProductImage(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  storeId: string,
+  imageFile: File,
+) {
+  const bucket = process.env.SUPABASE_ASSETS_BUCKET ?? "app-assets";
+  const safeBaseName = imageFile.name
+    .replace(/\.[^/.]+$/, "")
+    .replace(/[^a-zA-Z0-9-]/g, "_");
+  const objectPath = `stores/${storeId}/products/${Date.now()}-${safeBaseName}.webp`;
+
+  let webpBuffer: Buffer;
+
+  try {
+    const inputBuffer = Buffer.from(await imageFile.arrayBuffer());
+    webpBuffer = await sharp(inputBuffer)
+      .rotate()
+      .resize({
+        width: MAX_IMAGE_DIMENSION,
+        height: MAX_IMAGE_DIMENSION,
+        fit: "inside",
+        withoutEnlargement: true,
+      })
+      .webp({ quality: WEBP_QUALITY })
+      .toBuffer();
+  } catch {
+    return {
+      data: null,
+      error: "Failed to optimize image. Please try another file.",
+    } as const;
+  }
+
+  const { error: uploadError } = await supabase.storage
+    .from(bucket)
+    .upload(objectPath, webpBuffer, {
+      upsert: false,
+      contentType: "image/webp",
+    });
+
+  if (uploadError) {
+    if (/bucket.*not found/i.test(uploadError.message)) {
+      return {
+        data: null,
+        error:
+          `Storage bucket "${bucket}" was not found. ` +
+          "Create it in Supabase Storage, then retry.",
+      } as const;
+    }
+
+    return {
+      data: null,
+      error: `Image upload failed: ${uploadError.message}`,
+    } as const;
+  }
+
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from(bucket).getPublicUrl(objectPath);
+
+  if (!publicUrl) {
+    return { data: null, error: "Unable to get uploaded image URL." } as const;
+  }
+
+  return { data: { bucket, objectPath, publicUrl }, error: null } as const;
+}
+
+function getObjectPathFromPublicUrl(publicUrl: string, bucket: string) {
+  try {
+    const url = new URL(publicUrl);
+    const marker = `/storage/v1/object/public/${bucket}/`;
+    const markerIndex = url.pathname.indexOf(marker);
+
+    if (markerIndex === -1) return null;
+
+    return decodeURIComponent(url.pathname.slice(markerIndex + marker.length));
+  } catch {
+    return null;
+  }
+}
+
+async function removeImageByPublicUrl(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  publicUrl: string,
+) {
+  const bucket = process.env.SUPABASE_ASSETS_BUCKET ?? "app-assets";
+  const objectPath = getObjectPathFromPublicUrl(publicUrl, bucket);
+  if (!objectPath) return;
+  await supabase.storage.from(bucket).remove([objectPath]);
+}
+
 export async function createProductAction(
   storeId: string,
-  input: z.infer<typeof productFormSchema>,
+  formData: FormData,
 ): Promise<ProductActionResult> {
-  const parsed = productFormSchema.safeParse(input);
+  const parsed = parseProductInput(formData);
 
   if (!parsed.success) {
     return { data: null, error: "Please check product details and try again." };
+  }
+
+  const { imageFile, error: imageError } = getImageInput(formData);
+  if (imageError) {
+    return { data: null, error: imageError };
   }
 
   const supabase = await createClient();
@@ -37,7 +182,29 @@ export async function createProductAction(
     .single();
 
   if (!membership || !["owner", "manager"].includes(membership.role)) {
-    return { data: null, error: "You do not have permission to create products." };
+    return {
+      data: null,
+      error: "You do not have permission to create products.",
+    };
+  }
+
+  let uploadedImage: {
+    bucket: string;
+    objectPath: string;
+    publicUrl: string;
+  } | null = null;
+
+  if (imageFile) {
+    const uploadResult = await uploadProductImage(supabase, storeId, imageFile);
+
+    if (uploadResult.error || !uploadResult.data) {
+      return {
+        data: null,
+        error: uploadResult.error ?? "Image upload failed.",
+      };
+    }
+
+    uploadedImage = uploadResult.data;
   }
 
   const { data: product, error } = await supabase
@@ -53,25 +220,38 @@ export async function createProductAction(
       stock_qty: parsed.data.stockQty,
       low_stock_at: parsed.data.lowStockAt,
       unit: parsed.data.unit,
+      image_url: uploadedImage?.publicUrl ?? null,
     })
     .select("id")
     .single();
 
   if (error || !product) {
+    if (uploadedImage) {
+      await supabase.storage
+        .from(uploadedImage.bucket)
+        .remove([uploadedImage.objectPath]);
+    }
     return { data: null, error: error?.message ?? "Failed to create product." };
   }
+
+  revalidatePath(`/dashboard/store/${storeId}/inventory`);
 
   return { data: { productId: product.id }, error: null };
 }
 
 export async function updateProductAction(
   productId: string,
-  input: z.infer<typeof productFormSchema>,
+  formData: FormData,
 ): Promise<ProductActionResult> {
-  const parsed = productFormSchema.safeParse(input);
+  const parsed = parseProductInput(formData);
 
   if (!parsed.success) {
     return { data: null, error: "Please check product details and try again." };
+  }
+
+  const { imageFile, removeImage, error: imageError } = getImageInput(formData);
+  if (imageError) {
+    return { data: null, error: imageError };
   }
 
   const supabase = await createClient();
@@ -86,7 +266,7 @@ export async function updateProductAction(
   // Verify product exists and user has permission
   const { data: product } = await supabase
     .from("products")
-    .select("store_id")
+    .select("store_id, image_url")
     .eq("id", productId)
     .single();
 
@@ -102,8 +282,41 @@ export async function updateProductAction(
     .single();
 
   if (!membership || !["owner", "manager"].includes(membership.role)) {
-    return { data: null, error: "You do not have permission to edit this product." };
+    return {
+      data: null,
+      error: "You do not have permission to edit this product.",
+    };
   }
+
+  let uploadedImage: {
+    bucket: string;
+    objectPath: string;
+    publicUrl: string;
+  } | null = null;
+
+  if (imageFile) {
+    const uploadResult = await uploadProductImage(
+      supabase,
+      product.store_id,
+      imageFile,
+    );
+
+    if (uploadResult.error || !uploadResult.data) {
+      return {
+        data: null,
+        error: uploadResult.error ?? "Image upload failed.",
+      };
+    }
+
+    uploadedImage = uploadResult.data;
+  }
+
+  const currentImageUrl = product.image_url;
+  const nextImageUrl = uploadedImage
+    ? uploadedImage.publicUrl
+    : removeImage
+      ? null
+      : currentImageUrl;
 
   const { error } = await supabase
     .from("products")
@@ -117,13 +330,27 @@ export async function updateProductAction(
       stock_qty: parsed.data.stockQty,
       low_stock_at: parsed.data.lowStockAt,
       unit: parsed.data.unit,
+      image_url: nextImageUrl,
       updated_at: new Date().toISOString(),
     })
     .eq("id", productId);
 
   if (error) {
+    if (uploadedImage) {
+      await supabase.storage
+        .from(uploadedImage.bucket)
+        .remove([uploadedImage.objectPath]);
+    }
     return { data: null, error: error.message };
   }
+
+  const shouldDeleteCurrentImage =
+    Boolean(currentImageUrl) && (Boolean(uploadedImage) || removeImage);
+  if (shouldDeleteCurrentImage && currentImageUrl) {
+    await removeImageByPublicUrl(supabase, currentImageUrl);
+  }
+
+  revalidatePath(`/dashboard/store/${product.store_id}/inventory`);
 
   return { data: { productId }, error: null };
 }
@@ -143,7 +370,7 @@ export async function deleteProductAction(productId: string): Promise<{
   // Verify product exists and user has permission
   const { data: product } = await supabase
     .from("products")
-    .select("store_id")
+    .select("store_id, image_url")
     .eq("id", productId)
     .single();
 
@@ -162,11 +389,20 @@ export async function deleteProductAction(productId: string): Promise<{
     return { error: "You do not have permission to delete this product." };
   }
 
-  const { error } = await supabase.from("products").delete().eq("id", productId);
+  const { error } = await supabase
+    .from("products")
+    .delete()
+    .eq("id", productId);
 
   if (error) {
     return { error: error.message };
   }
+
+  if (product.image_url) {
+    await removeImageByPublicUrl(supabase, product.image_url);
+  }
+
+  revalidatePath(`/dashboard/store/${product.store_id}/inventory`);
 
   return { error: null };
 }

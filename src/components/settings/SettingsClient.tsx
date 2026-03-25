@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/Modal";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/Button";
+import { SectionCard } from "@/components/ui/SectionCard";
 import {
   FormField,
   FormLabel,
@@ -33,6 +34,7 @@ import {
   FormError,
 } from "@/components/ui/form";
 import { cn } from "@/lib/utils/cn";
+import { Plus } from "lucide-react";
 
 interface StoreData {
   id: string;
@@ -141,10 +143,7 @@ function GeneralSettingsTab({
     <form action={formAction} className="space-y-6">
       <input type="hidden" name="storeId" value={storeId} />
 
-      <div className="bg-white border border-neutral-200 rounded-lg p-6 space-y-6">
-        <h2 className="text-lg font-semibold text-neutral-900">
-          Store Details
-        </h2>
+      <SectionCard title="Store Details" bodyClassName="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
           <FormField>
             <FormLabel htmlFor="name" required>
@@ -182,10 +181,9 @@ function GeneralSettingsTab({
             rows={2}
           />
         </FormField>
-      </div>
+      </SectionCard>
 
-      <div className="bg-white border border-neutral-200 rounded-lg p-6 space-y-4">
-        <h2 className="text-lg font-semibold text-neutral-900">Currency</h2>
+      <SectionCard title="Currency" bodyClassName="space-y-4 p-4">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <FormField>
             <FormLabel htmlFor="currencyCode">Code (ISO 4217)</FormLabel>
@@ -235,10 +233,9 @@ function GeneralSettingsTab({
             </FormSelect>
           </FormField>
         </div>
-      </div>
+      </SectionCard>
 
-      <div className="bg-white border border-neutral-200 rounded-lg p-6 space-y-4">
-        <h2 className="text-lg font-semibold text-neutral-900">Receipt</h2>
+      <SectionCard title="Receipt" bodyClassName="space-y-4 p-4">
         <div className="grid gap-4 sm:grid-cols-2">
           <FormField>
             <FormLabel htmlFor="receiptHeader">Header message</FormLabel>
@@ -263,7 +260,7 @@ function GeneralSettingsTab({
             />
           </FormField>
         </div>
-      </div>
+      </SectionCard>
 
       <FormError message={state.error} />
 
@@ -290,6 +287,7 @@ function CategoriesTab({
   role: string;
 }) {
   const canManage = ["owner", "manager"].includes(role);
+  const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
   const [createState, createAction, isCreating] = useActionState<
     SettingsActionResult,
     FormData
@@ -316,51 +314,77 @@ function CategoriesTab({
             Configure product types used in inventory forms and filters.
           </p>
         </div>
+        {canManage && (
+          <Button
+            icon={<Plus size={16} />}
+            onClick={() => setShowAddCategoryModal(true)}
+          >
+            Add category
+          </Button>
+        )}
       </div>
 
       {canManage && (
-        <form
-          action={createAction}
-          className="rounded-lg border border-neutral-200 bg-white p-4"
+        <Modal
+          open={showAddCategoryModal}
+          onClose={() => setShowAddCategoryModal(false)}
+          size="md"
         >
-          <input type="hidden" name="storeId" value={storeId} />
-          <div className="grid gap-3 sm:grid-cols-[1fr_130px_auto]">
-            <FormField>
-              <FormLabel htmlFor="categoryName">Name</FormLabel>
-              <FormInput
-                id="categoryName"
-                name="name"
-                required
-                maxLength={80}
-                placeholder="e.g. Beverages"
-              />
-            </FormField>
-            <FormField>
-              <FormLabel htmlFor="categorySortOrder">Sort Order</FormLabel>
-              <FormInput
-                id="categorySortOrder"
-                name="sortOrder"
-                type="number"
-                min={0}
-                max={9999}
-                defaultValue={nextSortOrder}
-              />
-            </FormField>
-            <div className="flex items-end">
+          <ModalHeader
+            title="Add Category"
+            description="Create a new category for inventory and product filtering."
+            onClose={() => setShowAddCategoryModal(false)}
+          />
+          <form action={createAction} className="space-y-0">
+            <ModalBody className="space-y-4">
+              <input type="hidden" name="storeId" value={storeId} />
+
+              <FormField>
+                <FormLabel htmlFor="categoryName" required>
+                  Name
+                </FormLabel>
+                <FormInput
+                  id="categoryName"
+                  name="name"
+                  required
+                  maxLength={80}
+                  placeholder="e.g. Beverages"
+                />
+              </FormField>
+
+              <FormField>
+                <FormLabel htmlFor="categorySortOrder">Sort Order</FormLabel>
+                <FormInput
+                  id="categorySortOrder"
+                  name="sortOrder"
+                  type="number"
+                  min={0}
+                  max={9999}
+                  defaultValue={nextSortOrder}
+                />
+              </FormField>
+
+              <FormError message={createState.error} />
+            </ModalBody>
+
+            <ModalFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowAddCategoryModal(false)}
+              >
+                Cancel
+              </Button>
               <Button
                 type="submit"
                 disabled={isCreating}
                 isLoading={isCreating}
-                className="w-full"
               >
-                Add Category
+                Add category
               </Button>
-            </div>
-          </div>
-          {createState.error && (
-            <p className="mt-3 text-xs text-danger-700">{createState.error}</p>
-          )}
-        </form>
+            </ModalFooter>
+          </form>
+        </Modal>
       )}
 
       <div className="overflow-hidden rounded-lg border border-neutral-200 bg-white">
@@ -495,7 +519,12 @@ function QrChannelsTab({
           </p>
         </div>
         {isOwner && (
-          <Button onClick={() => setShowAddModal(true)}>+ Add channel</Button>
+          <Button
+            icon={<Plus size={16} />}
+            onClick={() => setShowAddModal(true)}
+          >
+            Add channel
+          </Button>
         )}
       </div>
 

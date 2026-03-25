@@ -20,10 +20,25 @@ function getVisiblePages(currentPage: number, totalPages: number) {
   }
 
   if (currentPage >= totalPages - 2) {
-    return [1, "ellipsis-start", totalPages - 3, totalPages - 2, totalPages - 1, totalPages] as const;
+    return [
+      1,
+      "ellipsis-start",
+      totalPages - 3,
+      totalPages - 2,
+      totalPages - 1,
+      totalPages,
+    ] as const;
   }
 
-  return [1, "ellipsis-start", currentPage - 1, currentPage, currentPage + 1, "ellipsis-end", totalPages] as const;
+  return [
+    1,
+    "ellipsis-start",
+    currentPage - 1,
+    currentPage,
+    currentPage + 1,
+    "ellipsis-end",
+    totalPages,
+  ] as const;
 }
 
 export function PaginationControls({

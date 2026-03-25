@@ -9,6 +9,7 @@ interface PosProductRow {
   name: string;
   price: number;
   stock_qty: number;
+  image_url: string | null;
   category_id: string | null;
   categories: { name: string } | null;
 }
@@ -41,7 +42,7 @@ export default async function PosPage({
   const [productsResult, qrChannelsResult, bnplAccountsResult] = await Promise.all([
     supabase
       .from("products")
-      .select("id, name, price, stock_qty, category_id, categories(name)")
+      .select("id, name, price, stock_qty, image_url, category_id, categories(name)")
       .eq("store_id", storeId)
       .eq("is_active", true)
       .order("created_at", { ascending: false })
@@ -71,6 +72,7 @@ export default async function PosPage({
         name: product.name,
         price: product.price,
         stock_qty: product.stock_qty,
+        image_url: product.image_url,
         category_id: product.category_id,
         category_name: product.categories?.name ?? null,
       }))}

@@ -3,16 +3,14 @@
 import { cn } from "@/lib/utils/cn";
 
 interface FormHelpProps {
-  message?: string;
+  children?: React.ReactNode;
   className?: string;
 }
 
-export function FormHelp({ message, className }: FormHelpProps) {
-  if (!message) return null;
+export function FormHelp({ children, className }: FormHelpProps) {
+  if (!children) return null;
 
   return (
-    <p className={cn("text-xs text-neutral-500", className)}>
-      {message}
-    </p>
+    <p className={cn("text-xs text-neutral-500", className)}>{children}</p>
   );
 }

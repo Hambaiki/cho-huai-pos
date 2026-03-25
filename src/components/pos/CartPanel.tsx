@@ -5,7 +5,7 @@ import { formatCurrency } from "@/lib/utils/currency";
 import { type CurrencyStore } from "@/lib/utils/currency";
 import { type CartItem } from "@/lib/store/cart";
 import { cn } from "@/lib/utils/cn";
-import { Minus, Plus, ShoppingCart, Trash } from "lucide-react";
+import { ImageOff, Minus, Plus, ShoppingCart, Trash } from "lucide-react";
 import {
   Modal,
   ModalBody,
@@ -60,14 +60,30 @@ export function CartPanel({
                   key={item.productId}
                   className="mb-3 rounded-xl border border-border p-3 last:mb-0"
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <p className="text-sm font-medium text-neutral-900">
-                        {item.name}
-                      </p>
-                      <p className="text-xs text-neutral-500">
-                        {formatCurrency(item.unitPrice, currency)} each
-                      </p>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="h-14 w-14 shrink-0 overflow-hidden rounded-md border border-neutral-200 bg-neutral-50">
+                        {item.imageUrl ? (
+                          <div
+                            className="h-full w-full bg-contain bg-center bg-no-repeat"
+                            style={{ backgroundImage: `url(${item.imageUrl})` }}
+                          />
+                        ) : (
+                          <div className="flex flex-col h-full w-full items-center justify-center text-[10px] font-medium text-neutral-500">
+                            <ImageOff size={12} />
+                            No image
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-neutral-900">
+                          {item.name}
+                        </p>
+                        <p className="text-xs text-neutral-500">
+                          {formatCurrency(item.unitPrice, currency)} each
+                        </p>
+                      </div>
                     </div>
                     <Button
                       variant="ghost"

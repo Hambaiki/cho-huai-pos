@@ -70,6 +70,7 @@ export function PosTerminal({
             addItem({
               productId: product.id,
               name: product.name,
+              imageUrl: product.image_url,
               unitPrice: Number(product.price),
               stockQty: product.stock_qty,
             })

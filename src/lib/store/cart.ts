@@ -3,6 +3,7 @@ import { create } from "zustand";
 export interface CartItem {
   productId: string;
   name: string;
+  imageUrl?: string | null;
   unitPrice: number;
   stockQty: number;
   quantity: number;

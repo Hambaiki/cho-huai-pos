@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { StaffManagement } from "@/components/settings/StaffManagement";
-import { getStaffMembers, getStoreInviteCodes } from "@/lib/actions/settingsActions";
+import { getStaffMembers } from "@/lib/actions/settingsActions";
 import { PageHeader } from "@/components/ui/PageHeader";
 
 export const metadata = { title: "Team" };
@@ -29,10 +29,7 @@ export default async function TeamPage({
 
   if (!membership?.store_id) redirect("/dashboard");
 
-  const [staffMembers, inviteCodes] = await Promise.all([
-    getStaffMembers(storeId),
-    getStoreInviteCodes(storeId),
-  ]);
+  const staffMembers = await getStaffMembers(storeId);
 
   return (
     <section className="space-y-6">
@@ -41,7 +38,6 @@ export default async function TeamPage({
       <StaffManagement
         storeId={storeId}
         staffMembers={staffMembers}
-        inviteCodes={inviteCodes}
         role={membership.role as "owner" | "manager" | "cashier" | "viewer"}
       />
     </section>

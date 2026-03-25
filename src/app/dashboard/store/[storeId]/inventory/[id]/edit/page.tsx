@@ -28,6 +28,18 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
     redirect(`/dashboard/store/${storeId}/inventory`);
   }
 
+  const { data: categoriesData } = await supabase
+    .from("categories")
+    .select("id, name")
+    .eq("store_id", storeId)
+    .order("sort_order", { ascending: true })
+    .order("name", { ascending: true });
+
+  const categories = (categoriesData ?? []).map((category) => ({
+    value: category.id,
+    label: category.name,
+  }));
+
   return (
     <section className="space-y-6">
       <PageHeader title="Edit Product" description={product.name} />
@@ -44,6 +56,7 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
           unit: product.unit,
           categoryId: product.category_id,
         }}
+        categories={categories}
       />
     </section>
   );

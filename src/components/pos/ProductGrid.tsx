@@ -9,6 +9,8 @@ export interface PosProduct {
   name: string;
   price: number;
   stock_qty: number;
+  category_id?: string | null;
+  category_name?: string | null;
 }
 
 interface ProductGridProps {
@@ -19,6 +21,7 @@ interface ProductGridProps {
 
 export function ProductGrid({ products, currency, onAdd }: ProductGridProps) {
   const [query, setQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [stockFilter, setStockFilter] = useState<
     "all" | "in-stock" | "out-of-stock"
   >("all");
@@ -44,8 +47,41 @@ export function ProductGrid({ products, currency, onAdd }: ProductGridProps) {
 
   const normalizedQuery = query.trim().toLowerCase();
 
+  const categoryTabs = useMemo(() => {
+    const map = new Map<
+      string,
+      { value: string; label: string; count: number }
+    >();
+
+    products.forEach((product) => {
+      const value = product.category_id ?? "uncategorized";
+      const label = product.category_name ?? "Uncategorized";
+      const existing = map.get(value);
+
+      if (existing) {
+        existing.count += 1;
+      } else {
+        map.set(value, { value, label, count: 1 });
+      }
+    });
+
+    return [
+      { value: "all", label: "All", count: products.length },
+      ...Array.from(map.values()).sort((a, b) =>
+        a.label.localeCompare(b.label),
+      ),
+    ];
+  }, [products]);
+
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
+      const selectedCategory =
+        categoryFilter === "all"
+          ? true
+          : categoryFilter === "uncategorized"
+            ? !product.category_id
+            : product.category_id === categoryFilter;
+
       const matchesSearch =
         normalizedQuery.length === 0 ||
         product.name.toLowerCase().includes(normalizedQuery);
@@ -56,9 +92,9 @@ export function ProductGrid({ products, currency, onAdd }: ProductGridProps) {
         (stockFilter === "in-stock" && inStock) ||
         (stockFilter === "out-of-stock" && !inStock);
 
-      return matchesSearch && matchesStockFilter;
+      return selectedCategory && matchesSearch && matchesStockFilter;
     });
-  }, [normalizedQuery, products, stockFilter]);
+  }, [categoryFilter, normalizedQuery, products, stockFilter]);
 
   const inStockCount = useMemo(
     () => products.filter((product) => product.stock_qty > 0).length,
@@ -86,7 +122,7 @@ export function ProductGrid({ products, currency, onAdd }: ProductGridProps) {
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Search product name..."
-            className="min-w-55 pl-10 flex-1 rounded-lg border border-border bg-white px-3 py-2 text-sm text-neutral-900 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+            className="min-w-55 flex-1 rounded-lg border border-border bg-white px-3 py-2 pl-10 text-sm text-neutral-900 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
             aria-label="Search products"
           />
         </div>
@@ -108,7 +144,7 @@ export function ProductGrid({ products, currency, onAdd }: ProductGridProps) {
               : "border-border text-neutral-700 hover:bg-neutral-50"
           }`}
         >
-          All ({products.length})
+          Any stock ({products.length})
         </button>
         <button
           type="button"
@@ -132,6 +168,23 @@ export function ProductGrid({ products, currency, onAdd }: ProductGridProps) {
         >
           Out of stock ({products.length - inStockCount})
         </button>
+      </div>
+
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        {categoryTabs.map((tab) => (
+          <button
+            key={tab.value}
+            type="button"
+            onClick={() => setCategoryFilter(tab.value)}
+            className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+              categoryFilter === tab.value
+                ? "border-brand-500 bg-brand-50 text-brand-800"
+                : "border-border text-neutral-700 hover:bg-neutral-50"
+            }`}
+          >
+            {tab.label} ({tab.count})
+          </button>
+        ))}
       </div>
 
       <p className="my-4 text-xs text-neutral-500">
@@ -166,7 +219,7 @@ export function ProductGrid({ products, currency, onAdd }: ProductGridProps) {
                   Stock: {product.stock_qty}
                 </p>
                 <p className="mt-3 text-sm font-medium text-brand-700">
-                  {outOfStock ? "Out of stock" : "Tap to add"}
+                  {outOfStock ? "Out of stock" : "+ Tap to add"}
                 </p>
               </button>
             );

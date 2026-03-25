@@ -12,6 +12,7 @@ type MembershipRow = {
   stores: {
     id: string;
     name: string;
+    is_suspended: boolean;
     currency_code: string;
     currency_symbol: string;
     currency_decimals: number;
@@ -39,7 +40,7 @@ export default async function StoreScopedLayout({
   const { data: membership, error } = await supabase
     .from("store_members")
     .select(
-      "role, stores(id, name, currency_code, currency_symbol, currency_decimals, symbol_position)",
+      "role, stores(id, name, is_suspended, currency_code, currency_symbol, currency_decimals, symbol_position)",
     )
     .eq("user_id", user.id)
     .eq("store_id", storeId)
@@ -48,6 +49,10 @@ export default async function StoreScopedLayout({
 
   if (error || !membership?.stores) {
     redirect("/dashboard");
+  }
+
+  if (membership.stores.is_suspended) {
+    redirect("/dashboard/stores");
   }
 
   const contextValue: StoreContextValue = {

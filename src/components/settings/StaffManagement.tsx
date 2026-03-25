@@ -2,17 +2,23 @@
 
 import { useState, useTransition } from "react";
 import { useFormStatus } from "react-dom";
-import { useStoreContext } from "@/lib/store-context";
 import {
-  inviteStaffAction,
-  type StaffActionState,
-} from "@/lib/actions/staff";
+  BadgeCheck,
+  Mail,
+  Shield,
+  UserCog,
+  UserMinus,
+  UserPlus,
+  UserSquare2,
+} from "lucide-react";
+import { useStoreContext } from "@/lib/store-context";
+import { inviteStaffAction, type StaffActionState } from "@/lib/actions/staff";
 import {
   removeMemberAction,
-  revokeInviteCodeAction,
   type StaffMember,
-  type InviteCodeRow,
+  updateMemberRoleAction,
 } from "@/lib/actions/settingsActions";
+import { StaffRemovalModal } from "@/components/settings/StaffRemovalModal";
 import {
   Table,
   TableBody,
@@ -31,7 +37,6 @@ import {
 
 interface StaffManagementProps {
   staffMembers: StaffMember[];
-  inviteCodes: InviteCodeRow[];
   storeId: string;
   role: "owner" | "manager" | "cashier" | "viewer";
 }
@@ -42,16 +47,16 @@ function InviteStaffButton() {
     <button
       type="submit"
       disabled={pending}
-      className="px-4 py-2 bg-brand-500 text-white rounded-md hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+      className="inline-flex items-center gap-2 rounded-md bg-brand-500 px-4 py-2 text-sm text-white hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
     >
-      {pending ? "Creating…" : "Create invite code"}
+      <UserPlus size={16} />
+      {pending ? "Inviting..." : "Send invite"}
     </button>
   );
 }
 
 export function StaffManagement({
   staffMembers,
-  inviteCodes,
   storeId,
   role,
 }: StaffManagementProps) {
@@ -61,15 +66,23 @@ export function StaffManagement({
   const isOwner = role === "owner";
 
   const [isInviteOpen, setIsInviteOpen] = useState(false);
-  const [actionState, setActionState] = useState<StaffActionState>({ error: null });
-  const [inviteCode, setInviteCode] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
-  const [, startTransition] = useTransition();
+  const [actionState, setActionState] = useState<StaffActionState>({
+    error: null,
+  });
+  const [isMutating, startTransition] = useTransition();
+  const [selectedForRemoval, setSelectedForRemoval] =
+    useState<StaffMember | null>(null);
+  const [selectedForRoleEdit, setSelectedForRoleEdit] =
+    useState<StaffMember | null>(null);
+  const [pendingRole, setPendingRole] = useState<
+    "manager" | "cashier" | "viewer"
+  >("cashier");
+  const [memberActionError, setMemberActionError] = useState<string | null>(
+    null,
+  );
 
   function resetInviteFlow() {
-    setInviteCode(null);
     setActionState({ error: null });
-    setCopied(false);
   }
 
   function openInviteModal() {
@@ -82,22 +95,77 @@ export function StaffManagement({
     resetInviteFlow();
   }
 
+  function openRemovalModal(member: StaffMember) {
+    setMemberActionError(null);
+    setSelectedForRemoval(member);
+  }
+
+  function openRoleModal(member: StaffMember) {
+    if (member.role === "owner") return;
+    setMemberActionError(null);
+    setSelectedForRoleEdit(member);
+    setPendingRole(member.role as "manager" | "cashier" | "viewer");
+  }
+
+  function closeRemovalModal() {
+    if (isMutating) return;
+    setSelectedForRemoval(null);
+  }
+
+  function closeRoleModal() {
+    if (isMutating) return;
+    setSelectedForRoleEdit(null);
+  }
+
   async function handleInviteSubmit(formData: FormData) {
     if (!effectiveStoreId) return;
     formData.append("storeId", effectiveStoreId);
     const result = await inviteStaffAction(actionState, formData);
     setActionState(result);
-    if (!result.error && result.data?.code) {
-      setInviteCode(result.data.code);
-    }
   }
 
-  function copyToClipboard() {
-    if (inviteCode) {
-      navigator.clipboard.writeText(inviteCode);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+  function handleRoleChange(
+    memberId: string,
+    nextRole: "manager" | "cashier" | "viewer",
+  ) {
+    if (!effectiveStoreId) return;
+    setMemberActionError(null);
+    startTransition(async () => {
+      const result = await updateMemberRoleAction(
+        memberId,
+        effectiveStoreId,
+        nextRole,
+      );
+      if (result.error) setMemberActionError(result.error);
+    });
+  }
+
+  function confirmRoleChange() {
+    if (!selectedForRoleEdit) return;
+
+    if (selectedForRoleEdit.role === pendingRole) {
+      setSelectedForRoleEdit(null);
+      return;
     }
+
+    handleRoleChange(selectedForRoleEdit.id, pendingRole);
+    setSelectedForRoleEdit(null);
+  }
+
+  function confirmRemoveMember() {
+    if (!selectedForRemoval || !effectiveStoreId) return;
+    setMemberActionError(null);
+    startTransition(async () => {
+      const result = await removeMemberAction(
+        selectedForRemoval.id,
+        effectiveStoreId,
+      );
+      if (result.error) {
+        setMemberActionError(result.error);
+        return;
+      }
+      setSelectedForRemoval(null);
+    });
   }
 
   const roleColors: Record<string, string> = {
@@ -107,27 +175,29 @@ export function StaffManagement({
     viewer: "bg-neutral-100 text-neutral-800",
   };
 
-  // Active: not revoked, not expired, not fully used
-  const activeCodes = inviteCodes.filter(
-    (c) =>
-      !c.is_revoked &&
-      c.used_count < c.max_uses &&
-      (!c.expires_at || new Date(c.expires_at) > new Date()),
-  );
+  const roleIcons = {
+    owner: Shield,
+    manager: UserCog,
+    cashier: BadgeCheck,
+    viewer: UserSquare2,
+  } as const;
 
   return (
     <div className="space-y-6">
       {/* ── Staff list ── */}
       <div className="space-y-4">
         <div className="flex justify-between items-center">
-          <h2 className="text-xl font-semibold">Staff Members</h2>
+          <h2 className="inline-flex items-center gap-2 text-xl font-semibold">
+            Staff Members
+          </h2>
           {isOwnerOrManager && (
             <button
               type="button"
               onClick={openInviteModal}
-              className="px-4 py-2 bg-brand-500 text-white rounded-md hover:bg-brand-600 text-sm"
+              className="inline-flex items-center gap-2 rounded-md bg-brand-500 px-4 py-2 text-sm text-white hover:bg-brand-600"
             >
-              + Invite Staff
+              <UserPlus size={16} />
+              Invite Staff
             </button>
           )}
         </div>
@@ -139,26 +209,54 @@ export function StaffManagement({
                 <TableHead>Name</TableHead>
                 <TableHead>Role</TableHead>
                 <TableHead>Joined</TableHead>
-                {isOwner && <TableHead className="text-right">Actions</TableHead>}
+                {isOwner && (
+                  <TableHead className="text-right">Actions</TableHead>
+                )}
               </TableRow>
             </TableHeader>
             <TableBody>
+              {memberActionError && (
+                <TableRow>
+                  <TableCell colSpan={isOwner ? 4 : 3} className="py-3">
+                    <p className="rounded-md bg-danger-50 px-3 py-2 text-xs text-danger-700">
+                      {memberActionError}
+                    </p>
+                  </TableCell>
+                </TableRow>
+              )}
               {staffMembers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={isOwner ? 4 : 3} className="py-10 text-center text-neutral-400">
-                    No staff members yet.
+                  <TableCell
+                    colSpan={isOwner ? 4 : 3}
+                    className="py-10 text-center text-neutral-400"
+                  >
+                    <span className="inline-flex items-center gap-2">
+                      No staff members yet.
+                    </span>
                   </TableCell>
                 </TableRow>
               ) : (
                 staffMembers.map((member) => (
                   <TableRow key={member.id}>
-                    <TableCell className="font-medium text-neutral-900">{member.displayName}</TableCell>
+                    <TableCell className="font-medium text-neutral-900">
+                      <span className="inline-flex items-center gap-2">
+                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-100 text-xs font-semibold uppercase text-neutral-700">
+                          {member.displayName.slice(0, 1)}
+                        </span>
+                        <span>{member.displayName}</span>
+                      </span>
+                    </TableCell>
                     <TableCell>
                       <span
-                        className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
+                        className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${
                           roleColors[member.role]
                         }`}
                       >
+                        {(() => {
+                          const RoleIcon =
+                            roleIcons[member.role as keyof typeof roleIcons];
+                          return RoleIcon ? <RoleIcon size={12} /> : null;
+                        })()}
                         {member.role}
                       </span>
                     </TableCell>
@@ -167,21 +265,27 @@ export function StaffManagement({
                     </TableCell>
                     {isOwner && (
                       <TableCell className="text-right">
-                        {member.role !== "owner" && (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              startTransition(async () => {
-                                if (confirm(`Remove ${member.displayName} from this store?`)) {
-                                  await removeMemberAction(member.id, effectiveStoreId);
-                                }
-                              })
-                            }
-                            className="text-xs text-danger-600 hover:text-danger-800"
-                          >
-                            Remove
-                          </button>
-                        )}
+                        {member.role !== "owner" ? (
+                          <div className="flex justify-end gap-3">
+                            <button
+                              type="button"
+                              disabled={isMutating}
+                              onClick={() => openRoleModal(member)}
+                              className="inline-flex items-center gap-1 text-xs text-brand-600 hover:text-brand-800 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                              Edit role
+                            </button>
+                            <button
+                              type="button"
+                              disabled={isMutating}
+                              onClick={() => openRemovalModal(member)}
+                              className="inline-flex items-center gap-1 text-xs text-danger-600 hover:text-danger-800 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                              <UserMinus size={12} />
+                              Remove
+                            </button>
+                          </div>
+                        ) : null}
                       </TableCell>
                     )}
                   </TableRow>
@@ -195,153 +299,146 @@ export function StaffManagement({
       <Modal open={isInviteOpen} onClose={closeInviteModal} size="md">
         <ModalHeader
           title="Invite Staff"
-          description="Create a secure invite code for your team member."
+          description="Invite an existing account by email to join this store."
           onClose={closeInviteModal}
         />
-        {inviteCode ? (
-          <>
-            <ModalBody>
-              <div className="bg-success-50 border border-success-200 rounded p-4">
-                <p className="text-sm text-neutral-600 mb-2">Invite code created:</p>
-                <div className="flex items-center gap-2">
-                  <code className="bg-white px-3 py-2 rounded font-mono font-bold text-lg flex-1">
-                    {inviteCode}
-                  </code>
-                  <button
-                    type="button"
-                    onClick={copyToClipboard}
-                    className="px-3 py-2 bg-brand-500 text-white rounded hover:bg-brand-600 text-sm"
-                  >
-                    {copied ? "Copied!" : "Copy"}
-                  </button>
-                </div>
-                <p className="text-xs text-neutral-500 mt-2">
-                  Share this code with your staff member. Valid for 7 days.
-                </p>
-              </div>
-            </ModalBody>
-            <ModalFooter>
-              <button
-                type="button"
-                onClick={closeInviteModal}
-                className="px-4 py-2 text-neutral-600 border border-neutral-200 rounded-md hover:bg-neutral-50 text-sm"
+        <form action={handleInviteSubmit}>
+          <ModalBody className="space-y-4">
+            <div>
+              <label className="mb-1 inline-flex items-center gap-2 text-sm font-medium text-neutral-700">
+                <Mail size={16} className="text-neutral-500" />
+                Email
+              </label>
+              <input
+                type="email"
+                name="email"
+                required
+                placeholder="staff@example.com"
+                className="w-full px-3 py-2 border border-neutral-200 rounded-md text-sm"
+              />
+              <p className="text-xs text-neutral-500 mt-1">
+                This email must already have an account.
+              </p>
+            </div>
+            <div>
+              <label className="mb-1 inline-flex items-center gap-2 text-sm font-medium text-neutral-700">
+                <Shield size={16} className="text-neutral-500" />
+                Role
+              </label>
+              <select
+                name="role"
+                defaultValue="cashier"
+                required
+                className="w-full px-3 py-2 border border-neutral-200 rounded-md text-sm bg-white"
               >
-                Close
-              </button>
-            </ModalFooter>
-          </>
-        ) : (
-          <form action={handleInviteSubmit}>
-            <ModalBody className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-1">Role</label>
-                <select
-                  name="role"
-                  defaultValue="cashier"
-                  required
-                  className="w-full px-3 py-2 border border-neutral-200 rounded-md text-sm bg-white"
-                >
-                  {isOwner && (
-                    <option value="manager">Manager — Full store access</option>
-                  )}
-                  <option value="cashier">Cashier — Sales only</option>
-                  <option value="viewer">Viewer — View only</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-1">
-                  Expires in
-                </label>
-                <select
-                  name="expiresInDays"
-                  defaultValue="7"
-                  className="w-full px-3 py-2 border border-neutral-200 rounded-md text-sm bg-white"
-                >
-                  <option value="1">1 day</option>
-                  <option value="7">7 days</option>
-                  <option value="30">30 days</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-1">
-                  Note (optional)
-                </label>
-                <input
-                  type="text"
-                  name="note"
-                  placeholder="e.g. Weekend cashier"
-                  maxLength={255}
-                  className="w-full px-3 py-2 border border-neutral-200 rounded-md text-sm"
-                />
-              </div>
-              {actionState.error && (
-                <p className="text-xs text-danger-700 bg-danger-50 p-2 rounded">
-                  {actionState.error}
-                </p>
-              )}
-            </ModalBody>
-            <ModalFooter>
-              <button
-                type="button"
-                onClick={closeInviteModal}
-                className="px-4 py-2 text-neutral-600 border border-neutral-200 rounded-md hover:bg-neutral-50 text-sm"
-              >
-                Cancel
-              </button>
-              <InviteStaffButton />
-            </ModalFooter>
-          </form>
-        )}
+                {isOwner && (
+                  <option value="manager">Manager - Full store access</option>
+                )}
+                <option value="cashier">Cashier - Sales only</option>
+                <option value="viewer">Viewer - View only</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-neutral-700 mb-1">
+                Note (optional)
+              </label>
+              <input
+                type="text"
+                name="note"
+                placeholder="e.g. Weekend cashier"
+                maxLength={255}
+                className="w-full px-3 py-2 border border-neutral-200 rounded-md text-sm"
+              />
+            </div>
+            {actionState.data?.message && !actionState.error && (
+              <p className="text-xs text-success-700 bg-success-50 p-2 rounded">
+                {actionState.data.message}
+              </p>
+            )}
+            {actionState.error && (
+              <p className="text-xs text-danger-700 bg-danger-50 p-2 rounded">
+                {actionState.error}
+              </p>
+            )}
+          </ModalBody>
+          <ModalFooter>
+            <button
+              type="button"
+              onClick={closeInviteModal}
+              className="px-4 py-2 text-neutral-600 border border-neutral-200 rounded-md hover:bg-neutral-50 text-sm"
+            >
+              Cancel
+            </button>
+            <InviteStaffButton />
+          </ModalFooter>
+        </form>
       </Modal>
 
-      {/* ── Active invite codes ── */}
-      {isOwnerOrManager && activeCodes.length > 0 && (
-        <div className="space-y-3">
-          <h3 className="text-base font-semibold text-neutral-800">Active Invite Codes</h3>
-          <TableContainer>
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                  <TableHead>Code</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Expires</TableHead>
-                  <TableHead>Note</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {activeCodes.map((code) => (
-                  <TableRow key={code.id}>
-                    <TableCell>
-                      <code className="font-mono font-semibold text-neutral-900">{code.code}</code>
-                    </TableCell>
-                    <TableCell className="capitalize text-neutral-600">{code.role}</TableCell>
-                    <TableCell className="text-neutral-500 text-xs">
-                      {code.expires_at ? new Date(code.expires_at).toLocaleDateString() : "No expiry"}
-                    </TableCell>
-                    <TableCell className="text-neutral-400 text-xs">{code.note ?? "—"}</TableCell>
-                    <TableCell className="text-right">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          startTransition(async () => {
-                            if (confirm("Revoke this invite code?")) {
-                              await revokeInviteCodeAction(code.id, effectiveStoreId);
-                            }
-                          })
-                        }
-                        className="text-xs text-danger-600 hover:text-danger-800"
-                      >
-                        Revoke
-                      </button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </div>
-      )}
+      <Modal
+        open={Boolean(selectedForRoleEdit)}
+        onClose={closeRoleModal}
+        size="sm"
+      >
+        <ModalHeader
+          title="Edit staff role"
+          description={
+            selectedForRoleEdit
+              ? `Update access for ${selectedForRoleEdit.displayName}.`
+              : undefined
+          }
+          onClose={closeRoleModal}
+        />
+        <ModalBody className="space-y-4">
+          <div>
+            <label className="mb-2 inline-flex items-center gap-2 text-sm font-medium text-neutral-700">
+              Role
+            </label>
+            <select
+              value={pendingRole}
+              disabled={isMutating}
+              onChange={(e) =>
+                setPendingRole(
+                  e.target.value as "manager" | "cashier" | "viewer",
+                )
+              }
+              className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-800"
+            >
+              <option value="manager">Manager - Full store access</option>
+              <option value="cashier">Cashier - Sales only</option>
+              <option value="viewer">Viewer - View only</option>
+            </select>
+          </div>
+          <p className="text-xs text-neutral-500">
+            Changes take effect immediately after saving.
+          </p>
+        </ModalBody>
+        <ModalFooter>
+          <button
+            type="button"
+            onClick={closeRoleModal}
+            disabled={isMutating}
+            className="rounded-md border border-neutral-200 px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={confirmRoleChange}
+            disabled={isMutating}
+            className="inline-flex items-center gap-2 rounded-md bg-brand-600 px-3 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isMutating ? "Saving..." : "Save role"}
+          </button>
+        </ModalFooter>
+      </Modal>
+
+      <StaffRemovalModal
+        open={Boolean(selectedForRemoval)}
+        memberName={selectedForRemoval?.displayName ?? "this staff member"}
+        isPending={isMutating}
+        onClose={closeRemovalModal}
+        onConfirm={confirmRemoveMember}
+      />
     </div>
   );
 }

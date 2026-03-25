@@ -5,12 +5,18 @@ import {
   AppSidebarLayout,
   type AppSidebarFooterLink,
   type AppSidebarNavSection,
+  type BreadcrumbItem,
 } from "@/components/layout/AppSidebarLayout";
 
 const NAV_SECTIONS: AppSidebarNavSection[] = [
   {
     items: [
-      { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
+      {
+        href: "/admin",
+        label: "Dashboard",
+        icon: LayoutDashboard,
+        exact: true,
+      },
       { href: "/admin/stores", label: "Stores", icon: Store },
       { href: "/admin/users", label: "Users", icon: Users },
     ],
@@ -18,17 +24,25 @@ const NAV_SECTIONS: AppSidebarNavSection[] = [
 ];
 
 const FOOTER_LINKS: AppSidebarFooterLink[] = [
-  { href: "/dashboard", label: "Back to Store", icon: ArrowLeft },
+  { href: "/dashboard", label: "Back to dashboard", icon: ArrowLeft },
 ];
 
-const ROUTE_LABELS: Record<string, string> = {
-  "/admin": "Dashboard",
-  "/admin/stores": "Stores",
-  "/admin/users": "Users",
-};
-
-function getBreadcrumb(pathname: string): string {
-  return ROUTE_LABELS[pathname] ?? "";
+function getBreadcrumbs(pathname: string): BreadcrumbItem[] {
+  if (pathname === "/admin")
+    return [{ label: "Dashboard", href: "/dashboard" }, { label: "Admin" }];
+  if (pathname === "/admin/stores")
+    return [
+      { label: "Dashboard", href: "/dashboard" },
+      { label: "Admin", href: "/admin" },
+      { label: "Stores" },
+    ];
+  if (pathname === "/admin/users")
+    return [
+      { label: "Dashboard", href: "/dashboard" },
+      { label: "Admin", href: "/admin" },
+      { label: "Users" },
+    ];
+  return [];
 }
 
 interface AdminSidebarLayoutProps {
@@ -38,9 +52,8 @@ interface AdminSidebarLayoutProps {
 export function AdminSidebarLayout({ children }: AdminSidebarLayoutProps) {
   return (
     <AppSidebarLayout
-      subtitle="Super Admin"
       navSections={NAV_SECTIONS}
-      getBreadcrumb={getBreadcrumb}
+      getBreadcrumbs={getBreadcrumbs}
       footerLinks={FOOTER_LINKS}
     >
       {children}

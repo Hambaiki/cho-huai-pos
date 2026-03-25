@@ -197,7 +197,19 @@ const recordPaymentSchema = z.object({
   accountId: z.string().uuid(),
   storeId: z.string().uuid(),
   amountPaid: z.coerce.number().positive("Amount must be positive"),
-  paymentMethod: z.enum(["cash", "qr_transfer", "card"]),
+  paymentMethod: z.enum(["cash", "qr_transfer"]),
+  qrChannelId: z.string().uuid().optional(),
+  qrReference: z.string().trim().max(120).optional(),
+  note: z.string().optional(),
+});
+
+const recordGeneralPaymentSchema = z.object({
+  accountId: z.string().uuid(),
+  storeId: z.string().uuid(),
+  amountPaid: z.coerce.number().positive("Amount must be positive"),
+  paymentMethod: z.enum(["cash", "qr_transfer"]),
+  qrChannelId: z.string().uuid().optional(),
+  qrReference: z.string().trim().max(120).optional(),
   note: z.string().optional(),
 });
 
@@ -210,9 +222,26 @@ export async function recordBnplPaymentAction(
 
   if (!parsed.success) return { data: null, error: parsed.error.issues[0]?.message ?? "Invalid input." };
 
-  const { installmentId, accountId, storeId, amountPaid, paymentMethod, note } = parsed.data;
+  const {
+    installmentId,
+    accountId,
+    storeId,
+    amountPaid,
+    paymentMethod,
+    qrChannelId,
+    qrReference,
+    note,
+  } = parsed.data;
   const { supabase, user, error: authError } = await requireManagerInStore(storeId);
   if (authError || !supabase || !user) return { data: null, error: authError! };
+
+  const noteParts: string[] = [];
+  if (note?.trim()) noteParts.push(note.trim());
+  if (paymentMethod === "qr_transfer") {
+    if (qrChannelId) noteParts.push(`[QR_CHANNEL:${qrChannelId}]`);
+    if (qrReference?.trim()) noteParts.push(`[QR_REF:${qrReference.trim()}]`);
+  }
+  const finalNote = noteParts.length > 0 ? noteParts.join(" ") : null;
 
   // The DB trigger handles balance_due update on bnpl_accounts
   const { error } = await supabase.from("bnpl_payments").insert({
@@ -221,7 +250,7 @@ export async function recordBnplPaymentAction(
     amount_paid: amountPaid,
     payment_method: paymentMethod,
     received_by: user.id,
-    note: note || null,
+    note: finalNote,
   });
 
   if (error) return { data: null, error: error.message };
@@ -229,6 +258,127 @@ export async function recordBnplPaymentAction(
   revalidatePath(`/dashboard/store/${storeId}/bnpl/${accountId}`);
   revalidatePath(`/dashboard/store/${storeId}/bnpl`);
   return { data: null, error: null };
+}
+
+export async function recordGeneralBnplPaymentAction(
+  _prevState: BnplActionResult<{ appliedAmount: number; paymentsCreated: number }>,
+  formData: FormData,
+): Promise<BnplActionResult<{ appliedAmount: number; paymentsCreated: number }>> {
+  const raw = Object.fromEntries(formData);
+  const parsed = recordGeneralPaymentSchema.safeParse(raw);
+
+  if (!parsed.success) {
+    return { data: null, error: parsed.error.issues[0]?.message ?? "Invalid input." };
+  }
+
+  const { accountId, storeId, amountPaid, paymentMethod, qrChannelId, qrReference, note } = parsed.data;
+  const { supabase, user, error: authError } = await requireManagerInStore(storeId);
+  if (authError || !supabase || !user) return { data: null, error: authError! };
+
+  const { data: account } = await supabase
+    .from("bnpl_accounts")
+    .select("id, balance_due")
+    .eq("id", accountId)
+    .eq("store_id", storeId)
+    .single();
+
+  if (!account) return { data: null, error: "Account not found." };
+
+  const balanceDue = Number(account.balance_due);
+  if (balanceDue <= 0) return { data: null, error: "This account has no balance due." };
+  if (amountPaid > balanceDue) {
+    return { data: null, error: "Amount exceeds account balance due." };
+  }
+
+  const { data: pendingInstallments, error: pendingError } = await supabase
+    .from("bnpl_installments")
+    .select("id, amount, due_date, created_at")
+    .eq("account_id", accountId)
+    .eq("status", "pending")
+    .order("due_date", { ascending: true })
+    .order("created_at", { ascending: true });
+
+  if (pendingError) return { data: null, error: pendingError.message };
+  if (!pendingInstallments || pendingInstallments.length === 0) {
+    return { data: null, error: "No pending installments found for this account." };
+  }
+
+  const installmentIds = pendingInstallments.map((item) => item.id);
+  const { data: existingPayments, error: paymentsError } = await supabase
+    .from("bnpl_payments")
+    .select("installment_id, amount_paid")
+    .eq("account_id", accountId)
+    .in("installment_id", installmentIds);
+
+  if (paymentsError) return { data: null, error: paymentsError.message };
+
+  const paidByInstallment = new Map<string, number>();
+  for (const payment of existingPayments ?? []) {
+    const running = paidByInstallment.get(payment.installment_id) ?? 0;
+    paidByInstallment.set(payment.installment_id, running + Number(payment.amount_paid));
+  }
+
+  const noteParts: string[] = [];
+  if (note?.trim()) noteParts.push(note.trim());
+  if (paymentMethod === "qr_transfer") {
+    if (qrChannelId) noteParts.push(`[QR_CHANNEL:${qrChannelId}]`);
+    if (qrReference?.trim()) noteParts.push(`[QR_REF:${qrReference.trim()}]`);
+  }
+  const finalNote = noteParts.length > 0 ? noteParts.join(" ") : null;
+
+  const toCents = (value: number) => Math.round(value * 100);
+  let remainingCents = toCents(amountPaid);
+
+  const rowsToInsert: Array<{
+    installment_id: string;
+    account_id: string;
+    amount_paid: number;
+    payment_method: "cash" | "qr_transfer";
+    received_by: string;
+    note: string | null;
+  }> = [];
+
+  for (const installment of pendingInstallments) {
+    if (remainingCents <= 0) break;
+
+    const totalAmountCents = toCents(Number(installment.amount));
+    const paidCents = toCents(paidByInstallment.get(installment.id) ?? 0);
+    const outstandingCents = Math.max(0, totalAmountCents - paidCents);
+    if (outstandingCents <= 0) continue;
+
+    const allocationCents = Math.min(remainingCents, outstandingCents);
+    rowsToInsert.push({
+      installment_id: installment.id,
+      account_id: accountId,
+      amount_paid: allocationCents / 100,
+      payment_method: paymentMethod,
+      received_by: user.id,
+      note: finalNote,
+    });
+    remainingCents -= allocationCents;
+  }
+
+  if (rowsToInsert.length === 0) {
+    return { data: null, error: "No outstanding installment amount found to apply this payment." };
+  }
+
+  if (remainingCents > 0) {
+    return { data: null, error: "Amount exceeds outstanding pending installment balance." };
+  }
+
+  const { error: insertError } = await supabase.from("bnpl_payments").insert(rowsToInsert);
+  if (insertError) return { data: null, error: insertError.message };
+
+  revalidatePath(`/dashboard/store/${storeId}/bnpl/${accountId}`);
+  revalidatePath(`/dashboard/store/${storeId}/bnpl`);
+
+  return {
+    data: {
+      appliedAmount: amountPaid,
+      paymentsCreated: rowsToInsert.length,
+    },
+    error: null,
+  };
 }
 
 export async function markInstallmentPaidAction(

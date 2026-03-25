@@ -26,6 +26,7 @@ alter table orders
   add column if not exists qr_channel_id uuid references qr_channels(id) on delete set null,
   add column if not exists qr_reference  text;
 
--- Supabase Storage bucket for QR code images
+-- Supabase Storage bucket for app assets (QR codes, product images, branding, etc.)
+-- Path convention: stores/{storeId}/qr-channels/{timestamp}-{name}
 -- Run in Supabase dashboard or linked project:
--- insert into storage.buckets (id, name, public) values ('qr-codes', 'qr-codes', true) on conflict do nothing;
+-- insert into storage.buckets (id, name, public) values ('app-assets', 'app-assets', true) on conflict do nothing;

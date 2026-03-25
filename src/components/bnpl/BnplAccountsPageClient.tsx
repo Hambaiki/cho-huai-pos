@@ -1,9 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { BnplAccountCreateModal } from "@/components/bnpl/BnplAccountCreateModal";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { SearchInput } from "@/components/ui/SearchInput";
+import { FilterSelect } from "@/components/ui/FilterSelect";
+import { PaginationControls } from "@/components/ui/PaginationControls";
 import {
   Table,
   TableBody,
@@ -28,16 +32,65 @@ interface BnplAccountsPageClientProps {
   currency: CurrencyStore;
   isManager: boolean;
   storeId: string;
+  currentPage: number;
+  totalItems: number;
+  pageSize: number;
+  initialQuery: string;
+  initialStatuses: string[];
+  initialBalanceStatuses: string[];
 }
 
 export function BnplAccountsPageClient({
-  accounts: initialAccounts,
+  accounts,
   currency,
   isManager,
   storeId,
+  currentPage,
+  totalItems,
+  pageSize,
+  initialQuery,
+  initialStatuses,
+  initialBalanceStatuses,
 }: BnplAccountsPageClientProps) {
-  const [accounts, setAccounts] = useState(initialAccounts);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const statusOptions = [
+    { label: "Active", value: "active" },
+    { label: "Frozen", value: "frozen" },
+    { label: "Closed", value: "closed" },
+    { label: "Settled", value: "settled" },
+  ];
+
+  const balanceStatusOptions = [
+    { label: "Has Balance Due", value: "has_balance" },
+    { label: "No Balance", value: "no_balance" },
+  ];
+
+  const hasFilters =
+    initialQuery.length > 0 ||
+    initialStatuses.length > 0 ||
+    initialBalanceStatuses.length > 0;
+
+  const updateParams = useMemo(
+    () => (updates: Record<string, string | null>) => {
+      const params = new URLSearchParams(searchParams.toString());
+
+      Object.entries(updates).forEach(([key, value]) => {
+        if (!value) {
+          params.delete(key);
+        } else {
+          params.set(key, value);
+        }
+      });
+
+      const queryString = params.toString();
+      router.replace(queryString ? `${pathname}?${queryString}` : pathname);
+    },
+    [pathname, router, searchParams],
+  );
 
   return (
     <section className="space-y-6">
@@ -57,6 +110,48 @@ export function BnplAccountsPageClient({
         }
       />
 
+      {/* Search and Filter Bar */}
+      <div className="flex flex-wrap gap-3">
+        <SearchInput
+          placeholder="Search by customer name or phone..."
+          initialValue={initialQuery}
+          onSearch={(value) =>
+            updateParams({
+              query: value.trim() || null,
+              page: null,
+            })
+          }
+        />
+        <FilterSelect
+          label="Status"
+          options={statusOptions}
+          selected={initialStatuses}
+          onSelect={(selected) =>
+            updateParams({
+              statuses: selected.length > 0 ? selected.join(",") : null,
+              page: null,
+            })
+          }
+        />
+        <FilterSelect
+          label="Balance"
+          options={balanceStatusOptions}
+          selected={initialBalanceStatuses}
+          onSelect={(selected) =>
+            updateParams({
+              balanceStatuses: selected.length > 0 ? selected.join(",") : null,
+              page: null,
+            })
+          }
+        />
+      </div>
+
+      {hasFilters && (
+        <div className="text-xs text-neutral-500">
+          Found {totalItems} matching account{totalItems === 1 ? "" : "s"}
+        </div>
+      )}
+
       <TableContainer>
         <Table>
           <TableHeader>
@@ -73,8 +168,11 @@ export function BnplAccountsPageClient({
             {accounts.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="py-12 text-center text-neutral-400">
-                  No BNPL accounts yet.{" "}
-                  {isManager ? (
+                  {hasFilters
+                    ? "No BNPL accounts match your filters."
+                    : "No BNPL accounts yet."}
+                  {" "}
+                  {isManager && totalItems === 0 && (
                     <button
                       type="button"
                       onClick={() => setIsCreateOpen(true)}
@@ -82,7 +180,7 @@ export function BnplAccountsPageClient({
                     >
                       Create the first account
                     </button>
-                  ) : null}
+                  )}
                 </TableCell>
               </TableRow>
             ) : (
@@ -120,6 +218,13 @@ export function BnplAccountsPageClient({
             )}
           </TableBody>
         </Table>
+
+        <PaginationControls
+          currentPage={currentPage}
+          pageSize={pageSize}
+          totalItems={totalItems}
+          onPageChange={(page) => updateParams({ page: String(page) })}
+        />
       </TableContainer>
 
       {isManager ? (
@@ -127,7 +232,7 @@ export function BnplAccountsPageClient({
           open={isCreateOpen}
           storeId={storeId}
           onClose={() => setIsCreateOpen(false)}
-          onCreated={(account) => setAccounts((prev) => [account, ...prev])}
+          onCreated={() => router.refresh()}
         />
       ) : null}
     </section>

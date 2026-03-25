@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import {
   getQrChannels,
+  getStoreCategories,
 } from "@/lib/actions/settingsActions";
 import SettingsClient from "@/components/settings/SettingsClient";
 
@@ -53,11 +54,15 @@ export default async function SettingsPage({
 
   if (!storeRow) redirect("/dashboard");
 
-  const qrChannels = await getQrChannels(storeId);
+  const [qrChannels, categories] = await Promise.all([
+    getQrChannels(storeId),
+    getStoreCategories(storeId),
+  ]);
 
   return (
     <SettingsClient
       qrChannels={qrChannels}
+      categories={categories}
       storeId={storeId}
       role={membershipRow.role as "owner" | "manager" | "cashier" | "viewer"}
       store={storeRow}

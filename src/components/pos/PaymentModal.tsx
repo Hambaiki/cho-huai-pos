@@ -12,7 +12,7 @@ import { Modal } from "@/components/ui/Modal";
 import type { BnplAccountSummary } from "@/lib/types/bnpl";
 import { formatCurrency, type CurrencyStore } from "@/lib/utils/currency";
 
-type PaymentMethod = "cash" | "qr_transfer" | "card" | "bnpl";
+type PaymentMethod = "cash" | "qr_transfer" | "bnpl";
 
 function dedupeBnplAccounts(accounts: BnplAccountSummary[]) {
   const seen = new Set<string>();
@@ -62,19 +62,27 @@ export function PaymentModal({
   onConfirm,
 }: PaymentModalProps) {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
-  const [numpadValue, setNumpadValue] = useState<string>(String(Math.ceil(amount)));
-  const [selectedChannel, setSelectedChannel] = useState<QrChannel | null>(null);
+  const [numpadValue, setNumpadValue] = useState<string>(
+    String(Math.ceil(amount)),
+  );
+  const [selectedChannel, setSelectedChannel] = useState<QrChannel | null>(
+    null,
+  );
   const [showQrScreen, setShowQrScreen] = useState(false);
   const [bnplAccounts, setBnplAccounts] = useState(
     dedupeBnplAccounts(initialBnplAccounts),
   );
   const [bnplSearch, setBnplSearch] = useState("");
-  const [selectedBnplAccountId, setSelectedBnplAccountId] = useState<string | null>(null);
+  const [selectedBnplAccountId, setSelectedBnplAccountId] = useState<
+    string | null
+  >(null);
   const [bnplDueDate, setBnplDueDate] = useState(getDefaultBnplDueDate());
   const [showCreateBnplModal, setShowCreateBnplModal] = useState(false);
 
   const amountTendered = parseFloat(numpadValue) || 0;
-  const enabledChannels = qrChannels.filter((channel) => channel.is_enabled !== false);
+  const enabledChannels = qrChannels.filter(
+    (channel) => channel.is_enabled !== false,
+  );
 
   useEffect(() => {
     setBnplAccounts(dedupeBnplAccounts(initialBnplAccounts));
@@ -122,7 +130,8 @@ export function PaymentModal({
     (account) => account.id === selectedBnplAccountId,
   );
   const selectedBnplAvailable = selectedBnplAccount
-    ? Number(selectedBnplAccount.credit_limit) - Number(selectedBnplAccount.balance_due)
+    ? Number(selectedBnplAccount.credit_limit) -
+      Number(selectedBnplAccount.balance_due)
     : 0;
   const isBnplSelectionInvalid =
     paymentMethod === "bnpl" &&
@@ -161,15 +170,20 @@ export function PaymentModal({
       className="flex max-h-[95dvh] flex-col"
     >
       <div className="border-b border-border px-5 py-4">
-        <h3 className="text-lg font-semibold text-neutral-900">Confirm payment</h3>
+        <h3 className="text-lg font-semibold text-neutral-900">
+          Confirm payment
+        </h3>
         <p className="mt-0.5 text-sm text-neutral-600">
-          Total: <strong className="text-neutral-900">{formatCurrency(amount, currency)}</strong>
+          Total:{" "}
+          <strong className="text-neutral-900">
+            {formatCurrency(amount, currency)}
+          </strong>
         </p>
       </div>
 
       <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          {(["cash", "qr_transfer", "card", "bnpl"] as const).map((method) => (
+          {(["cash", "qr_transfer", "bnpl"] as const).map((method) => (
             <button
               className={`rounded-lg border px-3 py-2.5 text-xs font-medium transition ${
                 paymentMethod === method
@@ -187,9 +201,7 @@ export function PaymentModal({
                 ? "QR Transfer"
                 : method === "cash"
                   ? "Cash"
-                  : method === "card"
-                    ? "Card"
-                    : "BNPL"}
+                  : "BNPL"}
             </button>
           ))}
         </div>
@@ -197,7 +209,9 @@ export function PaymentModal({
         {paymentMethod === "cash" && (
           <div className="space-y-3">
             <div>
-              <p className="mb-1.5 text-xs font-medium text-neutral-500">Quick amounts</p>
+              <p className="mb-1.5 text-xs font-medium text-neutral-500">
+                Quick amounts
+              </p>
               <div className="flex flex-wrap gap-2">
                 {quickAmounts.map((quickAmount) => (
                   <button
@@ -216,7 +230,11 @@ export function PaymentModal({
               </div>
             </div>
 
-            <Numpad value={numpadValue} onChange={setNumpadValue} currency={currency} />
+            <Numpad
+              value={numpadValue}
+              onChange={setNumpadValue}
+              currency={currency}
+            />
 
             <div className="flex items-center justify-between rounded-xl bg-neutral-50 px-4 py-3">
               <span className="text-sm text-neutral-600">Change</span>
@@ -233,7 +251,9 @@ export function PaymentModal({
 
         {paymentMethod === "qr_transfer" && enabledChannels.length > 0 && (
           <div className="space-y-2">
-            <p className="text-xs font-medium text-neutral-600">Select channel</p>
+            <p className="text-xs font-medium text-neutral-600">
+              Select channel
+            </p>
             <div className="grid gap-2">
               {enabledChannels.map((channel) => (
                 <button
@@ -272,9 +292,12 @@ export function PaymentModal({
           <div className="space-y-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-sm font-medium text-neutral-900">Select BNPL account</p>
+                <p className="text-sm font-medium text-neutral-900">
+                  Select BNPL account
+                </p>
                 <p className="text-xs text-neutral-500">
-                  Search existing customer accounts or create one during checkout.
+                  Search existing customer accounts or create one during
+                  checkout.
                 </p>
               </div>
               {canCreateBnplAccount && (
@@ -283,7 +306,7 @@ export function PaymentModal({
                   onClick={() => setShowCreateBnplModal(true)}
                   className="rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-sm font-medium text-brand-700 hover:bg-brand-100"
                 >
-                  + Create account
+                  <span className="whitespace-nowrap">+ Create account</span>
                 </button>
               )}
             </div>
@@ -306,8 +329,10 @@ export function PaymentModal({
                 </div>
               ) : (
                 filteredBnplAccounts.map((account) => {
-                  const available = Number(account.credit_limit) - Number(account.balance_due);
-                  const isDisabled = account.status !== "active" || available < amount;
+                  const available =
+                    Number(account.credit_limit) - Number(account.balance_due);
+                  const isDisabled =
+                    account.status !== "active" || available < amount;
 
                   return (
                     <button
@@ -350,7 +375,9 @@ export function PaymentModal({
                           <p className="text-neutral-500">Available credit</p>
                           <p
                             className={`mt-1 font-semibold ${
-                              available >= amount ? "text-success-700" : "text-danger-700"
+                              available >= amount
+                                ? "text-success-700"
+                                : "text-danger-700"
                             }`}
                           >
                             {formatCurrency(available, currency)}
@@ -359,7 +386,10 @@ export function PaymentModal({
                         <div className="rounded-lg bg-neutral-50 px-3 py-2">
                           <p className="text-neutral-500">Balance due</p>
                           <p className="mt-1 font-semibold text-neutral-900">
-                            {formatCurrency(Number(account.balance_due), currency)}
+                            {formatCurrency(
+                              Number(account.balance_due),
+                              currency,
+                            )}
                           </p>
                         </div>
                       </div>
@@ -370,7 +400,9 @@ export function PaymentModal({
             </div>
 
             <div className="rounded-xl border border-border bg-neutral-50 px-4 py-3">
-              <label className="block text-xs font-medium text-neutral-600">Due date</label>
+              <label className="block text-xs font-medium text-neutral-600">
+                Due date
+              </label>
               <input
                 type="date"
                 value={bnplDueDate}
@@ -378,7 +410,8 @@ export function PaymentModal({
                 className="mt-1.5 w-full rounded-lg border border-border bg-white px-3 py-2 text-sm text-neutral-900 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
               />
               <p className="mt-2 text-xs text-neutral-500">
-                Checkout will create one BNPL installment for the full order amount.
+                Checkout will create one BNPL installment for the full order
+                amount.
               </p>
             </div>
 
@@ -394,7 +427,9 @@ export function PaymentModal({
                   <span className="text-neutral-600">Available after sale</span>
                   <span
                     className={`font-semibold ${
-                      selectedBnplAvailable - amount >= 0 ? "text-success-700" : "text-danger-700"
+                      selectedBnplAvailable - amount >= 0
+                        ? "text-success-700"
+                        : "text-danger-700"
                     }`}
                   >
                     {formatCurrency(selectedBnplAvailable - amount, currency)}
@@ -405,7 +440,8 @@ export function PaymentModal({
 
             {selectedBnplAccount && selectedBnplAvailable < amount && (
               <p className="rounded-lg border border-danger-200 bg-danger-50 px-3 py-2 text-xs text-danger-700">
-                This account does not have enough available credit for the current cart total.
+                This account does not have enough available credit for the
+                current cart total.
               </p>
             )}
           </div>
@@ -424,14 +460,18 @@ export function PaymentModal({
           <button
             className="rounded-lg bg-brand-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-800 disabled:cursor-not-allowed disabled:opacity-60"
             disabled={
-              (paymentMethod === "cash" && amountTendered < amount) || isBnplSelectionInvalid
+              (paymentMethod === "cash" && amountTendered < amount) ||
+              isBnplSelectionInvalid
             }
             onClick={() =>
               onConfirm({
                 paymentMethod,
-                amountTendered: paymentMethod === "cash" ? amountTendered : undefined,
+                amountTendered:
+                  paymentMethod === "cash" ? amountTendered : undefined,
                 bnplAccountId:
-                  paymentMethod === "bnpl" ? selectedBnplAccountId ?? undefined : undefined,
+                  paymentMethod === "bnpl"
+                    ? (selectedBnplAccountId ?? undefined)
+                    : undefined,
                 bnplDueDate: paymentMethod === "bnpl" ? bnplDueDate : undefined,
               })
             }

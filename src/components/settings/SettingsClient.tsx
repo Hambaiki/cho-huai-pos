@@ -1,17 +1,27 @@
 "use client";
 
-import { useActionState, useState, useTransition } from "react";
+import { useActionState, useEffect, useState, useTransition } from "react";
 import { useStoreContext } from "@/lib/store-context";
 import type {
+  CategoryRow,
   QrChannelRow,
   SettingsActionResult,
 } from "@/lib/actions/settingsActions";
 import {
+  createCategoryAction,
+  deleteCategoryAction,
+  updateCategoryAction,
   updateStoreSettingsAction,
   createQrChannelAction,
   toggleQrChannelAction,
   deleteQrChannelAction,
 } from "@/lib/actions/settingsActions";
+import {
+  Modal,
+  ModalBody,
+  ModalFooter,
+  ModalHeader,
+} from "@/components/ui/Modal";
 import { PageHeader } from "@/components/ui/PageHeader";
 
 interface StoreData {
@@ -29,21 +39,24 @@ interface StoreData {
 
 interface SettingsClientProps {
   qrChannels: QrChannelRow[];
+  categories: CategoryRow[];
   storeId: string;
   role: "owner" | "manager" | "cashier" | "viewer";
   store: StoreData;
 }
 
-const TABS = ["general", "qr_channels"] as const;
+const TABS = ["general", "categories", "qr_channels"] as const;
 type Tab = (typeof TABS)[number];
 
 const TAB_LABELS: Record<Tab, string> = {
   general: "General",
+  categories: "Categories",
   qr_channels: "QR Channels",
 };
 
 export default function SettingsClient({
   qrChannels,
+  categories,
   storeId,
   role,
   store,
@@ -83,6 +96,9 @@ export default function SettingsClient({
           role={role}
           storeName={ctx.storeName}
         />
+      )}
+      {activeTab === "categories" && (
+        <CategoriesTab categories={categories} storeId={storeId} role={role} />
       )}
       {activeTab === "qr_channels" && (
         <QrChannelsTab channels={qrChannels} storeId={storeId} role={role} />
@@ -273,6 +289,153 @@ function GeneralSettingsTab({
   );
 }
 
+// ─── Categories ─────────────────────────────────────────────────────────────
+
+function CategoriesTab({
+  categories,
+  storeId,
+  role,
+}: {
+  categories: CategoryRow[];
+  storeId: string;
+  role: string;
+}) {
+  const canManage = ["owner", "manager"].includes(role);
+  const [createState, createAction, isCreating] = useActionState<
+    SettingsActionResult,
+    FormData
+  >(createCategoryAction, { data: null, error: null });
+  const [updateState, updateAction] = useActionState<
+    SettingsActionResult,
+    FormData
+  >(updateCategoryAction, { data: null, error: null });
+  const [, startTransition] = useTransition();
+
+  const nextSortOrder =
+    categories.length > 0
+      ? Math.max(...categories.map((category) => category.sort_order)) + 1
+      : 0;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-semibold text-neutral-900">Product Categories</h2>
+          <p className="mt-0.5 text-sm text-neutral-500">
+            Configure product types used in inventory forms and filters.
+          </p>
+        </div>
+      </div>
+
+      {canManage && (
+        <form action={createAction} className="rounded-lg border border-neutral-200 bg-white p-4">
+          <input type="hidden" name="storeId" value={storeId} />
+          <div className="grid gap-3 sm:grid-cols-[1fr_130px_auto]">
+            <div>
+              <label className="mb-1 block text-xs font-medium text-neutral-600">Name</label>
+              <input
+                name="name"
+                required
+                maxLength={80}
+                placeholder="e.g. Beverages"
+                className="w-full rounded-md border border-neutral-200 px-3 py-2 text-sm"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-neutral-600">Sort Order</label>
+              <input
+                name="sortOrder"
+                type="number"
+                min={0}
+                max={9999}
+                defaultValue={nextSortOrder}
+                className="w-full rounded-md border border-neutral-200 px-3 py-2 text-sm"
+              />
+            </div>
+            <div className="sm:self-end">
+              <button
+                type="submit"
+                disabled={isCreating}
+                className="w-full rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60"
+              >
+                {isCreating ? "Adding..." : "Add Category"}
+              </button>
+            </div>
+          </div>
+          {createState.error && (
+            <p className="mt-3 text-xs text-danger-700">{createState.error}</p>
+          )}
+        </form>
+      )}
+
+      <div className="overflow-hidden rounded-lg border border-neutral-200 bg-white">
+        {categories.length === 0 ? (
+          <div className="px-4 py-10 text-center text-sm text-neutral-500">
+            No categories yet. Add one to organize product types.
+          </div>
+        ) : (
+          <div className="divide-y divide-neutral-100">
+            {categories.map((category) => (
+              <form key={category.id} action={updateAction} className="px-4 py-3">
+                <input type="hidden" name="storeId" value={storeId} />
+                <input type="hidden" name="categoryId" value={category.id} />
+                <div className="grid gap-3 sm:grid-cols-[1fr_130px_auto]">
+                  <input
+                    name="name"
+                    defaultValue={category.name}
+                    disabled={!canManage}
+                    required
+                    maxLength={80}
+                    className="w-full rounded-md border border-neutral-200 px-3 py-2 text-sm disabled:bg-neutral-50 disabled:text-neutral-500"
+                  />
+                  <input
+                    name="sortOrder"
+                    type="number"
+                    min={0}
+                    max={9999}
+                    defaultValue={category.sort_order}
+                    disabled={!canManage}
+                    className="w-full rounded-md border border-neutral-200 px-3 py-2 text-sm disabled:bg-neutral-50 disabled:text-neutral-500"
+                  />
+                  <div className="flex items-center justify-end gap-2">
+                    {canManage && (
+                      <>
+                        <button
+                          type="submit"
+                          className="rounded-md border border-neutral-200 px-3 py-2 text-xs font-medium text-neutral-700 hover:bg-neutral-50"
+                        >
+                          Save
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            startTransition(() => {
+                              if (confirm(`Delete category \"${category.name}\"?`)) {
+                                deleteCategoryAction(category.id, storeId);
+                              }
+                            })
+                          }
+                          className="rounded-md border border-danger-200 px-3 py-2 text-xs font-medium text-danger-700 hover:bg-danger-50"
+                        >
+                          Delete
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </form>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {updateState.error && (
+        <p className="text-xs text-danger-700">{updateState.error}</p>
+      )}
+    </div>
+  );
+}
+
 // ─── QR Channels ─────────────────────────────────────────────────────────────
 
 function QrChannelsTab({
@@ -285,12 +448,43 @@ function QrChannelsTab({
   role: string;
 }) {
   const isOwner = role === "owner";
-  const [showAdd, setShowAdd] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [hasSubmittedCreate, setHasSubmittedCreate] = useState(false);
+  const [selectedFileName, setSelectedFileName] = useState("");
+  const [imagePreviewUrl, setImagePreviewUrl] = useState("");
   const [createState, createAction, isCreating] = useActionState<
     SettingsActionResult,
     FormData
   >(createQrChannelAction, { data: null, error: null });
   const [, startTransition] = useTransition();
+
+  useEffect(() => {
+    if (!hasSubmittedCreate || isCreating || createState.error) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setShowAddModal(false);
+      setHasSubmittedCreate(false);
+      setSelectedFileName("");
+      if (imagePreviewUrl) {
+        URL.revokeObjectURL(imagePreviewUrl);
+        setImagePreviewUrl("");
+      }
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [createState.error, hasSubmittedCreate, imagePreviewUrl, isCreating]);
+
+  const resetAddModalState = () => {
+    setShowAddModal(false);
+    setHasSubmittedCreate(false);
+    setSelectedFileName("");
+    if (imagePreviewUrl) {
+      URL.revokeObjectURL(imagePreviewUrl);
+      setImagePreviewUrl("");
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -305,7 +499,7 @@ function QrChannelsTab({
         </div>
         {isOwner && (
           <button
-            onClick={() => setShowAdd(!showAdd)}
+            onClick={() => setShowAddModal(true)}
             className="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium hover:bg-brand-700"
           >
             + Add channel
@@ -313,68 +507,104 @@ function QrChannelsTab({
         )}
       </div>
 
-      {showAdd && (
+      <Modal open={showAddModal} onClose={resetAddModalState} size="lg">
+        <ModalHeader
+          title="New QR Channel"
+          description="Add a label and upload an image that customers can scan at checkout."
+          onClose={resetAddModalState}
+        />
         <form
           action={createAction}
-          className="bg-neutral-50 border border-neutral-200 rounded-lg p-4 space-y-3"
+          onSubmit={() => setHasSubmittedCreate(true)}
+          className="space-y-0"
         >
-          <input type="hidden" name="storeId" value={storeId} />
-          <h3 className="font-medium text-neutral-900 text-sm">
-            New QR Channel
-          </h3>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <ModalBody className="space-y-4">
+            <input type="hidden" name="storeId" value={storeId} />
+
             <div>
-              <label className="block text-xs font-medium text-neutral-600 mb-1">
+              <label className="block text-sm font-medium text-neutral-700 mb-1">
                 Label
               </label>
               <input
                 name="label"
                 required
                 placeholder="e.g. PromptPay"
-                className="w-full px-3 py-2 border border-neutral-200 rounded-md text-sm"
+                className="w-full rounded-md border border-neutral-200 px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-brand-200"
               />
             </div>
+
             <div>
-              <label className="block text-xs font-medium text-neutral-600 mb-1">
-                QR Image URL
+              <label className="block text-sm font-medium text-neutral-700 mb-1">
+                QR image
               </label>
               <input
-                name="imageUrl"
+                name="imageFile"
+                type="file"
+                accept="image/*"
                 required
-                type="url"
-                placeholder="https://…"
-                className="w-full px-3 py-2 border border-neutral-200 rounded-md text-sm"
+                onChange={(event) => {
+                  const file = event.currentTarget.files?.[0] ?? null;
+                  setSelectedFileName(file?.name ?? "");
+
+                  if (imagePreviewUrl) {
+                    URL.revokeObjectURL(imagePreviewUrl);
+                    setImagePreviewUrl("");
+                  }
+
+                  if (file) {
+                    setImagePreviewUrl(URL.createObjectURL(file));
+                  }
+                }}
+                className="block w-full rounded-md border border-neutral-200 px-3 py-2 text-sm text-neutral-700 file:mr-3 file:rounded-md file:border-0 file:bg-neutral-100 file:px-3 file:py-1.5 file:text-sm file:font-medium"
               />
+              <p className="mt-1 text-xs text-neutral-500">
+                PNG, JPG, or WEBP up to 5MB.
+              </p>
             </div>
-          </div>
-          {createState.error && (
-            <p className="text-xs text-danger-700">{createState.error}</p>
-          )}
-          <div className="flex gap-2">
+
+            {selectedFileName && imagePreviewUrl && (
+              <div className="rounded-md border border-neutral-200 bg-neutral-50 p-3">
+                <p className="text-xs font-medium text-neutral-700">Selected file</p>
+                <p className="mt-0.5 text-xs text-neutral-500">{selectedFileName}</p>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={imagePreviewUrl}
+                  alt="QR image preview"
+                  className="mt-3 max-h-40 rounded-md border border-neutral-200 bg-white object-contain"
+                />
+              </div>
+            )}
+
+            {createState.error && (
+              <p className="text-xs text-danger-700">{createState.error}</p>
+            )}
+          </ModalBody>
+
+          <ModalFooter>
+            <button
+              type="button"
+              onClick={resetAddModalState}
+              className="px-4 py-2 border border-neutral-200 text-neutral-600 rounded-lg text-sm hover:bg-neutral-50"
+            >
+              Cancel
+            </button>
             <button
               type="submit"
               disabled={isCreating}
               className="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium hover:bg-brand-700 disabled:opacity-50"
             >
-              {isCreating ? "Adding…" : "Add channel"}
+              {isCreating ? "Adding..." : "Add channel"}
             </button>
-            <button
-              type="button"
-              onClick={() => setShowAdd(false)}
-              className="px-4 py-2 border border-neutral-200 text-neutral-600 rounded-lg text-sm hover:bg-neutral-50"
-            >
-              Cancel
-            </button>
-          </div>
+          </ModalFooter>
         </form>
-      )}
+      </Modal>
 
       {channels.length === 0 ? (
         <div className="rounded-lg border border-dashed border-neutral-300 py-12 text-center">
           <p className="text-neutral-500 text-sm">No QR channels yet.</p>
           {isOwner && (
             <p className="text-neutral-400 text-xs mt-1">
-              Add a channel above to enable QR Transfer payments.
+              Add a channel to enable QR Transfer payments.
             </p>
           )}
         </div>
@@ -422,7 +652,7 @@ function QrChannelsTab({
                   >
                     <span
                       className={`inline-block h-4 w-4 mt-0.5 rounded-full bg-white shadow transition-transform ${
-                        ch.is_enabled ? "translate-x-4" : "translate-x-0.5"
+                        ch.is_enabled ? "translate-x-4.5" : "translate-x-0.5"
                       }`}
                     />
                   </button>

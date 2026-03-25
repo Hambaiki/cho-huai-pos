@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { Modal } from "@/components/ui/Modal";
 import { formatCurrency, type CurrencyStore } from "@/lib/utils/currency";
 
 export interface QrChannel {
@@ -29,7 +30,12 @@ export function QrPaymentScreen({
   const [reference, setReference] = useState("");
 
   return (
-    <div className="fixed inset-0 z-60 flex flex-col items-center justify-center bg-white px-6 py-8">
+    <Modal
+      open
+      onClose={onCancel}
+      fullScreen
+      className="flex flex-col items-center justify-center px-6 py-8"
+    >
       <p className="mb-4 text-sm font-medium text-neutral-500">
         Pay via {channel.label}
       </p>
@@ -84,6 +90,6 @@ export function QrPaymentScreen({
           Cancel
         </button>
       </div>
-    </div>
+    </Modal>
   );
 }

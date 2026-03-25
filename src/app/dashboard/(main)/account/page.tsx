@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { DashboardSidebarLayout } from "@/components/layout/DashboardSidebarLayout";
 import AccountSettingsClient from "@/components/settings/AccountSettingsClient";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 export const metadata = {
   title: "Account Settings",
@@ -24,12 +24,19 @@ export default async function DashboardAccountPage() {
     .maybeSingle();
 
   return (
-    <DashboardSidebarLayout>
+    <div className="space-y-6">
+      <PageHeader
+        title="Account Settings"
+        description="Update your personal account profile used across your workspaces."
+      />
+
       <AccountSettingsClient
         email={user.email ?? ""}
         displayName={profile?.display_name ?? ""}
-        createdAt={new Date(profile?.created_at ?? user.created_at).toLocaleDateString()}
+        createdAt={new Date(
+          profile?.created_at ?? user.created_at,
+        ).toLocaleDateString()}
       />
-    </DashboardSidebarLayout>
+    </div>
   );
 }

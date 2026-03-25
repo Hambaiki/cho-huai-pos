@@ -25,6 +25,8 @@ interface ModalProps {
   size?: keyof typeof SIZE_MAP;
   /** Extra classes forwarded to the panel element */
   className?: string;
+  /** Render edge-to-edge full-screen panel */
+  fullScreen?: boolean;
 }
 
 export function Modal({
@@ -33,6 +35,7 @@ export function Modal({
   children,
   size = "md",
   className,
+  fullScreen = false,
 }: ModalProps) {
   const [phase, setPhase] = useState<Phase>(open ? "visible" : "hidden");
 
@@ -58,13 +61,21 @@ export function Modal({
   if (phase === "hidden") return null;
 
   const isExiting = phase === "exiting";
+  const panelAnimationClass = fullScreen
+    ? isExiting
+      ? "animate-modal-backdrop-out"
+      : "animate-modal-backdrop-in"
+    : isExiting
+      ? "animate-modal-panel-out"
+      : "animate-modal-panel-in";
 
   return createPortal(
     <div
       role="dialog"
       aria-modal="true"
       className={cn(
-        "fixed inset-0 z-50 grid place-items-center p-4",
+        "fixed inset-0 z-50 grid place-items-center",
+        fullScreen ? "p-0" : "p-4",
         isExiting ? "animate-modal-backdrop-out" : "animate-modal-backdrop-in",
       )}
       style={{ backgroundColor: "rgb(15 23 42 / 0.45)" }}
@@ -76,7 +87,8 @@ export function Modal({
         className={cn(
           "w-full overflow-hidden rounded-2xl border border-border bg-surface shadow-xl",
           SIZE_MAP[size] ?? SIZE_MAP.md,
-          isExiting ? "animate-modal-panel-out" : "animate-modal-panel-in",
+          fullScreen && "h-dvh max-w-none rounded-none border-0 shadow-none",
+          panelAnimationClass,
           className,
         )}
         onAnimationEnd={(e) => {
@@ -140,9 +152,7 @@ interface ModalBodyProps {
 }
 
 export function ModalBody({ children, className }: ModalBodyProps) {
-  return (
-    <div className={cn("px-5 py-4", className)}>{children}</div>
-  );
+  return <div className={cn("px-5 py-4", className)}>{children}</div>;
 }
 
 // ── Footer ──────────────────────────────────────────────────────────────────

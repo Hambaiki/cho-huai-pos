@@ -1,12 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { LogOut, Menu, X } from "lucide-react";
+import { ChevronRight, LogOut, Menu, X } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { signOutAction } from "@/lib/actions/auth";
+import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils/cn";
+
+export interface BreadcrumbItem {
+  label: string;
+  href?: string;
+}
 
 export interface AppSidebarNavItem {
   href: string;
@@ -27,9 +33,9 @@ export interface AppSidebarFooterLink {
 }
 
 interface AppSidebarLayoutProps {
-  subtitle: string;
+  subtitle?: string;
   navSections: AppSidebarNavSection[];
-  getBreadcrumb: (pathname: string) => string;
+  getBreadcrumbs: (pathname: string) => BreadcrumbItem[];
   footerLinks?: AppSidebarFooterLink[];
   children: React.ReactNode;
 }
@@ -42,19 +48,27 @@ function isActiveNavItem(pathname: string, item: AppSidebarNavItem): boolean {
 export function AppSidebarLayout({
   subtitle,
   navSections,
-  getBreadcrumb,
+  getBreadcrumbs,
   footerLinks = [],
   children,
 }: AppSidebarLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const pathname = usePathname();
-  const breadcrumb = getBreadcrumb(pathname);
+  const breadcrumbs = getBreadcrumbs(pathname);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getSession().then(({ data }) => {
+      setUserEmail(data.session?.user?.email ?? null);
+    });
+  }, []);
 
   const sidebarContent = (
     <div className="flex h-full flex-col">
-      <div className="flex h-14 items-center justify-between border-b border-neutral-200 px-4 py-4">
+      <div className="flex h-14 items-center justify-start border-b border-neutral-200 px-4 py-4">
         <div>
-          <p className="text-xs font-black uppercase tracking-widest text-brand-700">
+          <p className="text-lg font-black uppercase tracking-widest text-brand-700">
             Cho-Huai POS
           </p>
           <p className="mt-0.5 max-w-40 truncate text-sm font-medium text-neutral-600">
@@ -81,7 +95,12 @@ export function AppSidebarLayout({
             ) : null}
             <div className="space-y-0.5">
               {section.items.map(({ href, label, icon: Icon, exact }) => {
-                const active = isActiveNavItem(pathname, { href, label, icon: Icon, exact });
+                const active = isActiveNavItem(pathname, {
+                  href,
+                  label,
+                  icon: Icon,
+                  exact,
+                });
 
                 return (
                   <Link
@@ -105,8 +124,8 @@ export function AppSidebarLayout({
         ))}
       </nav>
 
-      <div className="border-t border-neutral-200 px-2 py-3">
-        <div className="space-y-0.5">
+      {footerLinks.length > 0 && (
+        <div className="border-t border-neutral-200 px-2 py-3">
           {footerLinks.map(({ href, label, icon: Icon }) => (
             <Link
               key={href}
@@ -118,18 +137,20 @@ export function AppSidebarLayout({
               {label}
             </Link>
           ))}
-
-          <form action={signOutAction}>
-            <button
-              type="submit"
-              onClick={() => setSidebarOpen(false)}
-              className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900"
-            >
-              <LogOut size={18} />
-              Logout
-            </button>
-          </form>
         </div>
+      )}
+
+      <div className="border-t border-neutral-200 px-2 py-3">
+        <form action={signOutAction}>
+          <button
+            type="submit"
+            onClick={() => setSidebarOpen(false)}
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900"
+          >
+            <LogOut size={18} />
+            Logout
+          </button>
+        </form>
       </div>
     </div>
   );
@@ -174,7 +195,50 @@ export function AppSidebarLayout({
           >
             <Menu size={20} />
           </button>
-          {breadcrumb ? <h1 className="text-sm font-semibold text-neutral-800">{breadcrumb}</h1> : null}
+
+          {breadcrumbs.length > 0 && (
+            <nav
+              aria-label="Breadcrumb"
+              className="flex min-w-0 flex-1 items-center gap-1 text-sm"
+            >
+              {breadcrumbs.map((crumb, index) => (
+                <Fragment key={index}>
+                  {index > 0 && (
+                    <ChevronRight
+                      size={14}
+                      className="shrink-0 text-neutral-400"
+                    />
+                  )}
+                  {crumb.href ? (
+                    <Link
+                      href={crumb.href}
+                      className="truncate font-medium text-neutral-500 hover:text-neutral-900"
+                    >
+                      {crumb.label}
+                    </Link>
+                  ) : (
+                    <span className="truncate font-semibold text-neutral-800">
+                      {crumb.label}
+                    </span>
+                  )}
+                </Fragment>
+              ))}
+            </nav>
+          )}
+
+          {userEmail && (
+            <div className="ml-auto flex shrink-0 items-center gap-2">
+              <span className="hidden max-w-40 truncate text-sm text-neutral-500 sm:block">
+                {userEmail}
+              </span>
+              <div
+                aria-hidden="true"
+                className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-600 text-xs font-bold uppercase text-white"
+              >
+                {userEmail.charAt(0)}
+              </div>
+            </div>
+          )}
         </header>
 
         <main className="flex-1 overflow-y-auto p-4 lg:p-6">{children}</main>

@@ -6,6 +6,7 @@ import AccountStatusControl from "@/components/bnpl/AccountStatusControl";
 import InstallmentList from "@/components/bnpl/InstallmentList";
 import AddInstallmentForm from "@/components/bnpl/AddInstallmentForm";
 import { PageHeader } from "@/components/ui/PageHeader";
+import type { QrChannel } from "@/components/pos/QrPaymentScreen";
 
 export const metadata = { title: "BNPL Account" };
 
@@ -43,21 +44,29 @@ export default async function BnplAccountDetailPage({
 
   const isManager = ["owner", "manager"].includes(membership.role);
 
-  const [{ data: account }, { data: installments }] = await Promise.all([
-    supabase
-      .from("bnpl_accounts")
-      .select(
-        "id, customer_name, phone:customer_phone, credit_limit, balance_due, status, notes, created_at",
-      )
-      .eq("id", accountId)
-      .eq("store_id", storeId)
-      .single(),
-    supabase
-      .from("bnpl_installments")
-      .select("id, amount, due_date, status")
-      .eq("account_id", accountId)
-      .order("due_date", { ascending: true }),
-  ]);
+  const [{ data: account }, { data: installments }, { data: qrChannels }] =
+    await Promise.all([
+      supabase
+        .from("bnpl_accounts")
+        .select(
+          "id, customer_name, phone:customer_phone, credit_limit, balance_due, status, notes, created_at",
+        )
+        .eq("id", accountId)
+        .eq("store_id", storeId)
+        .single(),
+      supabase
+        .from("bnpl_installments")
+        .select("id, amount, due_date, status")
+        .eq("account_id", accountId)
+        .order("due_date", { ascending: true }),
+      supabase
+        .from("qr_channels")
+        .select("id, label, image_url, is_enabled")
+        .eq("store_id", storeId)
+        .eq("is_enabled", true)
+        .order("sort_order", { ascending: true })
+        .returns<QrChannel[]>(),
+    ]);
 
   if (!account) notFound();
 
@@ -130,27 +139,22 @@ export default async function BnplAccountDetailPage({
       )}
 
       {/* Installments */}
-      <div className="rounded-lg border border-neutral-200 bg-white overflow-hidden">
-        <div className="px-5 py-4 border-b border-neutral-100 flex items-center justify-between">
-          <h2 className="font-semibold text-neutral-800">Installments</h2>
-        </div>
-        <div className="p-4">
-          <InstallmentList
-            installments={
-              (installments ?? []) as Array<{
-                id: string;
-                amount: number;
-                due_date: string;
-                status: "pending" | "paid" | "waived";
-              }>
-            }
-            accountId={accountId}
-            storeId={storeId}
-            currency={currency}
-            isManager={isManager}
-          />
-        </div>
-      </div>
+      <InstallmentList
+        installments={
+          (installments ?? []) as Array<{
+            id: string;
+            amount: number;
+            due_date: string;
+            status: "pending" | "paid" | "waived";
+          }>
+        }
+        accountId={accountId}
+        storeId={storeId}
+        accountBalanceDue={Number(account.balance_due)}
+        currency={currency}
+        isManager={isManager}
+        qrChannels={qrChannels ?? []}
+      />
 
       {/* Add installment */}
       {isManager && account.status === "active" && (

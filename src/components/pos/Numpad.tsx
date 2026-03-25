@@ -1,6 +1,7 @@
 "use client";
 
 import type { CurrencyStore } from "@/lib/utils/currency";
+import { Delete } from "lucide-react";
 
 interface NumpadProps {
   value: string;
@@ -96,7 +97,7 @@ export function Numpad({ value, onChange, currency }: NumpadProps) {
           aria-label="Backspace"
           className="select-none rounded-xl border border-border bg-white py-4 text-xl font-semibold text-neutral-700 transition active:scale-95 active:bg-neutral-100 hover:bg-neutral-50 flex items-center justify-center"
         >
-          ⌫
+          <Delete />
         </button>
       </div>
 

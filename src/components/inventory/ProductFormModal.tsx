@@ -23,6 +23,7 @@ interface ProductFormModalProps {
   open: boolean;
   onClose: () => void;
   product?: Product;
+  categories: Array<{ value: string; label: string }>;
   onSuccess?: () => void;
 }
 
@@ -30,6 +31,7 @@ export function ProductFormModal({
   open,
   onClose,
   product,
+  categories,
   onSuccess,
 }: ProductFormModalProps) {
   const store = useStoreContext();
@@ -146,6 +148,25 @@ export function ProductFormModal({
                 required
                 className="mt-1 block w-full rounded-md border border-neutral-200 px-3 py-2 text-neutral-900 placeholder-neutral-400 outline-none transition focus:ring-2 focus:ring-brand-200"
               />
+            </div>
+
+            <div>
+              <label htmlFor="categoryId" className="block text-sm font-medium text-neutral-700">
+                Product Type
+              </label>
+              <select
+                id="categoryId"
+                name="categoryId"
+                defaultValue={product?.categoryId || ""}
+                className="mt-1 block w-full rounded-md border border-neutral-200 px-3 py-2 text-neutral-900 outline-none transition focus:ring-2 focus:ring-brand-200"
+              >
+                <option value="">Uncategorized</option>
+                {categories.map((category) => (
+                  <option key={category.value} value={category.value}>
+                    {category.label}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div>

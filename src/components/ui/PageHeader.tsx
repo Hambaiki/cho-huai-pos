@@ -20,7 +20,7 @@ export function PageHeader({
   actions,
 }: PageHeaderProps) {
   return (
-    <header className="rounded-xl border border-neutral-200 bg-white px-5 py-4">
+    <header>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           {backHref && (
@@ -28,7 +28,7 @@ export function PageHeader({
               href={backHref}
               className="flex items-center text-sm text-brand-600 hover:text-brand-800"
             >
-              <ChevronLeft className="inline"/>
+              <ChevronLeft className="inline -ml-1"/>
               {backLabel ?? "Back"}
             </Link>
           )}

@@ -19,7 +19,7 @@ export function CreateStoreForm({
   const [state, action, isPending] = useActionState(createStoreAction, initialState);
 
   return (
-    <form action={action} className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6">
+    <form action={action} className="space-y-4">
       <div className="space-y-1">
         <label className="text-sm font-medium text-slate-700" htmlFor="name">
           Store name

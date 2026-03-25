@@ -21,9 +21,46 @@ export interface QrChannelRow {
   sort_order: number;
 }
 
+export interface CategoryRow {
+  id: string;
+  name: string;
+  sort_order: number;
+}
+
 export type SettingsActionResult<T = null> =
   | { data: T; error: null }
   | { data: null; error: string };
+
+const categorySchema = z.object({
+  storeId: z.string().uuid(),
+  categoryId: z.string().uuid().optional(),
+  name: z.string().min(1).max(80).trim(),
+  sortOrder: z.number().int().min(0).max(9999),
+});
+
+async function requireStoreManager(
+  storeId: string,
+): Promise<SettingsActionResult<{ userId: string }>> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return { data: null, error: "Authentication required." };
+
+  const { data: membership } = await supabase
+    .from("store_members")
+    .select("role")
+    .eq("store_id", storeId)
+    .eq("user_id", user.id)
+    .single();
+
+  if (!membership || !["owner", "manager"].includes(membership.role)) {
+    return { data: null, error: "Only owners or managers can manage categories." };
+  }
+
+  return { data: { userId: user.id }, error: null };
+}
 
 // ─── Staff ────────────────────────────────────────────────────────────────────
 
@@ -59,6 +96,140 @@ export async function getStaffMembers(storeId: string): Promise<StaffMember[]> {
     role: member.role as StaffMember["role"],
     joinedAt: member.joined_at,
   }));
+}
+
+export async function getStoreCategories(
+  storeId: string,
+): Promise<CategoryRow[]> {
+  const supabase = await createClient();
+
+  const { data } = await supabase
+    .from("categories")
+    .select("id, name, sort_order")
+    .eq("store_id", storeId)
+    .order("sort_order", { ascending: true })
+    .order("name", { ascending: true })
+    .returns<CategoryRow[]>();
+
+  return data ?? [];
+}
+
+export async function createCategoryAction(
+  _prevState: SettingsActionResult,
+  formData: FormData,
+): Promise<SettingsActionResult> {
+  const parsed = categorySchema.safeParse({
+    storeId: formData.get("storeId"),
+    name: formData.get("name"),
+    sortOrder: Number.parseInt((formData.get("sortOrder") as string) || "", 10) || 0,
+  });
+
+  if (!parsed.success) {
+    return { data: null, error: "Invalid category input." };
+  }
+
+  const guard = await requireStoreManager(parsed.data.storeId);
+  if (guard.error) return guard;
+
+  const supabase = await createClient();
+
+  const { data: existing } = await supabase
+    .from("categories")
+    .select("id")
+    .eq("store_id", parsed.data.storeId)
+    .ilike("name", parsed.data.name)
+    .maybeSingle();
+
+  if (existing) {
+    return { data: null, error: "A category with this name already exists." };
+  }
+
+  const { error } = await supabase.from("categories").insert({
+    store_id: parsed.data.storeId,
+    name: parsed.data.name,
+    sort_order: parsed.data.sortOrder,
+  });
+
+  if (error) return { data: null, error: error.message };
+
+  revalidatePath(`/dashboard/store/${parsed.data.storeId}/settings`);
+  revalidatePath(`/dashboard/store/${parsed.data.storeId}/inventory`);
+  return { data: null, error: null };
+}
+
+export async function updateCategoryAction(
+  _prevState: SettingsActionResult,
+  formData: FormData,
+): Promise<SettingsActionResult> {
+  const parsed = categorySchema.safeParse({
+    storeId: formData.get("storeId"),
+    categoryId: formData.get("categoryId"),
+    name: formData.get("name"),
+    sortOrder: Number.parseInt((formData.get("sortOrder") as string) || "", 10) || 0,
+  });
+
+  if (!parsed.success || !parsed.data.categoryId) {
+    return { data: null, error: "Invalid category update input." };
+  }
+
+  const guard = await requireStoreManager(parsed.data.storeId);
+  if (guard.error) return guard;
+
+  const supabase = await createClient();
+
+  const { data: duplicate } = await supabase
+    .from("categories")
+    .select("id")
+    .eq("store_id", parsed.data.storeId)
+    .ilike("name", parsed.data.name)
+    .neq("id", parsed.data.categoryId)
+    .maybeSingle();
+
+  if (duplicate) {
+    return { data: null, error: "A category with this name already exists." };
+  }
+
+  const { error } = await supabase
+    .from("categories")
+    .update({
+      name: parsed.data.name,
+      sort_order: parsed.data.sortOrder,
+    })
+    .eq("id", parsed.data.categoryId)
+    .eq("store_id", parsed.data.storeId);
+
+  if (error) return { data: null, error: error.message };
+
+  revalidatePath(`/dashboard/store/${parsed.data.storeId}/settings`);
+  revalidatePath(`/dashboard/store/${parsed.data.storeId}/inventory`);
+  return { data: null, error: null };
+}
+
+export async function deleteCategoryAction(
+  categoryId: string,
+  storeId: string,
+): Promise<SettingsActionResult> {
+  const idCheck = z.string().uuid().safeParse(categoryId);
+  const storeCheck = z.string().uuid().safeParse(storeId);
+  if (!idCheck.success || !storeCheck.success) {
+    return { data: null, error: "Invalid category delete request." };
+  }
+
+  const guard = await requireStoreManager(storeId);
+  if (guard.error) return guard;
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("categories")
+    .delete()
+    .eq("id", categoryId)
+    .eq("store_id", storeId);
+
+  if (error) return { data: null, error: error.message };
+
+  revalidatePath(`/dashboard/store/${storeId}/settings`);
+  revalidatePath(`/dashboard/store/${storeId}/inventory`);
+  return { data: null, error: null };
 }
 
 export async function removeMemberAction(
@@ -105,6 +276,68 @@ export async function removeMemberAction(
 
   revalidatePath(`/dashboard/store/${storeId}/settings`);
   revalidatePath(`/dashboard/store/${storeId}/team`);
+  return { data: null, error: null };
+}
+
+const updateMemberRoleSchema = z.object({
+  memberId: z.string().uuid(),
+  storeId: z.string().uuid(),
+  role: z.enum(["manager", "cashier", "viewer"]),
+});
+
+export async function updateMemberRoleAction(
+  memberId: string,
+  storeId: string,
+  role: "manager" | "cashier" | "viewer",
+): Promise<SettingsActionResult> {
+  const parsed = updateMemberRoleSchema.safeParse({ memberId, storeId, role });
+  if (!parsed.success) {
+    return { data: null, error: "Invalid role update request." };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return { data: null, error: "Authentication required." };
+
+  const { data: callerMembership } = await supabase
+    .from("store_members")
+    .select("role")
+    .eq("store_id", parsed.data.storeId)
+    .eq("user_id", user.id)
+    .single();
+
+  if (!callerMembership || callerMembership.role !== "owner") {
+    return { data: null, error: "Only store owners can edit member roles." };
+  }
+
+  const { data: targetMembership } = await supabase
+    .from("store_members")
+    .select("role")
+    .eq("id", parsed.data.memberId)
+    .eq("store_id", parsed.data.storeId)
+    .single();
+
+  if (!targetMembership) {
+    return { data: null, error: "Staff member not found." };
+  }
+
+  if (targetMembership.role === "owner") {
+    return { data: null, error: "Cannot change the store owner's role." };
+  }
+
+  const { error } = await supabase
+    .from("store_members")
+    .update({ role: parsed.data.role })
+    .eq("id", parsed.data.memberId)
+    .eq("store_id", parsed.data.storeId);
+
+  if (error) return { data: null, error: error.message };
+
+  revalidatePath(`/dashboard/store/${parsed.data.storeId}/settings`);
+  revalidatePath(`/dashboard/store/${parsed.data.storeId}/team`);
   return { data: null, error: null };
 }
 
@@ -272,10 +505,23 @@ export async function createQrChannelAction(
 ): Promise<SettingsActionResult> {
   const storeId = formData.get("storeId") as string;
   const label = (formData.get("label") as string)?.trim();
-  const imageUrl = (formData.get("imageUrl") as string)?.trim();
+  const imageFile = formData.get("imageFile");
 
-  if (!storeId || !label || !imageUrl) {
-    return { data: null, error: "Label and image URL are required." };
+  if (!storeId || !label) {
+    return { data: null, error: "Label is required." };
+  }
+
+  if (!(imageFile instanceof File) || imageFile.size === 0) {
+    return { data: null, error: "QR image is required." };
+  }
+
+  if (!imageFile.type.startsWith("image/")) {
+    return { data: null, error: "QR image must be an image file." };
+  }
+
+  const maxSizeBytes = 5 * 1024 * 1024;
+  if (imageFile.size > maxSizeBytes) {
+    return { data: null, error: "Image must be 5MB or smaller." };
   }
 
   const supabase = await createClient();
@@ -296,14 +542,49 @@ export async function createQrChannelAction(
     return { data: null, error: "Only store owners can manage QR channels." };
   }
 
+  const bucket = process.env.SUPABASE_ASSETS_BUCKET ?? "app-assets";
+  const safeFileName = imageFile.name.replace(/[^a-zA-Z0-9.-]/g, "_");
+  const objectPath = `stores/${storeId}/qr-channels/${Date.now()}-${safeFileName}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from(bucket)
+    .upload(objectPath, imageFile, {
+      upsert: false,
+      contentType: imageFile.type,
+    });
+
+  if (uploadError) {
+    if (/bucket.*not found/i.test(uploadError.message)) {
+      return {
+        data: null,
+        error:
+          `Storage bucket "${bucket}" was not found. ` +
+          "Create it in Supabase Storage, then retry.",
+      };
+    }
+
+    return { data: null, error: `Image upload failed: ${uploadError.message}` };
+  }
+
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from(bucket).getPublicUrl(objectPath);
+
+  if (!publicUrl) {
+    return { data: null, error: "Unable to get uploaded image URL." };
+  }
+
   const { error } = await supabase.from("qr_channels").insert({
     store_id: storeId,
     label,
-    image_url: imageUrl,
+    image_url: publicUrl,
     created_by: user.id,
   });
 
-  if (error) throw new Error(error.message);
+  if (error) {
+    await supabase.storage.from(bucket).remove([objectPath]);
+    return { data: null, error: error.message };
+  }
 
   revalidatePath(`/dashboard/store/${storeId}/settings`);
   return { data: null, error: null };

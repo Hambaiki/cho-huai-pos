@@ -37,15 +37,10 @@ export default function AccountSettingsClient({
 
   return (
     <section className="mx-auto space-y-6">
-      <div>
-        <p className="text-xs font-semibold tracking-[0.22em] text-brand-700">ACCOUNT</p>
-        <h1 className="mt-1 text-2xl font-semibold text-slate-900">Account settings</h1>
-        <p className="mt-2 text-sm text-slate-600">
-          Update your personal account profile used across your workspaces.
-        </p>
-      </div>
-
-      <form action={profileAction} className="rounded-2xl border border-slate-200 bg-white p-6 space-y-5">
+      <form
+        action={profileAction}
+        className="rounded-2xl border border-slate-200 bg-white p-6 space-y-5"
+      >
         <div>
           <label
             htmlFor="displayName"
@@ -66,11 +61,15 @@ export default function AccountSettingsClient({
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Email</p>
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+              Email
+            </p>
             <p className="mt-1 text-sm text-slate-700">{email}</p>
           </div>
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Member since</p>
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+              Member since
+            </p>
             <p className="mt-1 text-sm text-slate-700">{createdAt}</p>
           </div>
         </div>
@@ -98,7 +97,10 @@ export default function AccountSettingsClient({
         </div>
       </form>
 
-      <form action={emailAction} className="rounded-2xl border border-slate-200 bg-white p-6 space-y-5">
+      <form
+        action={emailAction}
+        className="rounded-2xl border border-slate-200 bg-white p-6 space-y-5"
+      >
         <div>
           <h2 className="text-lg font-semibold text-slate-900">Email</h2>
           <p className="mt-1 text-sm text-slate-600">
@@ -107,7 +109,10 @@ export default function AccountSettingsClient({
         </div>
 
         <div>
-          <label htmlFor="email" className="mb-1 block text-sm font-medium text-slate-700">
+          <label
+            htmlFor="email"
+            className="mb-1 block text-sm font-medium text-slate-700"
+          >
             New email
           </label>
           <input
@@ -141,7 +146,10 @@ export default function AccountSettingsClient({
         </button>
       </form>
 
-      <form action={passwordAction} className="rounded-2xl border border-slate-200 bg-white p-6 space-y-5">
+      <form
+        action={passwordAction}
+        className="rounded-2xl border border-slate-200 bg-white p-6 space-y-5"
+      >
         <div>
           <h2 className="text-lg font-semibold text-slate-900">Password</h2>
           <p className="mt-1 text-sm text-slate-600">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useCartStore } from "@/lib/store/cart";
 import { useStoreContext } from "@/lib/store-context";
 import { createOrderAction } from "@/lib/actions/orders";
@@ -27,9 +27,13 @@ export function PosTerminal({
   bnplAccounts = [],
   canCreateBnplAccount = false,
 }: PosTerminalProps) {
+  const RECEIPT_CLOSE_ANIMATION_MS = 160;
+
   const store = useStoreContext();
+
   const [products, setProducts] = useState<PosProduct[]>(initialProducts);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
+  const [isReceiptOpen, setIsReceiptOpen] = useState(false);
   const [receipt, setReceipt] = useState<
     Extract<CreateOrderResult, { data: unknown }>["data"] | null
   >(null);
@@ -37,6 +41,16 @@ export function PosTerminal({
   const [isPending, startTransition] = useTransition();
 
   const { items, addItem, setQuantity, removeItem, clearCart } = useCartStore();
+
+  useEffect(() => {
+    if (isReceiptOpen || !receipt) return;
+
+    const timer = window.setTimeout(() => {
+      setReceipt(null);
+    }, RECEIPT_CLOSE_ANIMATION_MS);
+
+    return () => window.clearTimeout(timer);
+  }, [isReceiptOpen, receipt]);
 
   const payable = Math.max(
     0,
@@ -49,12 +63,7 @@ export function PosTerminal({
   return (
     <section className="grid gap-4 lg:h-full lg:grid-cols-[1.35fr_0.9fr]">
       <div className="flex min-h-0 flex-col space-y-3">
-        <PageHeader
-          title="POS Terminal"
-          meta={
-            <p className="text-xs text-neutral-500">Store: {store.storeName}</p>
-          }
-        />
+        <PageHeader title="POS Terminal" />
         <ProductGrid
           currency={store.currency}
           onAdd={(product) =>
@@ -73,12 +82,7 @@ export function PosTerminal({
         className="min-h-0"
         currency={store.currency}
         items={items}
-        onClearAll={() => {
-          if (items.length === 0) return;
-          if (confirm("Clear all items from this cart?")) {
-            clearCart();
-          }
-        }}
+        onClearAll={clearCart}
         onCheckout={() => setIsPaymentOpen(true)}
         onQuantityChange={setQuantity}
         onRemove={removeItem}
@@ -140,6 +144,7 @@ export function PosTerminal({
             setIsPaymentOpen(false);
             setError(null);
             setReceipt(result.data);
+            setIsReceiptOpen(true);
           });
         }}
         open={isPaymentOpen}
@@ -158,7 +163,7 @@ export function PosTerminal({
 
       {receipt && (
         <ReceiptModal
-          open={true}
+          open={isReceiptOpen}
           orderId={receipt.orderId}
           storeName={store.storeName}
           currency={store.currency}
@@ -170,7 +175,7 @@ export function PosTerminal({
           changeAmount={receipt.changeAmount}
           paymentMethod={receipt.paymentMethod}
           createdAt={receipt.createdAt}
-          onClose={() => setReceipt(null)}
+          onClose={() => setIsReceiptOpen(false)}
         />
       )}
     </section>

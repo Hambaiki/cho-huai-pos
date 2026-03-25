@@ -18,13 +18,38 @@ interface Product {
   lowStockAt: number;
   unit: string;
   isActive: boolean;
+  categoryId: string | null;
+  categoryName: string | null;
+}
+
+interface CategoryOption {
+  value: string;
+  label: string;
 }
 
 interface InventoryContentProps {
   products: Product[];
+  currentPage: number;
+  totalItems: number;
+  pageSize: number;
+  initialQuery: string;
+  initialStatuses: string[];
+  initialStockStatuses: string[];
+  initialCategoryIds: string[];
+  categoryOptions: CategoryOption[];
 }
 
-export function InventoryContent({ products }: InventoryContentProps) {
+export function InventoryContent({
+  products,
+  currentPage,
+  totalItems,
+  pageSize,
+  initialQuery,
+  initialStatuses,
+  initialStockStatuses,
+  initialCategoryIds,
+  categoryOptions,
+}: InventoryContentProps) {
   const store = useStoreContext();
   const router = useRouter();
   const [modalOpen, setModalOpen] = useState(false);
@@ -67,6 +92,14 @@ export function InventoryContent({ products }: InventoryContentProps) {
       <ProductList
         products={products}
         currency={store.currency}
+        currentPage={currentPage}
+        totalItems={totalItems}
+        pageSize={pageSize}
+        initialQuery={initialQuery}
+        initialStatuses={initialStatuses}
+        initialStockStatuses={initialStockStatuses}
+        initialCategoryIds={initialCategoryIds}
+        categoryOptions={categoryOptions}
         onNewProduct={handleOpenNewProduct}
         onEditProduct={handleOpenEditProduct}
       />
@@ -86,10 +119,11 @@ export function InventoryContent({ products }: InventoryContentProps) {
                 stockQty: selectedProduct.stockQty,
                 lowStockAt: selectedProduct.lowStockAt,
                 unit: selectedProduct.unit,
-                categoryId: null,
+                categoryId: selectedProduct.categoryId,
               }
             : undefined
         }
+        categories={categoryOptions}
         onSuccess={handleSuccess}
       />
     </>

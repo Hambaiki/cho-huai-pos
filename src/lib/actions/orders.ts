@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 
 const createOrderSchema = z.object({
   storeId: z.string().uuid(),
-  paymentMethod: z.enum(["cash", "qr_transfer", "card", "split", "bnpl"]),
+  paymentMethod: z.enum(["cash", "qr_transfer", "split", "bnpl"]),
   amountTendered: z.number().nonnegative().optional(),
   qrChannelId: z.string().uuid().optional(),
   qrReference: z.string().optional(),
@@ -90,6 +90,25 @@ export async function createOrderAction(
     return { data: null, error: "Set a BNPL due date before checkout." };
   }
 
+  const productIds = [...new Set(parsed.data.items.map((item) => item.productId))];
+  const { data: products, error: productsError } = await supabase
+    .from("products")
+    .select("id, cost_price")
+    .eq("store_id", parsed.data.storeId)
+    .in("id", productIds);
+
+  if (productsError) {
+    return { data: null, error: productsError.message };
+  }
+
+  if ((products?.length ?? 0) !== productIds.length) {
+    return { data: null, error: "One or more products could not be loaded for checkout." };
+  }
+
+  const productCostMap = new Map(
+    (products ?? []).map((product) => [product.id, product.cost_price]),
+  );
+
   let bnplAccount:
     | {
         id: string;
@@ -158,6 +177,7 @@ export async function createOrderAction(
     product_id: item.productId,
     product_name: item.productName,
     unit_price: item.unitPrice,
+    unit_cost: productCostMap.get(item.productId) ?? null,
     quantity: item.quantity,
     discount: item.discount,
     subtotal: item.unitPrice * item.quantity - item.discount * item.quantity,
@@ -229,6 +249,7 @@ export async function createOrderAction(
   revalidatePath(`/dashboard/store/${parsed.data.storeId}/pos`);
   revalidatePath(`/dashboard/store/${parsed.data.storeId}/orders`);
   revalidatePath(`/dashboard/store/${parsed.data.storeId}`);
+  revalidatePath(`/dashboard/store/${parsed.data.storeId}/reports`);
 
   return {
     data: {
@@ -315,6 +336,7 @@ export async function voidOrderAction(
   revalidatePath(`/dashboard/store/${order.store_id}/orders`);
   revalidatePath(`/dashboard/store/${order.store_id}/orders/${orderId}`);
   revalidatePath(`/dashboard/store/${order.store_id}`);
+  revalidatePath(`/dashboard/store/${order.store_id}/reports`);
 
   return { data: { success: true }, error: null };
 }

@@ -1,41 +1,54 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { formatCurrency } from "@/lib/utils/currency";
+import { OrdersPageClient } from "@/components/orders/OrdersPageClient";
 import type { CurrencyStore } from "@/lib/utils/currency";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/Table";
-import { PageHeader } from "@/components/ui/PageHeader";
 
 export const metadata = { title: "Orders" };
 
-const STATUS_CLASSES: Record<string, string> = {
-  completed: "bg-success-100 text-success-700",
-  voided: "bg-neutral-100 text-neutral-500",
-  refunded: "bg-warning-100 text-warning-700",
+const PAGE_SIZE = 10;
+
+type OrdersSearchParams = {
+  page?: string;
+  query?: string;
+  statuses?: string;
+  methods?: string;
 };
 
-const METHOD_LABELS: Record<string, string> = {
-  cash: "Cash",
-  qr_transfer: "QR Transfer",
-  card: "Card",
-  split: "Split",
-  bnpl: "BNPL",
+type OrderRow = {
+  id: string;
+  total: number;
+  payment_method: string;
+  status: string;
+  created_at: string;
+  cashier_id: string | null;
+  total_count: number;
 };
+
+function parsePage(value?: string) {
+  const parsed = Number.parseInt(value ?? "1", 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
+}
+
+function parseList(value?: string) {
+  return (value ?? "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
 
 export default async function OrdersPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ storeId: string }>;
+  searchParams: Promise<OrdersSearchParams>;
 }) {
   const { storeId } = await params;
+  const resolvedSearchParams = await searchParams;
+  const currentPage = parsePage(resolvedSearchParams.page);
+  const query = resolvedSearchParams.query?.trim() ?? "";
+  const statuses = parseList(resolvedSearchParams.statuses);
+  const methods = parseList(resolvedSearchParams.methods);
 
   const supabase = await createClient();
   const {
@@ -63,81 +76,36 @@ export default async function OrdersPage({
     symbol_position: storeInfo.symbol_position,
   };
 
-  const { data: orders } = await supabase
-    .from("orders")
-    .select("id, total, payment_method, status, created_at, cashier_id")
-    .eq("store_id", storeId)
-    .order("created_at", { ascending: false })
-    .limit(100);
+  const { data: orders } = await supabase.rpc("paginated_orders", {
+    p_store_id: storeId,
+    p_query: query || null,
+    p_statuses: statuses.length > 0 ? statuses : null,
+    p_methods: methods.length > 0 ? methods : null,
+    p_page: currentPage,
+    p_page_size: PAGE_SIZE,
+  });
 
-  const basePath = `/dashboard/store/${storeId}`;
+  const orderRows = (orders ?? []) as OrderRow[];
+  const totalItems = orderRows[0]?.total_count ?? 0;
 
   return (
-    <section className="space-y-6">
-      <PageHeader title="Orders" description="Recent transaction history" />
-
-      <TableContainer>
-        <Table>
-          <TableHeader>
-            <TableRow className="hover:bg-transparent">
-              <TableHead>Order ID</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Method</TableHead>
-              <TableHead className="text-right">Total</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {!orders || orders.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={6}
-                  className="py-12 text-center text-neutral-400"
-                >
-                  No orders yet. Start selling from the POS terminal.
-                </TableCell>
-              </TableRow>
-            ) : (
-              orders.map((order) => (
-                <TableRow key={order.id}>
-                  <TableCell className="font-mono text-xs text-neutral-500">
-                    {order.id.slice(0, 8)}…
-                  </TableCell>
-                  <TableCell className="text-neutral-700">
-                    {new Date(order.created_at).toLocaleString()}
-                  </TableCell>
-                  <TableCell className="text-neutral-600">
-                    {METHOD_LABELS[order.payment_method] ??
-                      order.payment_method}
-                  </TableCell>
-                  <TableCell className="text-right font-medium text-neutral-900">
-                    {formatCurrency(Number(order.total), currency)}
-                  </TableCell>
-                  <TableCell>
-                    <span
-                      className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
-                        STATUS_CLASSES[order.status] ??
-                        "bg-neutral-100 text-neutral-600"
-                      }`}
-                    >
-                      {order.status}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Link
-                      href={`${basePath}/orders/${order.id}`}
-                      className="text-xs text-brand-600 hover:text-brand-800 font-medium"
-                    >
-                      View
-                    </Link>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
-    </section>
+    <OrdersPageClient
+      orders={orderRows.map((order) => ({
+        id: order.id,
+        total: order.total,
+        payment_method: order.payment_method,
+        status: order.status,
+        created_at: order.created_at,
+        cashier_id: order.cashier_id,
+      }))}
+      currency={currency}
+      storeId={storeId}
+      currentPage={currentPage}
+      totalItems={totalItems}
+      pageSize={PAGE_SIZE}
+      initialQuery={query}
+      initialStatuses={statuses}
+      initialMethods={methods}
+    />
   );
 }

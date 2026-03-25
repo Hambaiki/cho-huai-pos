@@ -9,6 +9,8 @@ interface PosProductRow {
   name: string;
   price: number;
   stock_qty: number;
+  category_id: string | null;
+  categories: { name: string } | null;
 }
 
 export default async function PosPage({
@@ -39,7 +41,7 @@ export default async function PosPage({
   const [productsResult, qrChannelsResult, bnplAccountsResult] = await Promise.all([
     supabase
       .from("products")
-      .select("id, name, price, stock_qty")
+      .select("id, name, price, stock_qty, category_id, categories(name)")
       .eq("store_id", storeId)
       .eq("is_active", true)
       .order("created_at", { ascending: false })
@@ -64,7 +66,14 @@ export default async function PosPage({
     <PosTerminal
       bnplAccounts={(bnplAccountsResult.data ?? []) as BnplAccountSummary[]}
       canCreateBnplAccount={["owner", "manager"].includes(membership?.role ?? "")}
-      products={productsResult.data ?? []}
+      products={(productsResult.data ?? []).map((product) => ({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        stock_qty: product.stock_qty,
+        category_id: product.category_id,
+        category_name: product.categories?.name ?? null,
+      }))}
       qrChannels={qrChannelsResult.data ?? []}
     />
   );

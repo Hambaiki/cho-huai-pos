@@ -1,26 +1,33 @@
 "use client";
 
 import {
+  ArrowLeft,
   BarChart2,
   ClipboardList,
   CreditCard,
-  LayoutDashboard,
+  Info,
   Package,
   Settings,
   ShoppingCart,
-  Store,
   Users,
 } from "lucide-react";
 import {
+  AppSidebarFooterLink,
   AppSidebarLayout,
   type AppSidebarNavSection,
+  type BreadcrumbItem,
 } from "@/components/layout/AppSidebarLayout";
 
 const NAV_SECTIONS: AppSidebarNavSection[] = [
   {
     title: "Overview",
     items: [
-      { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, exact: true },
+      {
+        href: "/dashboard",
+        label: "Overview",
+        icon: Info,
+        exact: true,
+      },
       { href: "/reports", label: "Reports", icon: BarChart2 },
     ],
   },
@@ -36,27 +43,20 @@ const NAV_SECTIONS: AppSidebarNavSection[] = [
   {
     title: "Management",
     items: [
-      { href: "/stores", label: "Stores", icon: Store },
       { href: "/team", label: "Team", icon: Users },
       { href: "/settings", label: "Settings", icon: Settings },
     ],
   },
 ];
 
-const ROUTE_LABELS: Record<string, string> = {
-  "/dashboard": "Dashboard",
-  "/pos": "POS Terminal",
-  "/inventory": "Inventory",
-  "/inventory/new": "New Product",
-  "/orders": "Orders",
-  "/bnpl": "BNPL",
-  "/reports": "Reports",
-  "/stores": "Stores",
-  "/team": "Team",
-  "/settings": "Settings",
-};
+const FOOTER_LINKS: AppSidebarFooterLink[] = [
+  { href: "/dashboard", label: "Back to Dashboard", icon: ArrowLeft },
+];
 
-function prefixNavSections(basePath: string, sections: AppSidebarNavSection[]): AppSidebarNavSection[] {
+function prefixNavSections(
+  basePath: string,
+  sections: AppSidebarNavSection[],
+): AppSidebarNavSection[] {
   if (!basePath) return sections;
 
   return sections.map((section) => ({
@@ -68,7 +68,7 @@ function prefixNavSections(basePath: string, sections: AppSidebarNavSection[]): 
           ? basePath
           : item.href === "/stores"
             ? "/dashboard/stores"
-          : `${basePath}${item.href}`,
+            : `${basePath}${item.href}`,
     })),
   }));
 }
@@ -82,14 +82,63 @@ function getRelativePath(pathname: string, basePath: string): string {
   return pathname;
 }
 
-function getBreadcrumb(pathname: string, basePath: string): string {
-  const relativePath = getRelativePath(pathname, basePath);
+function getBreadcrumbs(
+  pathname: string,
+  basePath: string,
+  storeName: string,
+): BreadcrumbItem[] {
+  const rel = getRelativePath(pathname, basePath);
+  const dashboardRoot: BreadcrumbItem = {
+    label: "Dashboard",
+    href: "/dashboard",
+  };
+  const storeRoot: BreadcrumbItem = { label: storeName, href: basePath };
 
-  if (ROUTE_LABELS[relativePath]) return ROUTE_LABELS[relativePath];
-  if (relativePath.startsWith("/inventory/") && relativePath.endsWith("/edit")) return "Edit Product";
-  if (relativePath.startsWith("/orders/")) return "Order Details";
-  if (relativePath.startsWith("/bnpl/")) return "BNPL Account";
-  return "";
+  if (rel === "/dashboard") return [dashboardRoot, { label: storeName }];
+  if (rel === "/pos") return [dashboardRoot, storeRoot, { label: "POS" }];
+  if (rel === "/reports")
+    return [dashboardRoot, storeRoot, { label: "Reports" }];
+  if (rel === "/stores") return [dashboardRoot, storeRoot, { label: "Stores" }];
+  if (rel === "/team") return [dashboardRoot, storeRoot, { label: "Team" }];
+  if (rel === "/settings")
+    return [dashboardRoot, storeRoot, { label: "Settings" }];
+
+  if (rel === "/inventory")
+    return [dashboardRoot, storeRoot, { label: "Inventory" }];
+  if (rel === "/inventory/new")
+    return [
+      dashboardRoot,
+      storeRoot,
+      { label: "Inventory", href: `${basePath}/inventory` },
+      { label: "New Product" },
+    ];
+  if (rel.startsWith("/inventory/") && rel.endsWith("/edit"))
+    return [
+      dashboardRoot,
+      storeRoot,
+      { label: "Inventory", href: `${basePath}/inventory` },
+      { label: "Edit Product" },
+    ];
+
+  if (rel === "/orders") return [dashboardRoot, storeRoot, { label: "Orders" }];
+  if (rel.startsWith("/orders/"))
+    return [
+      dashboardRoot,
+      storeRoot,
+      { label: "Orders", href: `${basePath}/orders` },
+      { label: "Order Details" },
+    ];
+
+  if (rel === "/bnpl") return [dashboardRoot, storeRoot, { label: "BNPL" }];
+  if (rel.startsWith("/bnpl/"))
+    return [
+      dashboardRoot,
+      storeRoot,
+      { label: "BNPL", href: `${basePath}/bnpl` },
+      { label: "Account" },
+    ];
+
+  return [];
 }
 
 interface StoreSidebarLayoutProps {
@@ -107,9 +156,11 @@ export function StoreSidebarLayout({
 
   return (
     <AppSidebarLayout
-      subtitle={storeName}
       navSections={prefixNavSections(normalizedBasePath, NAV_SECTIONS)}
-      getBreadcrumb={(pathname) => getBreadcrumb(pathname, normalizedBasePath)}
+      getBreadcrumbs={(pathname) =>
+        getBreadcrumbs(pathname, normalizedBasePath, storeName)
+      }
+      footerLinks={FOOTER_LINKS}
     >
       {children}
     </AppSidebarLayout>

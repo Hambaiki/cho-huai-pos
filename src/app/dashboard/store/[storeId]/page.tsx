@@ -1,9 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { CreditCard, DollarSign, Package, ShoppingCart } from "lucide-react";
 import { formatCurrency } from "@/lib/utils/currency";
 import type { CurrencyStore } from "@/lib/utils/currency";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { StatCard } from "@/components/ui/StatCard";
 
 export const metadata = { title: "Store Dashboard" };
 
@@ -63,13 +65,10 @@ export default async function StoreDashboardPage({
   const yesterdayStart = new Date(todayStart);
   yesterdayStart.setDate(todayStart.getDate() - 1);
   const yesterdayEnd = new Date(todayStart.getTime() - 1);
-  const startOf7Days = new Date(todayStart);
-  startOf7Days.setDate(todayStart.getDate() - 6);
 
   const [
     todayOrdersResult,
     yesterdayOrdersResult,
-    orders7dResult,
     recentOrdersResult,
     bnplResult,
     productsResult,
@@ -91,13 +90,6 @@ export default async function StoreDashboardPage({
       .lte("created_at", yesterdayEnd.toISOString()),
     supabase
       .from("orders")
-      .select("total, created_at")
-      .eq("store_id", store.id)
-      .eq("status", "completed")
-      .gte("created_at", startOf7Days.toISOString())
-      .lte("created_at", todayEnd.toISOString()),
-    supabase
-      .from("orders")
       .select("id, total, status, payment_method, created_at")
       .eq("store_id", store.id)
       .order("created_at", { ascending: false })
@@ -116,7 +108,6 @@ export default async function StoreDashboardPage({
 
   const todayOrders = todayOrdersResult.data ?? [];
   const yesterdayOrders = yesterdayOrdersResult.data ?? [];
-  const orders7d = orders7dResult.data ?? [];
   const recentOrders = recentOrdersResult.data ?? [];
   const bnplAccounts = bnplResult.data ?? [];
   const products = productsResult.data ?? [];
@@ -142,32 +133,6 @@ export default async function StoreDashboardPage({
       (paymentTotals[order.payment_method] ?? 0) + Number(order.total);
   });
   const paymentEntries = Object.entries(paymentTotals).sort((a, b) => b[1] - a[1]);
-
-  const dailySales7d = Array.from({ length: 7 }, (_, index) => {
-    const date = new Date(startOf7Days);
-    date.setDate(startOf7Days.getDate() + index);
-    const key = date.toLocaleDateString("en-CA");
-    return {
-      key,
-      label: date.toLocaleDateString(undefined, { weekday: "short" }),
-      fullLabel: date.toLocaleDateString(undefined, {
-        weekday: "short",
-        month: "short",
-        day: "numeric",
-      }),
-      total: 0,
-    };
-  });
-
-  orders7d.forEach((order) => {
-    const orderKey = new Date(order.created_at).toLocaleDateString("en-CA");
-    const day = dailySales7d.find((item) => item.key === orderKey);
-    if (day) day.total += Number(order.total);
-  });
-
-  const total7d = dailySales7d.reduce((sum, day) => sum + day.total, 0);
-  const avgDaily7d = total7d / 7;
-  const maxDailySales = dailySales7d.reduce((max, day) => Math.max(max, day.total), 0);
 
   const activeProducts = products.filter((product) => product.is_active);
   const lowStockProducts = activeProducts.filter(
@@ -200,7 +165,7 @@ export default async function StoreDashboardPage({
   return (
     <section className="space-y-6">
       <PageHeader
-        title="Dashboard"
+        title="Today Overview"
         description={now.toLocaleDateString(undefined, {
           weekday: "long",
           month: "long",
@@ -223,80 +188,61 @@ export default async function StoreDashboardPage({
             >
               vs yesterday: {formatDelta(salesDeltaPct)}
             </span>
+            <Link
+              href={`${basePath}/reports#sales-trend-7d`}
+              className="rounded-full bg-neutral-100 px-3 py-1.5 font-medium text-neutral-700 hover:bg-neutral-200"
+            >
+              Open analysis
+            </Link>
           </div>
         }
       />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <article className="rounded-xl border border-neutral-200 bg-white p-5">
-          <p className="text-sm text-neutral-500">Today&apos;s Sales</p>
-          <p className="mt-2 text-2xl font-semibold text-neutral-900">
-            {formatCurrency(todaySales, currency)}
-          </p>
-          <p className="mt-1 text-xs text-neutral-400">Completed orders only</p>
-        </article>
+        <StatCard
+          label="Today's Sales"
+          value={formatCurrency(todaySales, currency)}
+          icon={DollarSign}
+          subLabel="Completed orders only"
+          footer={
+            <Link
+              href={`${basePath}/reports#sales-trend-7d`}
+              className="inline-flex text-xs font-medium text-brand-700 hover:text-brand-800"
+            >
+              View 7-day and 30-day trend
+            </Link>
+          }
+        />
 
-        <article className="rounded-xl border border-neutral-200 bg-white p-5">
-          <p className="text-sm text-neutral-500">Transactions Today</p>
-          <p className="mt-2 text-2xl font-semibold text-neutral-900">{todayTransactions}</p>
-          <p className="mt-1 text-xs text-neutral-400">
-            Avg ticket {formatCurrency(avgOrderValue, currency)}
-          </p>
-        </article>
+        <StatCard
+          label="Transactions Today"
+          value={todayTransactions}
+          icon={ShoppingCart}
+          subLabel={`Avg ticket ${formatCurrency(avgOrderValue, currency)}`}
+        />
 
-        <article className="rounded-xl border border-neutral-200 bg-white p-5">
-          <p className="text-sm text-neutral-500">Open BNPL Balance</p>
-          <p className="mt-2 text-2xl font-semibold text-neutral-900">
-            {formatCurrency(openBnplBalance, currency)}
-          </p>
-          <p className="mt-1 text-xs text-neutral-400">{bnplAccountCount} active accounts</p>
-        </article>
+        <StatCard
+          label="Open BNPL Balance"
+          value={formatCurrency(openBnplBalance, currency)}
+          icon={CreditCard}
+          subLabel={`${bnplAccountCount} active accounts`}
+          footer={
+            <Link
+              href={`${basePath}/reports#bnpl-overdue`}
+              className="inline-flex text-xs font-medium text-brand-700 hover:text-brand-800"
+            >
+              Review BNPL risk
+            </Link>
+          }
+        />
 
-        <article className="rounded-xl border border-neutral-200 bg-white p-5">
-          <p className="text-sm text-neutral-500">Inventory Health</p>
-          <p className="mt-2 text-2xl font-semibold text-neutral-900">{inventoryHealth}%</p>
-          <p className="mt-1 text-xs text-neutral-400">
-            {lowStockProducts.length} low stock, {outOfStockProducts.length} out of stock
-          </p>
-        </article>
+        <StatCard
+          label="Inventory Health"
+          value={`${inventoryHealth}%`}
+          icon={Package}
+          subLabel={`${lowStockProducts.length} low stock, ${outOfStockProducts.length} out of stock`}
+        />
       </div>
-
-      <article className="rounded-xl border border-neutral-200 bg-white p-5">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-sm font-semibold text-neutral-800">Sales Trend (Last 7 Days)</h2>
-          <div className="flex items-center gap-3 text-xs">
-            <span className="text-neutral-500">
-              Total <strong className="text-neutral-800">{formatCurrency(total7d, currency)}</strong>
-            </span>
-            <span className="text-neutral-500">
-              Avg/day <strong className="text-neutral-800">{formatCurrency(avgDaily7d, currency)}</strong>
-            </span>
-          </div>
-        </div>
-
-        <div className="mt-4 grid grid-cols-7 gap-2">
-          {dailySales7d.map((day) => {
-            const ratio = maxDailySales > 0 ? (day.total / maxDailySales) * 100 : 0;
-            return (
-              <div key={day.key} className="rounded-lg border border-neutral-100 bg-neutral-50 p-2">
-                <p className="text-center text-[11px] font-medium text-neutral-500">{day.label}</p>
-                <div className="mt-2 h-16 rounded-md bg-white p-1">
-                  <div className="flex h-full items-end justify-center">
-                    <div
-                      className="w-full rounded-sm bg-brand-600"
-                      style={{ height: `${Math.max(8, ratio)}%` }}
-                      title={`${day.fullLabel}: ${formatCurrency(day.total, currency)}`}
-                    />
-                  </div>
-                </div>
-                <p className="mt-2 truncate text-center text-[10px] text-neutral-600">
-                  {formatCurrency(day.total, currency)}
-                </p>
-              </div>
-            );
-          })}
-        </div>
-      </article>
 
       <div className="grid gap-6 xl:grid-cols-[1.65fr_1fr]">
         <article className="rounded-xl border border-neutral-200 bg-white">

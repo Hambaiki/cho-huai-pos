@@ -396,13 +396,13 @@ export default async function ReportsPage({
         description="Historical analytics and financial overview"
         meta={
           <div className="flex flex-wrap gap-2 text-xs">
-            <span className="rounded-full bg-neutral-100 px-3 py-1.5 text-neutral-700">
+            <span className="rounded-full bg-neutral-100 px-3 py-2 text-neutral-700">
               7-day revenue: {formatDelta(delta7dPct)}
             </span>
-            <span className="rounded-full bg-neutral-100 px-3 py-1.5 text-neutral-700">
+            <span className="rounded-full bg-neutral-100 px-3 py-2 text-neutral-700">
               7-day profit: {formatDelta(delta7dProfitPct)}
             </span>
-            <span className="rounded-full bg-neutral-100 px-3 py-1.5 text-neutral-700">
+            <span className="rounded-full bg-neutral-100 px-3 py-2 text-neutral-700">
               30-day profit: {formatDelta(delta30dProfitPct)}
             </span>
           </div>
@@ -661,23 +661,23 @@ export default async function ReportsPage({
             <TableBody>
               {dailySalesEntries.map(({ date, revenue, cost, profit, coveragePct }) => (
                 <TableRow key={date} className="border-t border-neutral-100">
-                  <TableCell className="py-2.5 text-neutral-700">
+                  <TableCell className="py-3 text-neutral-700">
                     {new Date(date + "T00:00:00").toLocaleDateString(undefined, {
                       weekday: "short",
                       month: "short",
                       day: "numeric",
                     })}
                   </TableCell>
-                  <TableCell className="py-2.5 text-right font-medium text-neutral-900">
+                  <TableCell className="py-3 text-right font-medium text-neutral-900">
                     {formatCurrency(revenue, currency)}
                   </TableCell>
-                  <TableCell className="py-2.5 text-right text-neutral-600">
+                  <TableCell className="py-3 text-right text-neutral-600">
                     {formatCurrency(cost, currency)}
                   </TableCell>
-                  <TableCell className="py-2.5 text-right font-medium text-success-700">
+                  <TableCell className="py-3 text-right font-medium text-success-700">
                     {formatCurrency(profit, currency)}
                   </TableCell>
-                  <TableCell className="py-2.5 text-right text-neutral-600">
+                  <TableCell className="py-3 text-right text-neutral-600">
                     {coveragePct.toFixed(0)}%
                   </TableCell>
                 </TableRow>
@@ -718,19 +718,19 @@ export default async function ReportsPage({
               ) : (
                 topProductList.map(([name, stats]) => (
                   <TableRow key={name} className="border-t border-neutral-100">
-                    <TableCell className="py-2.5 text-neutral-800 font-medium">
+                    <TableCell className="py-3 text-neutral-800 font-medium">
                       {name}
                     </TableCell>
-                    <TableCell className="py-2.5 text-right text-neutral-600">
+                    <TableCell className="py-3 text-right text-neutral-600">
                       {stats.qty}
                     </TableCell>
-                    <TableCell className="py-2.5 text-right font-medium text-neutral-900">
+                    <TableCell className="py-3 text-right font-medium text-neutral-900">
                       {formatCurrency(stats.revenue, currency)}
                     </TableCell>
-                    <TableCell className="py-2.5 text-right text-neutral-600">
+                    <TableCell className="py-3 text-right text-neutral-600">
                       {formatCurrency(stats.cost, currency)}
                     </TableCell>
-                    <TableCell className="py-2.5 text-right font-medium text-success-700">
+                    <TableCell className="py-3 text-right font-medium text-success-700">
                       {formatCurrency(stats.profit, currency)}
                     </TableCell>
                   </TableRow>
@@ -763,13 +763,13 @@ export default async function ReportsPage({
               <TableBody>
                 {overdueList.map((inst) => (
                   <TableRow key={inst.id} className="border-t border-danger-100">
-                    <TableCell className="py-2.5 text-neutral-800 font-medium">
+                    <TableCell className="py-3 text-neutral-800 font-medium">
                       {inst.bnpl_accounts.customer_name}
                     </TableCell>
-                    <TableCell className="py-2.5 text-danger-600">
+                    <TableCell className="py-3 text-danger-600">
                       {new Date(inst.due_date).toLocaleDateString()}
                     </TableCell>
-                    <TableCell className="py-2.5 text-right font-medium text-danger-700">
+                    <TableCell className="py-3 text-right font-medium text-danger-700">
                       {formatCurrency(Number(inst.amount), currency)}
                     </TableCell>
                   </TableRow>

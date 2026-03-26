@@ -27,7 +27,7 @@ export function SectionCard({
       className={cn("rounded-lg border border-neutral-200 bg-white", className)}
     >
       <div
-        className={cn("border-b border-b-border px-4 py-3", headerClassName)}
+        className={cn("border-b border-border px-4 py-3", headerClassName)}
       >
         <div className="flex items-center justify-between gap-3">
           <div>

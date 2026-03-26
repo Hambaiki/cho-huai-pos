@@ -41,6 +41,7 @@ import {
   FormInput,
   FormSelect,
   FormError,
+  FormSelectOption,
 } from "@/components/ui/form";
 
 interface StaffManagementProps {
@@ -255,7 +256,7 @@ export function StaffManagement({
                     </TableCell>
                     <TableCell>
                       <span
-                        className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${
+                        className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium capitalize ${
                           roleColors[member.role]
                         }`}
                       >
@@ -336,17 +337,18 @@ export function StaffManagement({
                 <Shield size={16} className="text-neutral-500" />
                 Role
               </FormLabel>
-              <FormSelect
-                id="role"
-                name="role"
-                defaultValue="cashier"
-                required
-              >
+              <FormSelect id="role" name="role" defaultValue="cashier" required>
                 {isOwner && (
-                  <option value="manager">Manager - Full store access</option>
+                  <FormSelectOption value="manager">
+                    Manager - Full store access
+                  </FormSelectOption>
                 )}
-                <option value="cashier">Cashier - Sales only</option>
-                <option value="viewer">Viewer - View only</option>
+                <FormSelectOption value="cashier">
+                  Cashier - Sales only
+                </FormSelectOption>
+                <FormSelectOption value="viewer">
+                  Viewer - View only
+                </FormSelectOption>
               </FormSelect>
             </FormField>
             <FormField>
@@ -394,30 +396,44 @@ export function StaffManagement({
             <label className="mb-2 inline-flex items-center gap-2 text-sm font-medium text-neutral-700">
               Role
             </label>
-            <select
+            <FormSelect
               value={pendingRole}
               disabled={isMutating}
-              onChange={(e) =>
-                setPendingRole(
-                  e.target.value as "manager" | "cashier" | "viewer",
-                )
+              onChange={(value) =>
+                setPendingRole(value as "manager" | "cashier" | "viewer")
               }
               className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-800"
             >
-              <option value="manager">Manager - Full store access</option>
-              <option value="cashier">Cashier - Sales only</option>
-              <option value="viewer">Viewer - View only</option>
-            </select>
+              <FormSelectOption value="manager">
+                Manager - Full store access
+              </FormSelectOption>
+              <FormSelectOption value="cashier">
+                Cashier - Sales only
+              </FormSelectOption>
+              <FormSelectOption value="viewer">
+                Viewer - View only
+              </FormSelectOption>
+            </FormSelect>
           </div>
           <p className="text-xs text-neutral-500">
             Changes take effect immediately after saving.
           </p>
         </ModalBody>
         <ModalFooter>
-          <Button type="button" variant="outline" onClick={closeRoleModal} disabled={isMutating}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={closeRoleModal}
+            disabled={isMutating}
+          >
             Cancel
           </Button>
-          <Button type="button" onClick={confirmRoleChange} disabled={isMutating} isLoading={isMutating}>
+          <Button
+            type="button"
+            onClick={confirmRoleChange}
+            disabled={isMutating}
+            isLoading={isMutating}
+          >
             Save role
           </Button>
         </ModalFooter>

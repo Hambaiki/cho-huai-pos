@@ -45,7 +45,7 @@ export async function compressImageForUpload(
     if (!context) return file;
 
     const dimensions = [maxDimension, 1280, 1024, 800];
-    const qualities = [0.82, 0.74, 0.66, 0.58, 0.5];
+    const qualities = [0.82, 0.74, 0.66, 18, 1];
 
     let bestBlob: Blob | null = null;
 

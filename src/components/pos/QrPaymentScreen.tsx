@@ -78,7 +78,6 @@ export function QrPaymentScreen({
       <div className="mt-6 w-full max-w-xs space-y-3">
         <Button
           onClick={() => onConfirm(reference.trim() || undefined)}
-          size="lg"
           className="w-full"
           type="button"
         >

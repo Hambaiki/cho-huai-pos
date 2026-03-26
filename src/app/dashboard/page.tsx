@@ -35,13 +35,13 @@ function QuickLinkCard({
       className="group flex items-start gap-4 rounded-2xl border border-neutral-200 bg-white p-5 transition hover:border-brand-300 hover:shadow-sm"
     >
       <span
-        className={`mt-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${accent}`}
+        className={`mt-1 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${accent}`}
       >
         {icon}
       </span>
       <div className="min-w-0 flex-1">
         <p className="font-semibold text-neutral-900">{title}</p>
-        <p className="mt-0.5 text-sm text-neutral-500">{description}</p>
+        <p className="mt-1 text-sm text-neutral-500">{description}</p>
       </div>
       <ArrowRight
         size={16}
@@ -131,7 +131,7 @@ export default async function DashboardPage() {
           </p>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <div className="flex items-start gap-3 rounded-xl border border-dashed border-neutral-200 bg-neutral-50 p-4">
-              <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-success-50 text-success-600">
+              <span className="mt-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-success-50 text-success-600">
                 <ShoppingCart size={16} />
               </span>
               <div>
@@ -140,7 +140,7 @@ export default async function DashboardPage() {
               </div>
             </div>
             <div className="flex items-start gap-3 rounded-xl border border-dashed border-neutral-200 bg-neutral-50 p-4">
-              <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-info-50 text-info-600">
+              <span className="mt-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-info-50 text-info-600">
                 <Package size={16} />
               </span>
               <div>
@@ -151,7 +151,7 @@ export default async function DashboardPage() {
               </div>
             </div>
             <div className="flex items-start gap-3 rounded-xl border border-dashed border-neutral-200 bg-neutral-50 p-4">
-              <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-warning-50 text-warning-600">
+              <span className="mt-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-warning-50 text-warning-600">
                 <CreditCard size={16} />
               </span>
               <div>
@@ -162,7 +162,7 @@ export default async function DashboardPage() {
               </div>
             </div>
             <div className="flex items-start gap-3 rounded-xl border border-dashed border-neutral-200 bg-neutral-50 p-4">
-              <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
+              <span className="mt-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
                 <BarChart2 size={16} />
               </span>
               <div>

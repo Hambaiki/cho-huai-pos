@@ -3,7 +3,12 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { voidOrderAction } from "@/lib/actions/orders";
-import { Modal, ModalHeader, ModalBody, ModalFooter } from "@/components/ui/Modal";
+import {
+  Modal,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 
 export default function VoidOrderButton({ orderId }: { orderId: string }) {
@@ -31,10 +36,7 @@ export default function VoidOrderButton({ orderId }: { orderId: string }) {
 
   return (
     <>
-      <Button
-        onClick={() => setOpen(true)}
-        variant="destructive"
-      >
+      <Button onClick={() => setOpen(true)} variant="destructive">
         Void Order
       </Button>
 

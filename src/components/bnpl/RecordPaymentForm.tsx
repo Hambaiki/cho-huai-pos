@@ -103,7 +103,7 @@ export default function RecordPaymentForm({
     <Modal open onClose={onDone} size="lg" className="flex max-h-[95dvh] flex-col">
       <div className="border-b border-border px-5 py-4">
         <h3 className="text-lg font-semibold text-neutral-900">Record installment payment</h3>
-        <p className="mt-0.5 text-sm text-neutral-600">
+        <p className="mt-1 text-sm text-neutral-600">
           Due amount: <strong>{formatCurrency(maxAmount, currency)}</strong>
         </p>
       </div>
@@ -131,7 +131,7 @@ export default function RecordPaymentForm({
         {paymentMethod === "cash" && (
           <div className="space-y-3">
             <div>
-              <p className="mb-1.5 text-xs font-medium text-neutral-500">Quick amounts</p>
+              <p className="mb-2 text-xs font-medium text-neutral-500">Quick amounts</p>
               <div className="flex flex-wrap gap-2">
                 {quickAmounts.map((quickAmount) => (
                   <Button

@@ -12,6 +12,8 @@ interface PosProductRow {
   image_url: string | null;
   category_id: string | null;
   categories: { name: string } | null;
+  barcode: string | null;
+  sku: string | null;
 }
 
 export default async function PosPage({
@@ -42,7 +44,7 @@ export default async function PosPage({
   const [productsResult, qrChannelsResult, bnplAccountsResult] = await Promise.all([
     supabase
       .from("products")
-      .select("id, name, price, stock_qty, image_url, category_id, categories(name)")
+      .select("id, name, price, stock_qty, image_url, category_id, barcode, sku, categories(name)")
       .eq("store_id", storeId)
       .eq("is_active", true)
       .order("created_at", { ascending: false })
@@ -75,6 +77,8 @@ export default async function PosPage({
         image_url: product.image_url,
         category_id: product.category_id,
         category_name: product.categories?.name ?? null,
+        barcode: product.barcode,
+        sku: product.sku,
       }))}
       qrChannels={qrChannelsResult.data ?? []}
     />

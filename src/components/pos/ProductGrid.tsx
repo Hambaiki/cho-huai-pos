@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { formatCurrency, type CurrencyStore } from "@/lib/utils/currency";
-import { ImageOff, Search } from "lucide-react";
+import { ImageOff, Search, Barcode } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { FormInput } from "@/components/ui/form";
 import { cn } from "@/lib/utils/cn";
@@ -15,15 +15,25 @@ export interface PosProduct {
   image_url?: string | null;
   category_id?: string | null;
   category_name?: string | null;
+  barcode?: string | null;
+  sku?: string | null;
 }
 
 interface ProductGridProps {
   products: PosProduct[];
   currency: CurrencyStore;
   onAdd: (product: PosProduct) => void;
+  onScanProduct?: () => void;
+  className?: string;
 }
 
-export function ProductGrid({ products, currency, onAdd }: ProductGridProps) {
+export function ProductGrid({
+  products,
+  currency,
+  onAdd,
+  onScanProduct,
+  className,
+}: ProductGridProps) {
   const [query, setQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [stockFilter, setStockFilter] = useState<
@@ -114,7 +124,7 @@ export function ProductGrid({ products, currency, onAdd }: ProductGridProps) {
   }
 
   return (
-    <div className="flex flex-col h-full min-h-0">
+    <div className={cn("flex min-h-0 flex-1 flex-col", className)}>
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative flex-1">
           <Search
@@ -131,6 +141,7 @@ export function ProductGrid({ products, currency, onAdd }: ProductGridProps) {
             aria-label="Search products"
           />
         </div>
+
         {query.trim().length > 0 ? (
           <Button
             type="button"
@@ -141,6 +152,23 @@ export function ProductGrid({ products, currency, onAdd }: ProductGridProps) {
             Clear
           </Button>
         ) : null}
+
+        {onScanProduct && (
+          <Button
+            type="button"
+            variant="primary"
+            size="md"
+            onClick={() => onScanProduct()}
+            title="Scan barcode with camera to add product"
+            icon={<Barcode size={16} />}
+          >
+            Scan product
+          </Button>
+        )}
+      </div>
+
+      <div className="mt-3 flex flex-wrap items-center gap-3">
+        <p className="font-medium text-base text-neutral-500">Stock:</p>
         <Button
           type="button"
           variant={stockFilter === "all" ? "active" : "outline"}
@@ -172,7 +200,11 @@ export function ProductGrid({ products, currency, onAdd }: ProductGridProps) {
         to focus search.
       </p>
 
-      <div className="flex-1 rounded-2xl border border-border bg-surface p-4 mt-3 space-y-4">
+      <div
+        className={cn(
+          "mt-3 flex min-h-0 flex-1 flex-col rounded-2xl border border-border bg-surface p-4",
+        )}
+      >
         <div className="flex flex-wrap items-center gap-2">
           {categoryTabs.map((tab) => (
             <Button
@@ -187,78 +219,82 @@ export function ProductGrid({ products, currency, onAdd }: ProductGridProps) {
           ))}
         </div>
 
-        {filteredProducts.length === 0 ? (
-          <div className="rounded-2xl border border-border bg-surface p-6 text-sm text-neutral-500">
-            No products matched this search/filter.
-          </div>
-        ) : (
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 min-h-0 overflow-y-auto pr-1">
-            {filteredProducts.map((product) => {
-              const outOfStock = product.stock_qty <= 0;
+        <div className="mt-4 min-h-0 flex-1 overflow-y-auto pr-1">
+          {filteredProducts.length === 0 ? (
+            <div className="rounded-2xl border border-border bg-surface p-6 text-sm text-neutral-500">
+              No products matched this search/filter.
+            </div>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+              {filteredProducts.map((product) => {
+                const outOfStock = product.stock_qty <= 0;
 
-              return (
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className={cn(
-                    "grid h-auto grid-cols-1 items-stretch gap-3 p-2.5 text-left",
-                    "disabled:cursor-not-allowed disabled:opacity-50",
-                    "transition cursor-pointer disabled:cursor-not-allowed",
-                  )}
-                  disabled={outOfStock}
-                  key={product.id}
-                  onClick={() => onAdd(product)}
-                  type="button"
-                >
-                  <div className="h-32 w-full overflow-hidden rounded-md border border-neutral-200 bg-neutral-50">
-                    {product.image_url ? (
-                      <div
-                        className="h-full w-full bg-contain bg-center bg-no-repeat"
-                        style={{ backgroundImage: `url(${product.image_url})` }}
-                      />
-                    ) : (
-                      <div className="flex flex-col h-full w-full items-center justify-center text-xs font-medium text-neutral-500">
-                        <ImageOff size={24} />
-                        No image
-                      </div>
+                return (
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className={cn(
+                      "grid h-auto grid-cols-1 items-stretch gap-3 p-2 text-left",
+                      "disabled:cursor-not-allowed disabled:opacity-50",
+                      "transition cursor-pointer disabled:cursor-not-allowed",
                     )}
-                  </div>
-
-                  <div className="flex min-w-0 flex-col justify-between gap-1">
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-neutral-900">
-                        {product.name}
-                      </p>
-                      <p className="truncate text-xs text-neutral-500">
-                        {product.category_name ?? "Uncategorized"}
-                      </p>
+                    disabled={outOfStock}
+                    key={product.id}
+                    onClick={() => onAdd(product)}
+                    type="button"
+                  >
+                    <div className="h-36 w-full overflow-hidden rounded-md border border-neutral-200 bg-neutral-50">
+                      {product.image_url ? (
+                        <div
+                          className="h-full w-full bg-contain bg-center bg-no-repeat"
+                          style={{
+                            backgroundImage: `url(${product.image_url})`,
+                          }}
+                        />
+                      ) : (
+                        <div className="flex flex-col h-full w-full items-center justify-center text-xs font-medium text-neutral-500">
+                          <ImageOff size={24} />
+                          No image
+                        </div>
+                      )}
                     </div>
 
-                    <p className="text-sm font-semibold text-neutral-800">
-                      {formatCurrency(product.price, currency)}
-                    </p>
+                    <div className="flex min-w-0 flex-col justify-between gap-1">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-neutral-900">
+                          {product.name}
+                        </p>
+                        <p className="truncate text-xs text-neutral-500">
+                          {product.category_name ?? "Uncategorized"}
+                        </p>
+                      </div>
 
-                    <div className="flex items-center justify-between gap-2">
-                      <span
-                        className={cn(
-                          "rounded-full px-2 py-0.5 text-[11px] font-medium",
-                          outOfStock
-                            ? "bg-danger-100 text-danger-700"
-                            : "bg-success-100 text-success-700",
-                        )}
-                      >
-                        Stock {product.stock_qty}
-                      </span>
-                      <span className="text-xs font-medium text-brand-700">
-                        {outOfStock ? "Out of stock" : "Add to cart"}
-                      </span>
+                      <p className="text-sm font-semibold text-neutral-800">
+                        {formatCurrency(product.price, currency)}
+                      </p>
+
+                      <div className="flex items-center justify-between gap-2">
+                        <span
+                          className={cn(
+                            "rounded-full px-2 py-1 text-[11px] font-medium",
+                            outOfStock
+                              ? "bg-danger-100 text-danger-700"
+                              : "bg-success-100 text-success-700",
+                          )}
+                        >
+                          Stock {product.stock_qty}
+                        </span>
+                        <span className="text-xs font-medium text-brand-700">
+                          {outOfStock ? "Out of stock" : "Add to cart"}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                </Button>
-              );
-            })}
-          </div>
-        )}
+                  </Button>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

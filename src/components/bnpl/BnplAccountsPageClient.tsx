@@ -203,7 +203,7 @@ export function BnplAccountsPageClient({
                   </TableCell>
                   <TableCell>
                     <span
-                      className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${
+                      className={`inline-block rounded-full px-3 py-1 text-xs font-medium capitalize ${
                         STATUS_CLASSES[account.status] ??
                         "bg-neutral-100 text-neutral-600"
                       }`}

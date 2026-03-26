@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Sarabun } from "next/font/google";
 import { cn } from "@/lib/utils/cn";
+import { AppToaster } from "@/components/ui/AppToaster";
 import "./globals.css";
 
 const sarabun = Sarabun({
@@ -29,6 +30,7 @@ export default function RootLayout({
     <html lang="th">
       <body className={cn(`${sarabun.variable}`, `antialiased`)}>
         {children}
+        <AppToaster />
       </body>
     </html>
   );

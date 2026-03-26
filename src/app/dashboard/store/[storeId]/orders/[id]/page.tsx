@@ -98,7 +98,7 @@ export default async function OrderDetailPage({
             Order voided{voidedAt ? ` on ${new Date(voidedAt).toLocaleString()}` : ""}
           </p>
           {voidReason && (
-            <p className="text-xs text-danger-600 mt-0.5">Reason: {voidReason}</p>
+            <p className="text-xs text-danger-600 mt-1">Reason: {voidReason}</p>
           )}
         </div>
       )}
@@ -125,12 +125,12 @@ export default async function OrderDetailPage({
               subtotal: number;
             }>).map((item, i) => (
               <TableRow key={i} className="border-t border-neutral-100">
-                <TableCell className="py-2.5 text-neutral-800">{item.product_name}</TableCell>
-                <TableCell className="py-2.5 text-right text-neutral-600">{item.quantity}</TableCell>
-                <TableCell className="py-2.5 text-right text-neutral-600">
+                <TableCell className="py-3 text-neutral-800">{item.product_name}</TableCell>
+                <TableCell className="py-3 text-right text-neutral-600">{item.quantity}</TableCell>
+                <TableCell className="py-3 text-right text-neutral-600">
                   {formatCurrency(Number(item.unit_price), currency)}
                 </TableCell>
-                <TableCell className="py-2.5 text-right text-neutral-800 font-medium">
+                <TableCell className="py-3 text-right text-neutral-800 font-medium">
                   {formatCurrency(Number(item.subtotal), currency)}
                 </TableCell>
               </TableRow>

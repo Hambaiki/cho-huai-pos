@@ -9,7 +9,7 @@ interface FormFieldProps {
 
 export function FormField({ children, className = "" }: FormFieldProps) {
   return (
-    <div className={`space-y-1.5 ${className}`}>
+    <div className={`space-y-2 ${className}`}>
       {children}
     </div>
   );

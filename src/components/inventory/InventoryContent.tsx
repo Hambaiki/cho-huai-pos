@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useStoreContext } from "@/lib/store-context";
 import { ProductList } from "./ProductList";
-import { ProductFormModal } from "./ProductFormModal";
+import { ProductModal } from "./ProductModal";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { Plus } from "lucide-react";
@@ -104,7 +104,7 @@ export function InventoryContent({
         onEditProduct={handleOpenEditProduct}
       />
 
-      <ProductFormModal
+      <ProductModal
         open={modalOpen}
         onClose={handleCloseModal}
         product={

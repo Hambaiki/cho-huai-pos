@@ -111,7 +111,9 @@ export function ProductList({
   if (totalItems === 0 && !hasFilters) {
     return (
       <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-6 py-12 text-center">
-        <p className="text-neutral-600">No products yet. Create your first product to get started.</p>
+        <p className="text-neutral-600">
+          No products yet. Create your first product to get started.
+        </p>
         <Button
           type="button"
           onClick={onNewProduct}
@@ -209,6 +211,7 @@ export function ProductList({
                   <TableCell className="text-neutral-900">
                     <div className="flex items-center gap-3">
                       {product.imageUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={product.imageUrl}
                           alt={`${product.name} image`}
@@ -223,13 +226,19 @@ export function ProductList({
                       <div>
                         <div className="font-medium">{product.name}</div>
                         {product.barcode && (
-                          <div className="text-xs text-neutral-500">{product.barcode}</div>
+                          <div className="text-xs text-neutral-500">
+                            {product.barcode}
+                          </div>
                         )}
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="text-neutral-600">{product.sku || "—"}</TableCell>
-                  <TableCell className="text-neutral-600">{product.categoryName || "Uncategorized"}</TableCell>
+                  <TableCell className="text-neutral-600">
+                    {product.sku || "—"}
+                  </TableCell>
+                  <TableCell className="text-neutral-600">
+                    {product.categoryName || "Uncategorized"}
+                  </TableCell>
                   <TableCell className="text-right font-medium text-neutral-900">
                     {formatCurrency(product.price, currency)}
                   </TableCell>

@@ -1,8 +1,15 @@
 export { FormField } from "./FormField";
 export { FormLabel } from "./FormLabel";
 export { FormInput } from "./FormInput";
+export { FormFileUpload } from "./FormFileUpload";
+export type { FormFileUploadProps } from "./FormFileUpload";
 export { FormSelect } from "./FormSelect";
+export type { SelectOption, FormSelectProps } from "./FormSelect";
+export { FormSelectOption } from "./FormSelectOption";
+export type { FormSelectOptionProps } from "./FormSelectOption";
 export { FormTextarea } from "./FormTextarea";
 export { FormError } from "./FormError";
 export { FormHelp } from "./FormHelp";
 export { FormCheckbox } from "./FormCheckbox";
+export { FormToggle } from "./FormToggle";
+export type { FormToggleProps } from "./FormToggle";

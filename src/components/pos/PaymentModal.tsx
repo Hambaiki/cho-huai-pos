@@ -175,7 +175,7 @@ export function PaymentModal({
         <h3 className="text-lg font-semibold text-neutral-900">
           Confirm payment
         </h3>
-        <p className="mt-0.5 text-sm text-neutral-600">
+        <p className="mt-1 text-sm text-neutral-600">
           Total:{" "}
           <strong className="text-neutral-900">
             {formatCurrency(amount, currency)}
@@ -208,7 +208,7 @@ export function PaymentModal({
         {paymentMethod === "cash" && (
           <div className="space-y-3">
             <div>
-              <p className="mb-1.5 text-xs font-medium text-neutral-500">
+              <p className="mb-2 text-xs font-medium text-neutral-500">
                 Quick amounts
               </p>
               <div className="flex flex-wrap gap-2">
@@ -349,12 +349,12 @@ export function PaymentModal({
                           <p className="text-sm font-semibold text-neutral-900">
                             {account.customer_name}
                           </p>
-                          <p className="mt-0.5 text-xs text-neutral-500">
+                          <p className="mt-1 text-xs text-neutral-500">
                             {account.phone ?? "No phone"}
                           </p>
                         </div>
                         <span
-                          className={`rounded-full px-2 py-0.5 text-[11px] font-medium capitalize ${
+                          className={`rounded-full px-2 py-1 text-[11px] font-medium capitalize ${
                             account.status === "active"
                               ? "bg-success-100 text-success-700"
                               : account.status === "frozen"

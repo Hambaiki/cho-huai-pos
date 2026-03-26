@@ -13,6 +13,7 @@ import {
   FormSelect,
   FormTextarea,
   FormError,
+  FormSelectOption,
 } from "@/components/ui/form";
 
 const initialState: CreateStoreActionState = { error: null };
@@ -24,7 +25,10 @@ interface CreateStoreFormProps {
 export function CreateStoreForm({
   ctaLabel = "Create store",
 }: CreateStoreFormProps) {
-  const [state, action, isPending] = useActionState(createStoreAction, initialState);
+  const [state, action, isPending] = useActionState(
+    createStoreAction,
+    initialState,
+  );
 
   return (
     <form action={action} className="space-y-4">
@@ -32,21 +36,12 @@ export function CreateStoreForm({
         <FormLabel htmlFor="name" required>
           Store name
         </FormLabel>
-        <FormInput
-          id="name"
-          name="name"
-          required
-          type="text"
-        />
+        <FormInput id="name" name="name" required type="text" />
       </FormField>
 
       <FormField>
         <FormLabel htmlFor="address">Address</FormLabel>
-        <FormTextarea
-          id="address"
-          name="address"
-          rows={5}
-        />
+        <FormTextarea id="address" name="address" rows={5} />
       </FormField>
 
       <div className="grid grid-cols-2 gap-3">
@@ -105,8 +100,8 @@ export function CreateStoreForm({
             id="symbol_position"
             name="symbol_position"
           >
-            <option value="prefix">Prefix</option>
-            <option value="suffix">Suffix</option>
+            <FormSelectOption value="prefix">Prefix</FormSelectOption>
+            <FormSelectOption value="suffix">Suffix</FormSelectOption>
           </FormSelect>
         </FormField>
       </div>

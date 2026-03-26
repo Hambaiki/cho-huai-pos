@@ -200,7 +200,7 @@ export function OrdersPageClient({
                     {new Date(order.created_at).toLocaleString()}
                   </TableCell>
                   <TableCell className="text-neutral-600">
-                    <span className="inline-flex items-center gap-1.5">
+                    <span className="inline-flex items-center gap-2">
                       {(() => {
                         const MethodIcon =
                           METHOD_ICONS[
@@ -219,7 +219,7 @@ export function OrdersPageClient({
                   </TableCell>
                   <TableCell>
                     <span
-                      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${
+                      className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium capitalize ${
                         STATUS_CLASSES[order.status] ??
                         "bg-neutral-100 text-neutral-600"
                       }`}

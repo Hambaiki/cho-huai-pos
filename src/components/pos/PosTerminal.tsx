@@ -5,6 +5,7 @@ import { useCartStore } from "@/lib/store/cart";
 import { useStoreContext } from "@/lib/store-context";
 import { createOrderAction } from "@/lib/actions/orders";
 import { ProductGrid, type PosProduct } from "@/components/pos/ProductGrid";
+import { BarcodeCameraScanner } from "@/components/pos/BarcodeCameraScanner";
 import type { CartItem } from "@/lib/store/cart";
 import { CartPanel } from "@/components/pos/CartPanel";
 import { PaymentModal } from "@/components/pos/PaymentModal";
@@ -13,6 +14,8 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import type { QrChannel } from "@/components/pos/QrPaymentScreen";
 import type { CreateOrderResult } from "@/lib/actions/orders";
 import type { BnplAccountSummary } from "@/lib/types/bnpl";
+import { useBarcodeScanner } from "@/lib/hooks/useBarcodeScanner";
+import { toast } from "@/lib/utils/toast";
 
 interface PosTerminalProps {
   products: PosProduct[];
@@ -60,34 +63,68 @@ export function PosTerminal({
     ),
   );
 
+  const handleAddItem = (product: PosProduct) => {
+    toast.success(`${product.name} added to cart`);
+    addItem({
+      productId: product.id,
+      name: product.name,
+      imageUrl: product.image_url,
+      unitPrice: Number(product.price),
+      stockQty: product.stock_qty,
+    });
+  };
+
+  const handleRemoveItem = (productId: string) => {
+    toast.warning(`Item removed from cart`);
+    removeItem(productId);
+  };
+
+  const [showCameraScanner, setShowCameraScanner] = useState(false);
+
+  // Handle barcode scan
+  const handleBarcodeDetected = (barcode: string) => {
+    const product = products.find(
+      (p) =>
+        p.barcode?.toLowerCase() === barcode.toLowerCase() ||
+        p.sku?.toLowerCase() === barcode.toLowerCase(),
+    );
+
+    if (!product) {
+      toast.error(`Product with barcode/sku "${barcode}" not found`);
+      return;
+    }
+
+    if (product.stock_qty > 0) {
+      handleAddItem(product);
+    } else {
+      toast.warning(`Product "${product.name}" is out of stock`);
+    }
+  };
+
+  // Use hardware barcode scanner hook
+  useBarcodeScanner({ onBarcode: handleBarcodeDetected });
+
   return (
     <section className="grid gap-4 lg:h-full lg:grid-cols-[1.55fr_0.7fr]">
       <div className="flex min-h-0 flex-col space-y-3">
         <PageHeader title="POS Terminal" />
         <ProductGrid
           currency={store.currency}
-          onAdd={(product) =>
-            addItem({
-              productId: product.id,
-              name: product.name,
-              imageUrl: product.image_url,
-              unitPrice: Number(product.price),
-              stockQty: product.stock_qty,
-            })
-          }
           products={products}
+          onAdd={handleAddItem}
+          onScanProduct={() => setShowCameraScanner(true)}
         />
       </div>
 
       <CartPanel
-        className="min-h-0"
         currency={store.currency}
         items={items}
         onClearAll={clearCart}
         onCheckout={() => setIsPaymentOpen(true)}
         onQuantityChange={setQuantity}
-        onRemove={removeItem}
+        onRemove={handleRemoveItem}
         total={payable}
+        products={products}
       />
 
       <PaymentModal
@@ -179,6 +216,12 @@ export function PosTerminal({
           onClose={() => setIsReceiptOpen(false)}
         />
       )}
+
+      <BarcodeCameraScanner
+        isOpen={showCameraScanner}
+        onClose={() => setShowCameraScanner(false)}
+        onBarcode={handleBarcodeDetected}
+      />
     </section>
   );
 }

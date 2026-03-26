@@ -79,7 +79,7 @@ export function StoresHubClient({ stores }: StoresHubClientProps) {
                   <Store className="h-5 w-5 text-brand-600" />
                 </div>
                 <span
-                  className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${
+                  className={`inline-block rounded-full px-3 py-1 text-xs font-medium capitalize ${
                     ROLE_CLASSES[store.role] ?? "bg-neutral-100 text-neutral-600"
                   }`}
                 >
@@ -95,7 +95,7 @@ export function StoresHubClient({ stores }: StoresHubClientProps) {
                   <p className="mt-1 text-sm text-neutral-400 italic">No address</p>
                 )}
                 {store.isSuspended && (
-                  <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-warning-100 px-2 py-0.5 text-xs font-medium text-warning-700">
+                  <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-warning-100 px-2 py-1 text-xs font-medium text-warning-700">
                     <ShieldAlert size={14} />
                     Suspended by Admin
                   </p>
@@ -107,13 +107,13 @@ export function StoresHubClient({ stores }: StoresHubClientProps) {
                   {new Date(store.createdAt).toLocaleDateString()}
                 </span>
                 {store.isSuspended ? (
-                  <span className="rounded-lg bg-neutral-200 px-3 py-1.5 text-xs font-medium text-neutral-500">
+                  <span className="rounded-lg bg-neutral-200 px-3 py-2 text-xs font-medium text-neutral-500">
                     Disabled
                   </span>
                 ) : (
                   <Link
                     href={`/dashboard/store/${store.id}`}
-                    className="inline-flex items-center gap-1 rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-brand-700"
+                    className="inline-flex items-center gap-1 rounded-lg bg-brand-600 px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-brand-700"
                   >
                     Open workspace
                     <ArrowRight size={14} />

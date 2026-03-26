@@ -1,6 +1,20 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
+function clearSupabaseAuthCookies(request: NextRequest, response: NextResponse) {
+  const requestCookies = request.cookies.getAll();
+
+  requestCookies
+    .filter(({ name }) => name.startsWith("sb-"))
+    .forEach(({ name }) => {
+      request.cookies.delete(name);
+      response.cookies.set(name, "", {
+        path: "/",
+        maxAge: 0,
+      });
+    });
+}
+
 export async function updateSession(request: NextRequest) {
   const response = NextResponse.next({
     request,
@@ -27,9 +41,16 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  return { response, user, supabase };
+    return { response, user, supabase };
+  } catch {
+    // Stale/invalid auth cookies can trigger refresh_token_not_found.
+    // Clear Supabase cookies and continue as signed out.
+    clearSupabaseAuthCookies(request, response);
+    return { response, user: null, supabase };
+  }
 }

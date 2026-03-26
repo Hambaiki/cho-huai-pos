@@ -109,7 +109,7 @@ export function AdminUsersTable({
                     </TableCell>
                     <TableCell>
                       {profile.is_super_admin ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2 py-1 text-xs font-medium text-brand-700">
                           <Crown size={12} />
                           Yes
                         </span>
@@ -119,7 +119,7 @@ export function AdminUsersTable({
                     </TableCell>
                     <TableCell>
                       {profile.store_limit_override ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2 py-1 text-xs font-medium text-brand-700">
                           <Store size={12} />
                           {profile.store_limit_override}
                         </span>
@@ -134,12 +134,12 @@ export function AdminUsersTable({
                           Always enabled
                         </span>
                       ) : profile.is_suspended ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-warning-100 px-2 py-0.5 text-xs font-medium text-warning-700">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-warning-100 px-2 py-1 text-xs font-medium text-warning-700">
                           <ShieldAlert size={12} />
                           Suspended
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-success-100 px-2 py-0.5 text-xs font-medium text-success-700">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-success-100 px-2 py-1 text-xs font-medium text-success-700">
                           <ShieldCheck size={12} />
                           Active
                         </span>

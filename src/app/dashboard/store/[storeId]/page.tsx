@@ -174,11 +174,11 @@ export default async function StoreDashboardPage({
         })}
         meta={
           <div className="flex flex-wrap items-center gap-2 text-xs">
-            <span className="rounded-full bg-neutral-100 px-3 py-1.5 font-medium text-neutral-700">
+            <span className="rounded-full bg-neutral-100 px-3 py-2 font-medium text-neutral-700">
               Role: <span className="capitalize">{membership.role}</span>
             </span>
             <span
-              className={`rounded-full px-3 py-1.5 font-medium ${
+              className={`rounded-full px-3 py-2 font-medium ${
                 salesDeltaPct > 0
                   ? "bg-success-100 text-success-700"
                   : salesDeltaPct < 0
@@ -190,7 +190,7 @@ export default async function StoreDashboardPage({
             </span>
             <Link
               href={`${basePath}/reports#sales-trend-7d`}
-              className="rounded-full bg-neutral-100 px-3 py-1.5 font-medium text-neutral-700 hover:bg-neutral-200"
+              className="rounded-full bg-neutral-100 px-3 py-2 font-medium text-neutral-700 hover:bg-neutral-200"
             >
               Open analysis
             </Link>
@@ -260,10 +260,10 @@ export default async function StoreDashboardPage({
           ) : (
             <ul className="divide-y divide-neutral-100">
               {recentOrders.map((order) => (
-                <li key={order.id} className="flex items-center justify-between gap-3 px-5 py-3.5">
+                <li key={order.id} className="flex items-center justify-between gap-3 px-5 py-4">
                   <div>
                     <p className="font-mono text-xs text-neutral-500">#{order.id.slice(0, 8)}</p>
-                    <p className="mt-0.5 text-xs text-neutral-500">
+                    <p className="mt-1 text-xs text-neutral-500">
                       {new Date(order.created_at).toLocaleString()}
                     </p>
                   </div>
@@ -277,7 +277,7 @@ export default async function StoreDashboardPage({
                         {PAYMENT_LABELS[order.payment_method] ?? order.payment_method}
                       </span>
                       <span
-                        className={`rounded-full px-2 py-0.5 text-[11px] font-medium capitalize ${
+                        className={`rounded-full px-2 py-1 text-[11px] font-medium capitalize ${
                           ORDER_STATUS_CLASSES[order.status] ?? "bg-neutral-100 text-neutral-600"
                         }`}
                       >

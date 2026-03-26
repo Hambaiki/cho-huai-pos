@@ -20,7 +20,7 @@ const FormCheckbox = forwardRef<HTMLInputElement, FormCheckboxProps>(
       >
         <div
           className={cn(
-            "relative flex-shrink-0 w-5 h-5 rounded border-2 border-neutral-300 transition-colors",
+            "relative shrink-0 w-5 h-5 rounded border-2 border-neutral-300 transition-colors",
             "has-[input:focus-visible]:ring-2 has-[input:focus-visible]:ring-brand-200 has-[input:focus-visible]:ring-offset-1",
             "has-[input:checked]:bg-brand-600 has-[input:checked]:border-brand-600",
             className,
@@ -35,7 +35,7 @@ const FormCheckbox = forwardRef<HTMLInputElement, FormCheckboxProps>(
           />
           <Check
             size={16}
-            className="absolute inset-0 w-full h-full p-0.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none"
+            className="absolute inset-0 w-full h-full p-1 text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none"
           />
         </div>
         {label && (

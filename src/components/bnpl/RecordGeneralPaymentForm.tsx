@@ -96,7 +96,7 @@ export default function RecordGeneralPaymentForm({
     <Modal open onClose={onDone} size="lg" className="flex max-h-[95dvh] flex-col">
       <div className="border-b border-border px-5 py-4">
         <h3 className="text-lg font-semibold text-neutral-900">Record account payment</h3>
-        <p className="mt-0.5 text-sm text-neutral-600">
+        <p className="mt-1 text-sm text-neutral-600">
           Balance due: <strong>{formatCurrency(maxAmount, currency)}</strong>
         </p>
       </div>
@@ -124,7 +124,7 @@ export default function RecordGeneralPaymentForm({
         {paymentMethod === "cash" && (
           <div className="space-y-3">
             <div>
-              <p className="mb-1.5 text-xs font-medium text-neutral-500">Quick amounts</p>
+              <p className="mb-2 text-xs font-medium text-neutral-500">Quick amounts</p>
               <div className="flex flex-wrap gap-2">
                 {quickAmounts.map((quickAmount) => (
                   <Button
@@ -182,7 +182,7 @@ export default function RecordGeneralPaymentForm({
                 type="button"
                 onClick={() => setShowQrScreen(true)}
                 disabled={isQrInvalid || isPending}
-                className="mt-2 w-full rounded-xl bg-brand-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-800 disabled:opacity-60"
+                className="mt-2 w-full rounded-xl bg-brand-700 px-4 py-3 text-sm font-semibold text-white hover:bg-brand-800 disabled:opacity-60"
               >
                 Show QR code →
               </button>

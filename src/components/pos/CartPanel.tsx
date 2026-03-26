@@ -5,7 +5,16 @@ import { formatCurrency } from "@/lib/utils/currency";
 import { type CurrencyStore } from "@/lib/utils/currency";
 import { type CartItem } from "@/lib/store/cart";
 import { cn } from "@/lib/utils/cn";
-import { ImageOff, Minus, Plus, ShoppingCart, Trash } from "lucide-react";
+import {
+  ImageOff,
+  Minus,
+  Plus,
+  ShoppingCart,
+  Trash,
+  Barcode,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 import {
   Modal,
   ModalBody,
@@ -13,6 +22,7 @@ import {
   ModalHeader,
 } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
+import type { PosProduct } from "@/components/pos/ProductGrid";
 
 interface CartPanelProps {
   items: CartItem[];
@@ -22,6 +32,8 @@ interface CartPanelProps {
   onRemove: (productId: string) => void;
   onClearAll: () => void;
   onCheckout: () => void;
+  onScanProduct?: () => void;
+  products?: PosProduct[];
   className?: string;
 }
 
@@ -33,24 +45,63 @@ export function CartPanel({
   onRemove,
   onClearAll,
   onCheckout,
+  onScanProduct,
+  products = [],
   className,
 }: CartPanelProps) {
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
+
+  const cartContentHidden = isCollapsed;
 
   return (
     <>
       <aside
         className={cn(
-          "flex h-full min-h-0 flex-col rounded-2xl border border-border bg-surface",
+          "flex flex-col h-full rounded-2xl border border-border bg-surface",
           className,
         )}
       >
-        <h2 className="inline-flex items-center text-lg font-semibold text-neutral-900 border-b border-border p-4">
-          <ShoppingCart size={16} className="mr-2" />
-          Cart
-        </h2>
+        <div className="flex items-center justify-between border-b border-border p-4">
+          <h2 className="inline-flex items-center text-lg font-semibold text-neutral-900">
+            <ShoppingCart size={16} className="mr-2" />
+            Cart
+          </h2>
+          <div className="flex items-center gap-2">
+            {onScanProduct && products.length > 0 && (
+              <Button
+                type="button"
+                variant="primary"
+                size="md"
+                onClick={() => onScanProduct()}
+                title="Scan barcode with camera to add product"
+                icon={<Barcode size={16} />}
+              >
+                Scan product
+              </Button>
+            )}
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={() => setIsCollapsed((prev) => !prev)}
+              aria-expanded={!isCollapsed}
+              aria-label={isCollapsed ? "Expand cart" : "Collapse cart"}
+              title={isCollapsed ? "Expand cart" : "Collapse cart"}
+              className="lg:hidden"
+              icon={
+                isCollapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />
+              }
+            />
+          </div>
+        </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+        <div
+          className={cn(
+            "min-h-0 flex-1 overflow-y-auto pr-1 lg:block",
+            cartContentHidden ? "hidden" : "block",
+          )}
+        >
           <div className="p-4">
             {items.length === 0 ? (
               <p className="text-sm text-neutral-500">No items yet.</p>
@@ -131,7 +182,12 @@ export function CartPanel({
           </div>
         </div>
 
-        <div className="border-t border-border p-4">
+        <div
+          className={cn(
+            "border-t border-border p-4 lg:block",
+            cartContentHidden ? "hidden" : "block",
+          )}
+        >
           <div className="flex items-center justify-between text-sm">
             <span className="text-neutral-600">Total</span>
             <strong className="text-neutral-900">

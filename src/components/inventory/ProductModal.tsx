@@ -1,10 +1,19 @@
 "use client";
 
-import { useActionState, useRef } from "react";
-import { createProductAction, updateProductAction } from "@/lib/actions/products";
+import { useActionState, useRef, useState } from "react";
+import { Barcode } from "lucide-react";
+import {
+  createProductAction,
+  updateProductAction,
+} from "@/lib/actions/products";
 import { compressImageForUpload } from "@/lib/utils/image-compression";
 import { useStoreContext } from "@/lib/store-context";
-import { Modal, ModalHeader, ModalBody, ModalFooter } from "@/components/ui/Modal";
+import {
+  Modal,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import {
   FormField,
@@ -12,7 +21,11 @@ import {
   FormInput,
   FormSelect,
   FormError,
+  FormSelectOption,
+  FormFileUpload,
 } from "@/components/ui/form";
+import { useBarcodeScanner } from "@/lib/hooks/useBarcodeScanner";
+import { BarcodeCameraScanner } from "@/components/pos/BarcodeCameraScanner";
 
 interface Product {
   id: string;
@@ -28,7 +41,7 @@ interface Product {
   imageUrl: string | null;
 }
 
-interface ProductFormModalProps {
+interface ProductModalProps {
   open: boolean;
   onClose: () => void;
   product?: Product;
@@ -36,16 +49,30 @@ interface ProductFormModalProps {
   onSuccess?: () => void;
 }
 
-export function ProductFormModal({
+export function ProductModal({
   open,
   onClose,
   product,
   categories,
   onSuccess,
-}: ProductFormModalProps) {
+}: ProductModalProps) {
   const store = useStoreContext();
   const isEdit = !!product;
   const formRef = useRef<HTMLFormElement>(null);
+  const barcodeInputRef = useRef<HTMLInputElement>(null);
+  const [showCameraScanner, setShowCameraScanner] = useState(false);
+
+  // Handle barcode from camera or hardware scanner
+  const handleBarcodeDetected = (barcode: string) => {
+    if (barcodeInputRef.current) {
+      barcodeInputRef.current.value = barcode;
+      barcodeInputRef.current.focus();
+    }
+    setShowCameraScanner(false);
+  };
+
+  // Use hardware barcode scanner hook - listens for scanner input
+  useBarcodeScanner({ onBarcode: handleBarcodeDetected });
 
   const [state, formAction, isPending] = useActionState(
     async (
@@ -76,30 +103,40 @@ export function ProductFormModal({
   );
 
   return (
-    <Modal open={open} onClose={onClose} size="lg">
+    <Modal
+      open={open}
+      onClose={onClose}
+      size="lg"
+      className="flex max-h-[calc(100dvh-2rem)] flex-col"
+    >
       <ModalHeader
         title={isEdit ? "Edit Product" : "Add New Product"}
-        description={isEdit ? product?.name : "Create a new product for your store inventory"}
+        description={
+          isEdit
+            ? product?.name
+            : "Create a new product for your store inventory"
+        }
         onClose={onClose}
       />
 
-      <form ref={formRef} action={formAction}>
-        <ModalBody className="space-y-6">
+      <form ref={formRef} action={formAction} className="flex min-h-0 flex-col">
+        <ModalBody className="space-y-6 overflow-y-auto">
           <FormError message={state?.error} />
 
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
             <FormField className="sm:col-span-2">
               <FormLabel htmlFor="imageFile">Item Image</FormLabel>
-              <FormInput
+              <FormFileUpload
                 id="imageFile"
                 name="imageFile"
-                type="file"
                 accept="image/*"
               />
-              <p className="mt-1 text-xs text-neutral-500">Optional. Max file size 5MB.</p>
-
+              <p className="mt-1 text-xs text-neutral-500">
+                Optional. Max file size 5MB.
+              </p>
               {product?.imageUrl ? (
                 <div className="mt-3 rounded-md border border-neutral-200 p-3">
+                  {/* eslint-disable-next-line @next/next/no-img-element  */}
                   <img
                     src={product.imageUrl}
                     alt={`${product.name} image`}
@@ -142,12 +179,25 @@ export function ProductFormModal({
 
             <FormField>
               <FormLabel htmlFor="barcode">Barcode</FormLabel>
-              <FormInput
-                id="barcode"
-                name="barcode"
-                placeholder="e.g., 123456789"
-                defaultValue={product?.barcode || ""}
-              />
+              <div className="flex items-center gap-2">
+                <FormInput
+                  ref={barcodeInputRef}
+                  id="barcode"
+                  name="barcode"
+                  placeholder="e.g., 123456789"
+                  defaultValue={product?.barcode || ""}
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setShowCameraScanner(true)}
+                  title="Scan barcode using camera"
+                  icon={<Barcode size={16} />}
+                  className="mt-0"
+                />
+              </div>
             </FormField>
 
             <FormField>
@@ -170,11 +220,11 @@ export function ProductFormModal({
                 name="categoryId"
                 defaultValue={product?.categoryId || ""}
               >
-                <option value="">Uncategorized</option>
+                <FormSelectOption value="">Uncategorized</FormSelectOption>
                 {categories.map((category) => (
-                  <option key={category.value} value={category.value}>
+                  <FormSelectOption key={category.value} value={category.value}>
                     {category.label}
-                  </option>
+                  </FormSelectOption>
                 ))}
               </FormSelect>
             </FormField>
@@ -243,22 +293,24 @@ export function ProductFormModal({
         </ModalBody>
 
         <ModalFooter>
-          <Button
-            type="button"
-            onClick={onClose}
-            variant="outline"
-          >
+          <Button type="button" onClick={onClose} variant="outline">
             Cancel
           </Button>
-          <Button
-            type="submit"
-            disabled={isPending}
-            isLoading={isPending}
-          >
-            {isPending ? "Saving..." : isEdit ? "Update Product" : "Create Product"}
+          <Button type="submit" disabled={isPending} isLoading={isPending}>
+            {isPending
+              ? "Saving..."
+              : isEdit
+                ? "Update Product"
+                : "Create Product"}
           </Button>
         </ModalFooter>
       </form>
+
+      <BarcodeCameraScanner
+        isOpen={showCameraScanner}
+        onClose={() => setShowCameraScanner(false)}
+        onBarcode={handleBarcodeDetected}
+      />
     </Modal>
   );
 }

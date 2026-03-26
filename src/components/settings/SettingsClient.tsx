@@ -32,6 +32,8 @@ import {
   FormSelect,
   FormTextarea,
   FormError,
+  FormSelectOption,
+  FormToggle,
 } from "@/components/ui/form";
 import { cn } from "@/lib/utils/cn";
 import { Plus } from "lucide-react";
@@ -228,8 +230,8 @@ function GeneralSettingsTab({
               defaultValue={store.symbol_position}
               disabled={!isOwner}
             >
-              <option value="prefix">Prefix (฿100)</option>
-              <option value="suffix">Suffix (100฿)</option>
+              <FormSelectOption value="prefix">Prefix (฿100)</FormSelectOption>
+              <FormSelectOption value="suffix">Suffix (100฿)</FormSelectOption>
             </FormSelect>
           </FormField>
         </div>
@@ -310,7 +312,7 @@ function CategoriesTab({
           <h2 className="text-xl font-semibold text-neutral-900">
             Product Categories
           </h2>
-          <p className="mt-0.5 text-sm text-neutral-500">
+          <p className="mt-1 text-sm text-neutral-500">
             Configure product types used in inventory forms and filters.
           </p>
         </div>
@@ -477,7 +479,7 @@ function QrChannelsTab({
     SettingsActionResult,
     FormData
   >(createQrChannelAction, { data: null, error: null });
-  const [, startTransition] = useTransition();
+  const [isTransitioning, startTransition] = useTransition();
 
   useEffect(() => {
     if (!hasSubmittedCreate || isCreating || createState.error) {
@@ -514,7 +516,7 @@ function QrChannelsTab({
           <h2 className="text-xl font-semibold text-neutral-900">
             QR Transfer Channels
           </h2>
-          <p className="text-sm text-neutral-500 mt-0.5">
+          <p className="text-sm text-neutral-500 mt-1">
             Upload QR code images for PromptPay, TrueMoney, bank QR, etc.
           </p>
         </div>
@@ -577,7 +579,7 @@ function QrChannelsTab({
                     setImagePreviewUrl(URL.createObjectURL(file));
                   }
                 }}
-                className="block w-full rounded-md border border-neutral-200 px-3 py-2 text-sm text-neutral-700 file:mr-3 file:rounded-md file:border-0 file:bg-neutral-100 file:px-3 file:py-1.5 file:text-sm file:font-medium"
+                className="block w-full rounded-md border border-neutral-200 px-3 py-2 text-sm text-neutral-700 file:mr-3 file:rounded-md file:border-0 file:bg-neutral-100 file:px-3 file:py-2 file:text-sm file:font-medium"
               />
               <p className="mt-1 text-xs text-neutral-500">
                 PNG, JPG, or WEBP up to 5MB.
@@ -589,7 +591,7 @@ function QrChannelsTab({
                 <p className="text-xs font-medium text-neutral-700">
                   Selected file
                 </p>
-                <p className="mt-0.5 text-xs text-neutral-500">
+                <p className="mt-1 text-xs text-neutral-500">
                   {selectedFileName}
                 </p>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -650,7 +652,7 @@ function QrChannelsTab({
               </div>
               <span
                 className={cn(
-                  `text-xs px-2 py-0.5 rounded-full`,
+                  `text-xs px-2 py-1 rounded-full`,
                   ch.is_enabled
                     ? "bg-success-100 text-success-700"
                     : "bg-neutral-100 text-neutral-500",
@@ -660,27 +662,15 @@ function QrChannelsTab({
               </span>
               {isOwner && (
                 <div className="flex items-center gap-3 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() =>
+                  <FormToggle
+                    value={ch.is_enabled}
+                    disabled={isTransitioning}
+                    onChange={(enabled) =>
                       startTransition(() => {
-                        toggleQrChannelAction(ch.id, storeId, !ch.is_enabled);
+                        toggleQrChannelAction(ch.id, storeId, enabled);
                       })
                     }
-                    className={cn(
-                      `relative inline-flex h-5 w-9 rounded-full p-0 cursor-pointer transition`,
-                      ch.is_enabled
-                        ? "bg-brand-600 hover:bg-brand-700"
-                        : "bg-neutral-300 hover:bg-neutral-400",
-                    )}
-                  >
-                    <span
-                      className={cn(
-                        `inline-block h-4 w-4 mt-0.5 rounded-full bg-white shadow transition-transform`,
-                        ch.is_enabled ? "translate-x-4.5" : "translate-x-0.5",
-                      )}
-                    />
-                  </button>
+                  />
                   <Button
                     type="button"
                     variant="ghost"

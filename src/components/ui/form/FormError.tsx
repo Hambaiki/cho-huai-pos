@@ -18,7 +18,7 @@ export function FormError({ message, className }: FormErrorProps) {
         className,
       )}
     >
-      <AlertCircle size={14} className="flex-shrink-0" />
+      <AlertCircle size={14} className="shrink-0" />
       <span>{message}</span>
     </div>
   );

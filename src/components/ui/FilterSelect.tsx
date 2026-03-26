@@ -3,6 +3,7 @@
 import { cn } from "@/lib/utils/cn";
 import { ChevronDown } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import { Button } from "@/components/ui/Button";
 
 type DropdownPhase = "visible" | "exiting" | "hidden";
 
@@ -16,6 +17,7 @@ interface FilterSelectProps {
   options: FilterOption[];
   selected: string[];
   onSelect: (selected: string[]) => void;
+  mode?: "single" | "multiple";
 }
 
 export function FilterSelect({
@@ -23,6 +25,7 @@ export function FilterSelect({
   options,
   selected,
   onSelect,
+  mode = "multiple",
 }: FilterSelectProps) {
   const [phase, setPhase] = useState<DropdownPhase>("hidden");
   const containerRef = useRef<HTMLDivElement>(null);
@@ -46,6 +49,16 @@ export function FilterSelect({
   }, []);
 
   const toggleOption = (value: string) => {
+    if (mode === "single") {
+      if (selected.includes(value)) {
+        onSelect([]);
+      } else {
+        onSelect([value]);
+      }
+      setPhase("exiting");
+      return;
+    }
+
     if (selected.includes(value)) {
       onSelect(selected.filter((v) => v !== value));
     } else {
@@ -62,26 +75,34 @@ export function FilterSelect({
 
   return (
     <div ref={containerRef} className="relative">
-      <button
-        onClick={() => setPhase((currentPhase) => (currentPhase === "visible" ? "exiting" : "visible"))}
-        className="inline-flex items-center gap-2 rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm hover:bg-neutral-50 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+      <Button
+        variant={selected.length > 0 ? "active" : "outline"}
+        onClick={() =>
+          setPhase((currentPhase) =>
+            currentPhase === "visible" ? "exiting" : "visible",
+          )
+        }
+        className="flex gap-2"
       >
         <span className="text-neutral-700">{label}</span>
-        {selected.length > 0 && (
+        {mode === "multiple" && selected.length > 0 && (
           <span className="flex items-center justify-center rounded-full bg-brand-100 min-w-5 h-5 text-xs font-medium text-brand-700">
             {selected.length}
           </span>
         )}
         <ChevronDown
           size={16}
-          className={cn("text-neutral-400", isOpen ? "rotate-180" : "")}
+          className={cn(
+            "text-neutral-400 transition-transform",
+            isOpen ? "rotate-180" : "",
+          )}
         />
-      </button>
+      </Button>
 
       {isPanelVisible && (
         <div
           className={cn(
-            "absolute right-0 top-full z-10 mt-2 w-56 rounded-lg border border-neutral-200 bg-white",
+            "absolute right-0 top-full z-10 mt-2 w-56 rounded-md border border-neutral-200 bg-white",
             isExiting ? "animate-dropdown-out" : "animate-dropdown-in",
           )}
           onAnimationEnd={(e) => {
@@ -92,7 +113,14 @@ export function FilterSelect({
         >
           <div className="flex items-center justify-between px-4 py-2 border-b border-neutral-100">
             <span className="text-xs font-medium text-neutral-600">
-              {selected.length === 0 ? "All" : `${selected.length} selected`}
+              {mode === "multiple"
+                ? selected.length === 0
+                  ? "All"
+                  : `${selected.length} selected`
+                : selected.length === 0
+                  ? "None"
+                  : options.find((option) => option.value === selected[0])
+                      ?.label}
             </span>
             {selected.length > 0 && (
               <button

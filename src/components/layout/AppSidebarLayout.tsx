@@ -3,7 +3,15 @@
 import Link from "next/link";
 import { Fragment, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { ChevronRight, LogOut, Menu, X } from "lucide-react";
+import {
+  ChevronRight,
+  Coins,
+  LogOut,
+  Menu,
+  PanelLeftClose,
+  PanelLeftOpen,
+  X,
+} from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { signOutAction } from "@/lib/actions/auth";
 import { createClient } from "@/lib/supabase/client";
@@ -54,6 +62,7 @@ export function AppSidebarLayout({
   children,
 }: AppSidebarLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [compactExpanded, setCompactExpanded] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const pathname = usePathname();
   const breadcrumbs = getBreadcrumbs(pathname);
@@ -68,11 +77,24 @@ export function AppSidebarLayout({
   const sidebarContent = (
     <div className="flex h-full flex-col">
       <div className="flex h-14 items-center justify-between border-b border-neutral-200 px-4 py-4">
-        <div>
-          <p className="text-lg font-black uppercase tracking-widest text-brand-700">
+        <div className="flex items-center">
+          <Coins size={30} className="mr-2 text-brand-600" />
+          <p
+            className={cn(
+              "overflow-hidden whitespace-nowrap text-lg font-black uppercase tracking-widest text-brand-700 transition-[max-width,opacity] duration-200 ease-out md:max-w-40 md:opacity-100",
+              !compactExpanded &&
+                "md:max-w-0 md:opacity-0 xl:max-w-40 xl:opacity-100",
+            )}
+          >
             Cho-Huai POS
           </p>
-          <p className="mt-0.5 max-w-40 truncate text-sm font-medium text-neutral-600">
+          <p
+            className={cn(
+              "mt-1 overflow-hidden whitespace-nowrap text-sm font-medium text-neutral-600 transition-[max-width,opacity] duration-200 ease-out md:max-w-40 md:opacity-100",
+              !compactExpanded &&
+                "md:max-w-0 md:opacity-0 xl:max-w-40 xl:opacity-100",
+            )}
+          >
             {subtitle}
           </p>
         </div>
@@ -81,22 +103,52 @@ export function AppSidebarLayout({
           variant="ghost"
           size="icon-sm"
           onClick={() => setSidebarOpen(false)}
-          className="lg:hidden text-neutral-500"
+          className="text-neutral-500 md:hidden"
           aria-label="Close menu"
         >
-          <X size={18} />
+          <X size={20} />
         </Button>
       </div>
 
-      <nav className="flex-1 space-y-4 overflow-y-auto px-2 py-3">
+      <div className="hidden border-b border-neutral-200 px-2 py-3 md:block xl:hidden">
+        <Button
+          type="submit"
+          variant="ghost"
+          onClick={() => setCompactExpanded((prev) => !prev)}
+          aria-label="Collapse sidebar"
+          className="h-auto w-full justify-start gap-3 px-3 py-3 text-neutral-600 transition-colors duration-200 ease-out hover:text-neutral-900"
+        >
+          {compactExpanded ? (
+            <PanelLeftClose size={20} className="shrink-0" />
+          ) : (
+            <PanelLeftOpen size={20} className="shrink-0" />
+          )}
+          <span
+            className={cn(
+              "overflow-hidden whitespace-nowrap transition-[max-width,opacity] duration-200 ease-out md:max-w-40 md:opacity-100",
+              !compactExpanded &&
+                "md:max-w-0 md:opacity-0 xl:max-w-40 xl:opacity-100",
+            )}
+          >
+            {compactExpanded ? "Collapse" : "Expand"}
+          </span>
+        </Button>
+      </div>
+
+      <nav className="flex-1 space-y-4 overflow-y-auto scrollbar-none px-2 py-3">
         {navSections.map((section, index) => (
           <div key={section.title ?? `section-${index}`}>
             {section.title ? (
-              <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wide text-neutral-400">
+              <p
+                className={cn(
+                  "overflow-hidden whitespace-nowrap px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-neutral-400 transition-opacity duration-200 ease-out md:min-h-5 md:opacity-100",
+                  !compactExpanded && "md:opacity-0 xl:opacity-100",
+                )}
+              >
                 {section.title}
               </p>
             ) : null}
-            <div className="space-y-0.5">
+            <div className="space-y-1">
               {section.items.map(({ href, label, icon: Icon, exact }) => {
                 const active = isActiveNavItem(pathname, {
                   href,
@@ -110,15 +162,29 @@ export function AppSidebarLayout({
                     key={href}
                     href={href}
                     onClick={() => setSidebarOpen(false)}
+                    aria-label={label}
+                    title={label}
                     className={cn(
-                      "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                      "flex items-center gap-3 rounded-lg p-3 text-sm font-medium transition-colors duration-200 ease-out",
                       active
                         ? "bg-brand-50 text-brand-700"
                         : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900",
                     )}
                   >
-                    <Icon size={18} strokeWidth={active ? 2.5 : 2} />
-                    {label}
+                    <Icon
+                      size={20}
+                      strokeWidth={active ? 3 : 2}
+                      className="shrink-0"
+                    />
+                    <span
+                      className={cn(
+                        "overflow-hidden whitespace-nowrap transition-[max-width,opacity] duration-200 ease-out md:max-w-40 md:opacity-100",
+                        !compactExpanded &&
+                          "md:max-w-0 md:opacity-0 xl:max-w-40 xl:opacity-100",
+                      )}
+                    >
+                      {label}
+                    </span>
                   </Link>
                 );
               })}
@@ -134,10 +200,22 @@ export function AppSidebarLayout({
               key={href}
               href={href}
               onClick={() => setSidebarOpen(false)}
-              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900"
+              aria-label={label}
+              title={label}
+              className={cn(
+                "flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium text-neutral-600 transition-colors duration-200 ease-out hover:bg-neutral-100 hover:text-neutral-900",
+              )}
             >
-              <Icon size={18} />
-              {label}
+              <Icon size={20} className="shrink-0" />
+              <span
+                className={cn(
+                  "overflow-hidden whitespace-nowrap transition-[max-width,opacity] duration-200 ease-out md:max-w-40 md:opacity-100",
+                  !compactExpanded &&
+                    "md:max-w-0 md:opacity-0 xl:max-w-40 xl:opacity-100",
+                )}
+              >
+                {label}
+              </span>
             </Link>
           ))}
         </div>
@@ -149,10 +227,19 @@ export function AppSidebarLayout({
             type="submit"
             variant="ghost"
             onClick={() => setSidebarOpen(false)}
-            className="h-auto w-full justify-start gap-3 px-3 py-2.5 text-neutral-600 hover:text-neutral-900"
-            icon={<LogOut size={18} />}
+            aria-label="Logout"
+            className="h-auto w-full justify-start gap-3 px-3 py-3 text-neutral-600 transition-colors duration-200 ease-out hover:text-neutral-900"
           >
-            Logout
+            <LogOut size={20} className="shrink-0" />
+            <span
+              className={cn(
+                "overflow-hidden whitespace-nowrap transition-[max-width,opacity] duration-200 ease-out md:max-w-40 md:opacity-100",
+                !compactExpanded &&
+                  "md:max-w-0 md:opacity-0 xl:max-w-40 xl:opacity-100",
+              )}
+            >
+              Logout
+            </span>
           </Button>
         </form>
       </div>
@@ -160,14 +247,19 @@ export function AppSidebarLayout({
   );
 
   return (
-    <div className="min-h-screen overflow-hidden bg-neutral-50 text-neutral-900">
-      <aside className="hidden border-r border-neutral-200 bg-white lg:fixed lg:inset-y-0 lg:left-0 lg:z-30 lg:flex lg:w-56 lg:flex-col">
+    <div className="min-h-dvh overflow-hidden bg-neutral-50 text-neutral-900">
+      <aside
+        className={cn(
+          "hidden border-r border-neutral-200 bg-white md:fixed md:inset-y-0 md:left-0 md:z-30 md:flex md:flex-col md:w-16 xl:w-56 md:transition-[width] md:duration-300 md:ease-in-out",
+          compactExpanded && "md:w-56",
+        )}
+      >
         {sidebarContent}
       </aside>
 
       <div
         className={cn(
-          "fixed inset-0 z-40 flex lg:hidden",
+          "fixed inset-0 z-40 flex md:hidden",
           sidebarOpen ? "pointer-events-auto" : "pointer-events-none",
         )}
         aria-hidden={!sidebarOpen}
@@ -189,14 +281,22 @@ export function AppSidebarLayout({
         </aside>
       </div>
 
-      <div className="flex h-screen min-w-0 flex-1 flex-col pt-14 lg:pl-56">
-        <header className="fixed inset-x-0 top-0 z-20 flex h-14 items-center gap-3 border-b border-neutral-200 bg-white px-6 lg:left-56 lg:right-0">
+      <div
+        className={cn(
+          "flex h-dvh min-w-0 flex-1 flex-col pt-14 md:pl-16 xl:pl-56",
+        )}
+      >
+        <header
+          className={cn(
+            "fixed inset-x-0 top-0 z-20 flex h-14 items-center gap-3 border-b border-neutral-200 bg-white px-6 md:right-0 md:left-16 xl:left-56",
+          )}
+        >
           <Button
             type="button"
             variant="ghost"
             size="icon-sm"
             onClick={() => setSidebarOpen(true)}
-            className="lg:hidden text-neutral-500"
+            className="text-neutral-500 md:hidden"
             aria-label="Open menu"
           >
             <Menu size={20} />

@@ -105,7 +105,7 @@ export function Numpad({ value, onChange, currency }: NumpadProps) {
       <button
         type="button"
         onClick={handleClear}
-        className="w-full select-none rounded-xl border border-neutral-200 bg-neutral-100 py-2.5 text-sm font-medium text-neutral-600 transition hover:bg-neutral-200 active:scale-95"
+        className="w-full select-none rounded-xl border border-neutral-200 bg-neutral-100 py-3 text-sm font-medium text-neutral-600 transition hover:bg-neutral-200 active:scale-95"
       >
         Clear
       </button>

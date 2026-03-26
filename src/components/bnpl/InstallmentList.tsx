@@ -117,7 +117,7 @@ export default function InstallmentList({
                   </TableCell>
                   <TableCell>
                     <span
-                      className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
+                      className={`inline-block rounded-full px-2 py-1 text-xs font-medium ${
                         inst.status === "paid"
                           ? "bg-success-100 text-success-700"
                           : inst.status === "waived"

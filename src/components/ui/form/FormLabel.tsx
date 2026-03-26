@@ -16,7 +16,7 @@ export function FormLabel({
   return (
     <label
       className={cn(
-        "inline-flex items-center gap-1.5 text-sm font-medium text-neutral-700",
+        "inline-flex items-center gap-2 text-sm font-medium text-neutral-700",
         className,
       )}
       {...props}

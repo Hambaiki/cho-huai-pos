@@ -53,7 +53,7 @@ export function SitewideSettingsForm({
     <form onSubmit={handleSubmit}>
       {error && (
         <div className="mb-6 rounded-md bg-danger-50 border border-danger-200 p-4 flex gap-3">
-          <AlertCircle size={20} className="text-danger-600 shrink-0 mt-0.5" />
+          <AlertCircle size={20} className="text-danger-600 shrink-0 mt-1" />
           <p className="text-sm font-medium text-danger-900">{error}</p>
         </div>
       )}

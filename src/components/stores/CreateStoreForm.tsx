@@ -15,6 +15,7 @@ import {
   FormError,
   FormSelectOption,
 } from "@/components/ui/form";
+import { useSyncPendingAction } from "@/components/ui/PendingActionProvider";
 
 const initialState: CreateStoreActionState = { error: null };
 
@@ -29,6 +30,12 @@ export function CreateStoreForm({
     createStoreAction,
     initialState,
   );
+
+  useSyncPendingAction(isPending, {
+    message: "Creating a new store...",
+    subMessage:
+      "This may take a moment. Please do not close or refresh the page.",
+  });
 
   return (
     <form action={action} className="space-y-4">

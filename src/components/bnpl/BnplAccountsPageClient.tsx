@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/Table";
 import { formatCurrency, type CurrencyStore } from "@/lib/utils/currency";
 import type { BnplAccountSummary } from "@/lib/types/bnpl";
-import { ArrowUpRight, Plus } from "lucide-react";
+import { ExternalLink, Plus } from "lucide-react";
 
 const STATUS_CLASSES: Record<string, string> = {
   active: "bg-success-100 text-success-700",
@@ -214,10 +214,10 @@ export function BnplAccountsPageClient({
                   <TableCell className="text-right">
                     <Link
                       href={`/dashboard/store/${storeId}/bnpl/${account.id}`}
-                      className="inline-flex items-center gap-1 text-xs font-medium text-brand-600 hover:text-brand-800"
+                      className="inline-flex items-center gap-1 text-sm font-medium text-neutral-500 transition hover:text-neutral-800"
                     >
-                      View
-                      <ArrowUpRight size={13} />
+                      <ExternalLink size={14} />
+                      Details
                     </Link>
                   </TableCell>
                 </TableRow>
@@ -225,14 +225,14 @@ export function BnplAccountsPageClient({
             )}
           </TableBody>
         </Table>
-
-        <PaginationControls
-          currentPage={currentPage}
-          pageSize={pageSize}
-          totalItems={totalItems}
-          onPageChange={(page) => updateParams({ page: String(page) })}
-        />
       </TableContainer>
+
+      <PaginationControls
+        currentPage={currentPage}
+        pageSize={pageSize}
+        totalItems={totalItems}
+        onPageChange={(page) => updateParams({ page: String(page) })}
+      />
 
       {isManager ? (
         <BnplAccountCreateModal

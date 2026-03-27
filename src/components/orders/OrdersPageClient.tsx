@@ -3,7 +3,13 @@
 import Link from "next/link";
 import { useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { ArrowUpRight, BadgeCheck, CreditCard, ReceiptText, Undo2 } from "lucide-react";
+import {
+  BadgeCheck,
+  CreditCard,
+  ExternalLink,
+  ReceiptText,
+  Undo2,
+} from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { FilterSelect } from "@/components/ui/FilterSelect";
@@ -237,10 +243,10 @@ export function OrdersPageClient({
                   <TableCell className="text-right">
                     <Link
                       href={`${basePath}/orders/${order.id}`}
-                      className="inline-flex items-center gap-1 text-xs font-medium text-brand-600 hover:text-brand-800"
+                      className="inline-flex items-center gap-1 text-sm font-medium text-neutral-500 transition hover:text-neutral-800"
                     >
-                      View
-                      <ArrowUpRight size={13} />
+                      <ExternalLink size={14} />
+                      Details
                     </Link>
                   </TableCell>
                 </TableRow>
@@ -248,14 +254,14 @@ export function OrdersPageClient({
             )}
           </TableBody>
         </Table>
-
-        <PaginationControls
-          currentPage={currentPage}
-          pageSize={pageSize}
-          totalItems={totalItems}
-          onPageChange={(page) => updateParams({ page: String(page) })}
-        />
       </TableContainer>
+
+      <PaginationControls
+        currentPage={currentPage}
+        pageSize={pageSize}
+        totalItems={totalItems}
+        onPageChange={(page) => updateParams({ page: String(page) })}
+      />
     </section>
   );
 }

@@ -1,9 +1,10 @@
 "use client";
 
 import { useActionState, useRef, useState } from "react";
-import { Barcode } from "lucide-react";
+import { Barcode, Trash } from "lucide-react";
 import {
   createProductAction,
+  removeProductImageAction,
   updateProductAction,
 } from "@/lib/actions/products";
 import { compressImageForUpload } from "@/lib/utils/image-compression";
@@ -26,6 +27,7 @@ import {
 } from "@/components/ui/form";
 import { useBarcodeScanner } from "@/lib/hooks/useBarcodeScanner";
 import { BarcodeCameraScanner } from "@/components/pos/BarcodeCameraScanner";
+import { useSyncPendingAction } from "@/components/ui/PendingActionProvider";
 
 interface Product {
   id: string;
@@ -61,6 +63,15 @@ export function ProductModal({
   const formRef = useRef<HTMLFormElement>(null);
   const barcodeInputRef = useRef<HTMLInputElement>(null);
   const [showCameraScanner, setShowCameraScanner] = useState(false);
+  const [showRemoveImageConfirm, setShowRemoveImageConfirm] = useState(false);
+  const [hasRemovedImage, setHasRemovedImage] = useState(false);
+
+  const handleModalClose = () => {
+    setShowRemoveImageConfirm(false);
+    setHasRemovedImage(false);
+    setShowCameraScanner(false);
+    onClose();
+  };
 
   // Handle barcode from camera or hardware scanner
   const handleBarcodeDetected = (barcode: string) => {
@@ -76,7 +87,7 @@ export function ProductModal({
 
   const [state, formAction, isPending] = useActionState(
     async (
-      _prevState: { data: null; error: string | null },
+      prevState: { data: null; error: string | null },
       formData: FormData,
     ) => {
       const imageValue = formData.get("imageFile");
@@ -90,22 +101,56 @@ export function ProductModal({
         : await createProductAction(store.storeId, formData);
 
       if (result.error) {
-        return { data: null, error: result.error };
+        return { ...prevState, error: result.error };
       }
 
       if (onSuccess) {
         onSuccess();
       }
-      onClose();
+      handleModalClose();
       return { data: null, error: null };
     },
     { data: null, error: null as string | null },
   );
 
+  const [removeImageState, removeImageFormAction, isRemovingImagePending] =
+    useActionState(
+      async (prevState: { error: string | null }) => {
+        if (!product) {
+          return { ...prevState, error: "Product not found." };
+        }
+
+        const result = await removeProductImageAction(product.id);
+
+        if (result.error) {
+          return { ...prevState, error: result.error };
+        }
+
+        setHasRemovedImage(true);
+        setShowRemoveImageConfirm(false);
+        if (onSuccess) {
+          onSuccess();
+        }
+
+        return { error: null };
+      },
+      { error: null as string | null },
+    );
+
+  const hasCurrentImage = Boolean(product?.imageUrl) && !hasRemovedImage;
+  const currentImageUrl = hasCurrentImage ? (product?.imageUrl ?? "") : "";
+  const productName = product?.name ?? "Product";
+
+  useSyncPendingAction(isPending || isRemovingImagePending, {
+    message: isRemovingImagePending
+      ? "Removing product image..."
+      : "Saving product...",
+  });
+
   return (
     <Modal
       open={open}
-      onClose={onClose}
+      onClose={handleModalClose}
       size="lg"
       className="flex max-h-[calc(100dvh-2rem)] flex-col"
     >
@@ -116,7 +161,7 @@ export function ProductModal({
             ? product?.name
             : "Create a new product for your store inventory"
         }
-        onClose={onClose}
+        onClose={handleModalClose}
       />
 
       <form ref={formRef} action={formAction} className="flex min-h-0 flex-col">
@@ -132,24 +177,45 @@ export function ProductModal({
                 accept="image/*"
               />
               <p className="mt-1 text-xs text-neutral-500">
-                Optional. Max file size 5MB.
+                Optional. PNG, JPG, or WEBP up to 1MB.
               </p>
-              {product?.imageUrl ? (
-                <div className="mt-3 rounded-md border border-neutral-200 p-3">
-                  {/* eslint-disable-next-line @next/next/no-img-element  */}
-                  <img
-                    src={product.imageUrl}
-                    alt={`${product.name} image`}
-                    className="h-20 w-20 rounded object-cover shrink-0"
-                  />
-                  <label className="mt-2 flex items-center gap-2 text-sm text-neutral-700">
-                    <input
-                      type="checkbox"
-                      name="removeImage"
-                      className="h-4 w-4 rounded border-neutral-300"
-                    />
-                    Remove current image
-                  </label>
+              {hasCurrentImage ? (
+                <div className="mt-3 rounded-lg border border-neutral-200 bg-neutral-50">
+                  <div className="flex items-start gap-4 p-3">
+                    <div className="h-24 w-24 overflow-hidden rounded-md border border-neutral-200 bg-white shrink-0">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={currentImageUrl}
+                        alt={`${productName} image`}
+                        className="h-full w-full object-cover shrink-0"
+                      />
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+                        Current image
+                      </p>
+                      <p className="mt-1 text-sm font-medium text-neutral-900 truncate">
+                        {productName}
+                      </p>
+                      <p className="mt-1 text-xs text-neutral-500">
+                        Upload a new file to replace this image, or use the
+                        button below to remove it.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end border-t border-neutral-200 p-3">
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      icon={<Trash size={16} />}
+                      onClick={() => setShowRemoveImageConfirm(true)}
+                    >
+                      Remove current image
+                    </Button>
+                  </div>
                 </div>
               ) : null}
             </FormField>
@@ -304,7 +370,7 @@ export function ProductModal({
         </ModalBody>
 
         <ModalFooter>
-          <Button type="button" onClick={onClose} variant="outline">
+          <Button type="button" onClick={handleModalClose} variant="outline">
             Cancel
           </Button>
           <Button type="submit" disabled={isPending} isLoading={isPending}>
@@ -322,6 +388,42 @@ export function ProductModal({
         onClose={() => setShowCameraScanner(false)}
         onBarcode={handleBarcodeDetected}
       />
+
+      <Modal
+        open={showRemoveImageConfirm}
+        onClose={() => setShowRemoveImageConfirm(false)}
+        size="md"
+      >
+        <ModalHeader
+          title="Remove product image"
+          description="This removes the current image from this product."
+          onClose={() => setShowRemoveImageConfirm(false)}
+        />
+        <form action={removeImageFormAction}>
+          <ModalBody className="space-y-3">
+            <p className="text-sm text-neutral-600">
+              This action cannot be undone. You can upload a new image later.
+            </p>
+            <FormError message={removeImageState.error} />
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowRemoveImageConfirm(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="destructive"
+              isLoading={isRemovingImagePending}
+            >
+              {isRemovingImagePending ? "Removing..." : "Yes, remove image"}
+            </Button>
+          </ModalFooter>
+        </form>
+      </Modal>
     </Modal>
   );
 }

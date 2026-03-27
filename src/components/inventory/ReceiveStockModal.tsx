@@ -17,6 +17,7 @@ import {
   FormTextarea,
   FormError,
 } from "@/components/ui/form";
+import { useSyncPendingAction } from "@/components/ui/PendingActionProvider";
 
 interface ReceiveStockModalProps {
   open: boolean;
@@ -38,10 +39,7 @@ export function ReceiveStockModal({
   const store = useStoreContext();
 
   const [state, formAction, isPending] = useActionState(
-    async (
-      _prev: { data: null; error: string | null },
-      formData: FormData,
-    ) => {
+    async (_prev: { data: null; error: string | null }, formData: FormData) => {
       formData.set("storeId", store.storeId);
       formData.set("productId", productId);
 
@@ -57,6 +55,10 @@ export function ReceiveStockModal({
     },
     { data: null, error: null as string | null },
   );
+
+  useSyncPendingAction(isPending, {
+    message: "Receiving stock…",
+  });
 
   return (
     <Modal open={open} onClose={onClose} size="sm">

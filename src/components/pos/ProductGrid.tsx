@@ -167,7 +167,12 @@ export function ProductGrid({
         )}
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-3">
+      <div
+        className={cn(
+          "hidden",
+          // "mt-3 flex flex-wrap items-center gap-3",
+        )}
+      >
         <p className="font-medium text-base text-neutral-500">Stock:</p>
         <Button
           type="button"
@@ -202,7 +207,8 @@ export function ProductGrid({
 
       <div
         className={cn(
-          "mt-3 flex min-h-0 flex-1 flex-col rounded-2xl border border-border bg-surface p-4",
+          "mt-3 flex min-h-0 flex-1 flex-col",
+          // "rounded-2xl border border-border bg-surface p-3",
         )}
       >
         <div className="flex flex-wrap items-center gap-2">
@@ -225,7 +231,7 @@ export function ProductGrid({
               No products matched this search/filter.
             </div>
           ) : (
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+            <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 2xl:grid-cols-4">
               {filteredProducts.map((product) => {
                 const outOfStock = product.stock_qty <= 0;
 

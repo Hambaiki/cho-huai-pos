@@ -367,6 +367,61 @@ export async function updateProductAction(
   return { data: { productId }, error: null };
 }
 
+export async function removeProductImageAction(
+  productId: string,
+): Promise<ProductActionResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { data: null, error: "Please sign in again." };
+  }
+
+  const { data: product } = await supabase
+    .from("products")
+    .select("store_id, image_url")
+    .eq("id", productId)
+    .single();
+
+  if (!product) {
+    return { data: null, error: "Product not found." };
+  }
+
+  const { data: membership } = await supabase
+    .from("store_members")
+    .select("role")
+    .eq("store_id", product.store_id)
+    .eq("user_id", user.id)
+    .single();
+
+  if (!membership || !["owner", "manager"].includes(membership.role)) {
+    return {
+      data: null,
+      error: "You do not have permission to edit this product.",
+    };
+  }
+
+  if (!product.image_url) {
+    return { data: { productId }, error: null };
+  }
+
+  const { error } = await supabase
+    .from("products")
+    .update({ image_url: null, updated_at: new Date().toISOString() })
+    .eq("id", productId);
+
+  if (error) {
+    return { data: null, error: error.message };
+  }
+
+  await removeImageByPublicUrl(supabase, product.image_url);
+  revalidatePath(`/dashboard/store/${product.store_id}/inventory`);
+
+  return { data: { productId }, error: null };
+}
+
 export async function deleteProductAction(productId: string): Promise<{
   error: string | null;
 }> {

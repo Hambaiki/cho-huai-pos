@@ -16,6 +16,7 @@ import type { CreateOrderResult } from "@/lib/actions/orders";
 import type { BnplAccountSummary } from "@/lib/types/bnpl";
 import { useBarcodeScanner } from "@/lib/hooks/useBarcodeScanner";
 import { toast } from "@/lib/utils/toast";
+import { useSyncPendingAction } from "@/components/ui/PendingActionProvider";
 
 interface PosTerminalProps {
   products: PosProduct[];
@@ -42,6 +43,10 @@ export function PosTerminal({
   >(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  useSyncPendingAction(isPending, {
+    message: "Recording order…",
+  });
 
   const { items, addItem, setQuantity, removeItem, clearCart } = useCartStore();
 

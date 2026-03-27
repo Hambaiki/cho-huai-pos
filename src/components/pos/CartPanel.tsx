@@ -62,7 +62,7 @@ export function CartPanel({
           className,
         )}
       >
-        <div className="flex items-center justify-between border-b border-border p-4">
+        <div className="flex items-center justify-between border-b border-border p-3">
           <h2 className="inline-flex items-center text-lg font-semibold text-neutral-900">
             <ShoppingCart size={16} className="mr-2" />
             Cart ({items.reduce((sum, item) => sum + item.quantity, 0)})
@@ -106,7 +106,7 @@ export function CartPanel({
             cartContentHidden ? "hidden" : "block",
           )}
         >
-          <div className="p-4">
+          <div className="p-3">
             {items.length === 0 ? (
               <p className="text-sm text-neutral-500">No items yet.</p>
             ) : (
@@ -188,7 +188,8 @@ export function CartPanel({
 
         <div
           className={cn(
-            "border-t border-border p-4 lg:block",
+            "p-3",
+            "border-t border-border lg:block",
             cartContentHidden ? "hidden" : "block",
           )}
         >

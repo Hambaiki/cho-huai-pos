@@ -13,7 +13,7 @@ export function Loader({ size = 48, className = "" }: LoaderProps) {
 
   return (
     <div
-      className={`inline-block rounded-full border-6 border-white border-b-brand-600 box-border animate-rotation ${sizeClass} ${className}`}
+      className={`inline-block rounded-full border-6 border-white border-b-brand-500 box-border animate-rotation ${sizeClass} ${className}`}
     />
   );
 }

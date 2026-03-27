@@ -11,11 +11,18 @@ import {
   FormError,
 } from "@/components/ui/form";
 import { cn } from "@/lib/utils/cn";
+import { useSyncPendingAction } from "@/components/ui/PendingActionProvider";
 
 const initialState: AuthActionState = { error: null };
 
 export default function SignupPage() {
   const [state, action, isPending] = useActionState(signUpAction, initialState);
+
+  useSyncPendingAction(isPending, {
+    message: "Creating a new account...",
+    subMessage:
+      "This may take a moment. Please do not close or refresh the page.",
+  });
 
   return (
     <div
@@ -90,6 +97,7 @@ export default function SignupPage() {
             Sign in
           </Link>
         </p>
+
       </main>
     </div>
   );

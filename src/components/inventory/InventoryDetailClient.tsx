@@ -12,7 +12,11 @@ import {
 } from "lucide-react";
 import { useStoreContext } from "@/lib/store-context";
 import { formatCurrency } from "@/lib/utils/currency";
-import { SectionCard } from "@/components/ui/SectionCard";
+import {
+  SectionCard,
+  SectionCardBody,
+  SectionCardHeader,
+} from "@/components/ui/SectionCard";
 import { Button } from "@/components/ui/Button";
 import {
   Table,
@@ -231,27 +235,30 @@ export function InventoryDetailClient({
       )}
 
       {/* Purchase lots */}
-      <SectionCard
-        title="Purchase Lots"
-        description="Each stock-in event with its unit cost. Used for FIFO/LIFO cost allocation."
-        headerRight={
-          canManage ? (
-            <Button
-              size="sm"
-              variant="outline"
-              icon={<ArrowDownToLine size={14} />}
-              onClick={() => setReceiveOpen(true)}
-            >
-              Receive Stock
-            </Button>
-          ) : undefined
-        }
-      >
+      <SectionCard>
+        <SectionCardHeader
+          title="Purchase Lots"
+          description="Each stock-in event with its unit cost. Used for FIFO/LIFO cost allocation."
+          headerRight={
+            canManage ? (
+              <Button
+                size="sm"
+                variant="outline"
+                icon={<ArrowDownToLine size={14} />}
+                onClick={() => setReceiveOpen(true)}
+              >
+                Receive Stock
+              </Button>
+            ) : undefined
+          }
+        />
         {lots.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 py-10 text-neutral-400">
-            <Package size={32} className="opacity-50" />
-            <p className="text-sm">No purchase lots recorded yet.</p>
-          </div>
+          <SectionCardBody>
+            <div className="flex flex-col items-center gap-2 py-10 text-neutral-400">
+              <Package size={32} className="opacity-50" />
+              <p className="text-sm">No purchase lots recorded yet.</p>
+            </div>
+          </SectionCardBody>
         ) : (
           <div className="overflow-x-auto">
             <Table className="w-full text-sm">
@@ -318,27 +325,30 @@ export function InventoryDetailClient({
       </SectionCard>
 
       {/* Stock adjustments */}
-      <SectionCard
-        title="Stock Adjustments"
-        description="Manual corrections for damage, loss, returns, and other non-sale events."
-        headerRight={
-          canManage ? (
-            <Button
-              size="sm"
-              variant="outline"
-              icon={<SlidersHorizontal size={14} />}
-              onClick={() => setAdjustOpen(true)}
-            >
-              Adjust Stock
-            </Button>
-          ) : undefined
-        }
-      >
+      <SectionCard>
+        <SectionCardHeader
+          title="Stock Adjustments"
+          description="Manual corrections for damage, loss, returns, and other non-sale events."
+          headerRight={
+            canManage ? (
+              <Button
+                size="sm"
+                variant="outline"
+                icon={<SlidersHorizontal size={14} />}
+                onClick={() => setAdjustOpen(true)}
+              >
+                Adjust Stock
+              </Button>
+            ) : undefined
+          }
+        />
         {adjustments.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 py-10 text-neutral-400">
-            <TrendingUp size={32} className="opacity-50" />
-            <p className="text-sm">No adjustments recorded.</p>
-          </div>
+          <SectionCardBody>
+            <div className="flex flex-col items-center gap-2 py-10 text-neutral-400">
+              <TrendingUp size={32} className="opacity-50" />
+              <p className="text-sm">No adjustments recorded.</p>
+            </div>{" "}
+          </SectionCardBody>
         ) : (
           <div className="overflow-x-auto">
             <Table className="w-full text-sm">

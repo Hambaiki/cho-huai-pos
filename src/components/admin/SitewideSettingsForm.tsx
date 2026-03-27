@@ -9,6 +9,7 @@ import { FormLabel } from "@/components/ui/form/FormLabel";
 import { FormHelp } from "@/components/ui/form/FormHelp";
 import { Button } from "@/components/ui/Button";
 import { AlertCircle } from "lucide-react";
+import { useSyncPendingAction } from "../ui/PendingActionProvider";
 
 interface SitewideSettingsFormProps {
   maintenanceMode: boolean;
@@ -28,6 +29,12 @@ export function SitewideSettingsForm({
   const [announcementText, setAnnouncementText] = useState(
     initialAnnouncementText,
   );
+
+  useSyncPendingAction(isPending, {
+    message: "Saving settings...",
+    subMessage:
+      "This may take a moment. Please do not close or refresh the page.",
+  });
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -81,7 +88,9 @@ export function SitewideSettingsForm({
         {/* Announcement Banner */}
         <div className="p-4 space-y-3">
           <div className="space-y-1">
-            <FormLabel htmlFor="announcement_text">Announcement Banner</FormLabel>
+            <FormLabel htmlFor="announcement_text">
+              Announcement Banner
+            </FormLabel>
             <FormHelp>
               Display an announcement banner to all users. Leave empty to hide
               the banner. Maximum 1000 characters.

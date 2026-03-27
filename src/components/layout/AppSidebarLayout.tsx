@@ -1,22 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import {
-  ChevronRight,
-  Coins,
-  LogOut,
-  Menu,
-  PanelLeftClose,
-  PanelLeftOpen,
-  X,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, LogOut, Menu, X } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { signOutAction } from "@/lib/actions/auth";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/Button";
+import { Logo } from "@/components/ui/Logo";
 
 export interface BreadcrumbItem {
   label: string;
@@ -61,11 +54,15 @@ export function AppSidebarLayout({
   footerLinks = [],
   children,
 }: AppSidebarLayoutProps) {
+  const pathname = usePathname();
+  const breadcrumbs = getBreadcrumbs(pathname);
+  const sidebarRef = useRef<HTMLElement | null>(null);
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [compactExpanded, setCompactExpanded] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
-  const pathname = usePathname();
-  const breadcrumbs = getBreadcrumbs(pathname);
+
+  const isExpanded = compactExpanded;
 
   useEffect(() => {
     const supabase = createClient();
@@ -74,33 +71,61 @@ export function AppSidebarLayout({
     });
   }, []);
 
+  useEffect(() => {
+    if (!compactExpanded) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node | null;
+      if (!target) return;
+      if (sidebarRef.current?.contains(target)) return;
+      setCompactExpanded(false);
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+    };
+  }, [compactExpanded]);
+
   const sidebarContent = (
-    <div className="flex h-full flex-col">
-      <div className="flex h-14 items-center justify-between border-b border-brand-800 bg-brand-700 px-4 py-4">
-        <div className="flex items-center">
-          <Coins size={30} className="mr-2 text-white" />
-          <p
+    <div
+      className={cn(
+        "flex h-full flex-col bg-neutral-50",
+        "transition",
+        isExpanded && "shadow-xl xl:shadow-none",
+      )}
+    >
+      <div
+        className={cn(
+          "flex h-14 items-center justify-between px-4 py-4",
+          "border-b border-neutral-200",
+        )}
+      >
+        <Link href="/" className="flex items-center gap-2">
+          <Logo variant="icon" size="sm" />
+          <div
             className={cn(
-              "overflow-hidden whitespace-nowrap text-lg font-black uppercase tracking-widest text-white transition-[max-width,opacity] duration-200 ease-out md:max-w-40 md:opacity-100",
-              !compactExpanded &&
+              "overflow-hidden whitespace-nowrap text-lg font-black uppercase tracking-widest transition-[max-width,opacity] duration-200 ease-out md:max-w-40 md:opacity-100",
+              !isExpanded &&
                 "md:max-w-0 md:opacity-0 xl:max-w-40 xl:opacity-100",
             )}
           >
-            Cho-Huai POS
-          </p>
+            <Logo variant="text-dark" className="h-auto w-20" />
+          </div>
+
           <p
             className={cn(
               "mt-1 overflow-hidden whitespace-nowrap text-sm font-medium text-neutral-600 transition-[max-width,opacity] duration-200 ease-out md:max-w-40 md:opacity-100",
-              !compactExpanded &&
+              !isExpanded &&
                 "md:max-w-0 md:opacity-0 xl:max-w-40 xl:opacity-100",
             )}
           >
             {subtitle}
           </p>
-        </div>
+        </Link>
         <Button
           type="button"
-          variant="ghostDark"
+          variant="ghost"
           size="icon-sm"
           onClick={() => setSidebarOpen(false)}
           className="text-white md:hidden"
@@ -110,23 +135,28 @@ export function AppSidebarLayout({
         </Button>
       </div>
 
-      <div className="hidden border-b border-brand-800 px-2 py-3 md:block xl:hidden">
+      <div
+        className={cn(
+          "hidden p-2 md:block xl:hidden",
+          "border-b border-neutral-200",
+        )}
+      >
         <Button
           type="submit"
-          variant="ghostDark"
+          variant="ghost"
           onClick={() => setCompactExpanded((prev) => !prev)}
           aria-label="Collapse sidebar"
           className="h-auto w-full justify-start gap-3 px-3 py-3"
         >
           {compactExpanded ? (
-            <PanelLeftClose size={20} className="shrink-0" />
+            <ChevronLeft size={20} className="shrink-0" />
           ) : (
-            <PanelLeftOpen size={20} className="shrink-0" />
+            <ChevronRight size={20} className="shrink-0" />
           )}
           <span
             className={cn(
               "overflow-hidden whitespace-nowrap transition-[max-width,opacity] duration-200 ease-out md:max-w-40 md:opacity-100",
-              !compactExpanded &&
+              !isExpanded &&
                 "md:max-w-0 md:opacity-0 xl:max-w-40 xl:opacity-100",
             )}
           >
@@ -135,20 +165,22 @@ export function AppSidebarLayout({
         </Button>
       </div>
 
-      <nav className="flex-1 space-y-4 overflow-y-auto scrollbar-none px-2 py-3">
+      <nav
+        className={cn("flex-1 space-y-4 overflow-y-auto scrollbar-none p-2")}
+      >
         {navSections.map((section, index) => (
           <div key={section.title ?? `section-${index}`}>
             {section.title ? (
               <p
                 className={cn(
-                  "overflow-hidden whitespace-nowrap px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-neutral-100 transition-opacity duration-200 ease-out md:min-h-5 md:opacity-100",
-                  !compactExpanded && "md:opacity-0 xl:opacity-100",
+                  "overflow-hidden whitespace-nowrap px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-neutral-500 transition-opacity duration-200 ease-out md:min-h-5 md:opacity-100",
+                  !isExpanded && "md:opacity-0 xl:opacity-100",
                 )}
               >
                 {section.title}
               </p>
             ) : null}
-            <div className="space-y-1">
+            <div className={cn("space-y-1")}>
               {section.items.map(({ href, label, icon: Icon, exact }) => {
                 const active = isActiveNavItem(pathname, {
                   href,
@@ -165,10 +197,9 @@ export function AppSidebarLayout({
                     aria-label={label}
                     title={label}
                     className={cn(
-                      "flex items-center gap-3 rounded-lg px-3 py-3 font-medium text-sm text-neutral-50",
-                      "hover:bg-neutral-700/10 active:bg-neutral-700/20 hover:text-white",
-                      active &&
-                        "bg-neutral-700/30 hover:bg-neutral-700/40 text-white",
+                      "flex items-center gap-3 rounded-md px-3 py-3 font-medium text-sm text-neutral-700",
+                      "hover:bg-neutral-600/10 active:bg-brand-600/20",
+                      active && "bg-brand-600 hover:bg-brand-600 text-white",
                       "transition-colors duration-200 ease-out",
                     )}
                   >
@@ -176,7 +207,7 @@ export function AppSidebarLayout({
                     <span
                       className={cn(
                         "overflow-hidden whitespace-nowrap transition-[max-width,opacity] duration-200 ease-out md:max-w-40 md:opacity-100",
-                        !compactExpanded &&
+                        !isExpanded &&
                           "md:max-w-0 md:opacity-0 xl:max-w-40 xl:opacity-100",
                       )}
                     >
@@ -191,7 +222,7 @@ export function AppSidebarLayout({
       </nav>
 
       {footerLinks.length > 0 && (
-        <div className="border-t border-brand-800 px-2 py-3">
+        <div className={cn("p-2", "border-t border-neutral-200")}>
           {footerLinks.map(({ href, label, icon: Icon }) => (
             <Link
               key={href}
@@ -200,8 +231,8 @@ export function AppSidebarLayout({
               aria-label={label}
               title={label}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-3 font-medium text-sm text-neutral-50",
-                "hover:bg-neutral-700/10 active:bg-neutral-700/20 hover:text-white",
+                "flex items-center gap-3 rounded-md p-3 font-medium text-sm text-neutral-700",
+                "hover:bg-neutral-600/10 active:bg-brand-600/20",
                 "transition-colors duration-200 ease-out",
               )}
             >
@@ -209,7 +240,7 @@ export function AppSidebarLayout({
               <span
                 className={cn(
                   "overflow-hidden whitespace-nowrap transition-[max-width,opacity] duration-200 ease-out md:max-w-40 md:opacity-100",
-                  !compactExpanded &&
+                  !isExpanded &&
                     "md:max-w-0 md:opacity-0 xl:max-w-40 xl:opacity-100",
                 )}
               >
@@ -220,20 +251,20 @@ export function AppSidebarLayout({
         </div>
       )}
 
-      <div className="border-t border-brand-800 px-2 py-3">
+      <div className={cn("p-2", "border-t border-neutral-200")}>
         <form action={signOutAction}>
           <Button
             type="submit"
-            variant="ghostDark"
+            variant="ghost"
             onClick={() => setSidebarOpen(false)}
             aria-label="Logout"
-            className="h-auto w-full justify-start gap-3 px-3 py-3"
+            className={cn("h-auto w-full justify-start gap-3 px-3 py-3")}
           >
             <LogOut size={20} className="shrink-0" />
             <span
               className={cn(
                 "overflow-hidden whitespace-nowrap transition-[max-width,opacity] duration-200 ease-out md:max-w-40 md:opacity-100",
-                !compactExpanded &&
+                !isExpanded &&
                   "md:max-w-0 md:opacity-0 xl:max-w-40 xl:opacity-100",
               )}
             >
@@ -246,11 +277,16 @@ export function AppSidebarLayout({
   );
 
   return (
-    <div className="min-h-dvh overflow-hidden bg-white text-neutral-900">
+    <div
+      className={cn(
+        "min-h-dvh overflow-hidden bg-neutral-100 text-neutral-900",
+      )}
+    >
       <aside
+        ref={sidebarRef}
         className={cn(
-          "hidden border-r border-brand-800 bg-brand-700 md:fixed md:inset-y-0 md:left-0 md:z-30 md:flex md:flex-col md:w-16 xl:w-56 md:transition-[width] md:duration-300 md:ease-in-out",
-          compactExpanded && "md:w-56",
+          "hidden border-r border-neutral-200 bg-neutral-50 md:fixed md:inset-y-0 md:left-0 md:z-30 md:flex md:flex-col md:w-16 xl:w-56 md:transition-[width] md:duration-300 md:ease-in-out",
+          isExpanded && "md:w-56",
         )}
       >
         {sidebarContent}
@@ -272,7 +308,7 @@ export function AppSidebarLayout({
         />
         <aside
           className={cn(
-            "relative z-50 flex w-64 flex-col bg-brand-700 shadow-xl transition-transform duration-250 ease-out",
+            "relative z-50 flex w-64 flex-col bg-neutral-50 shadow-xl transition-transform duration-250 ease-out",
             sidebarOpen ? "translate-x-0" : "-translate-x-full",
           )}
         >
@@ -287,15 +323,15 @@ export function AppSidebarLayout({
       >
         <header
           className={cn(
-            "fixed inset-x-0 top-0 z-20 flex h-14 items-center gap-3 border-b border-brand-800 bg-brand-700 px-6 md:right-0 md:left-16 xl:left-56",
+            "fixed inset-x-0 top-0 z-20 flex h-14 items-center gap-3 border-b border-neutral-200 bg-neutral-50 px-6 md:right-0 md:left-16 xl:left-56",
           )}
         >
           <Button
             type="button"
-            variant="ghostDark"
+            variant="ghost"
             size="icon-sm"
             onClick={() => setSidebarOpen(true)}
-            className="text-white md:hidden"
+            className="text-neutral-700 md:hidden"
             aria-label="Open menu"
           >
             <Menu size={20} />
@@ -304,28 +340,36 @@ export function AppSidebarLayout({
           {breadcrumbs.length > 0 && (
             <nav
               aria-label="Breadcrumb"
-              className="flex min-w-0 flex-1 items-center gap-1 text-sm"
+              className={cn("flex min-w-0 flex-1 items-center gap-1 text-sm")}
             >
               {breadcrumbs.map((crumb, index) => (
                 <Fragment key={index}>
                   {index > 0 && (
                     <ChevronRight
                       size={16}
-                      className="shrink-0 text-white/70"
+                      className="shrink-0 text-neutral-700/70"
                     />
                   )}
                   {crumb.href ? (
                     <Link
                       href={crumb.href}
                       className={cn(
-                        "truncate font-semibold text-white hover:text-white/80",
+                        "truncate text-neutral-500 hover:text-neutral-500/80",
                         "transition-colors duration-200 ease-out",
+                        index === breadcrumbs.length - 1 &&
+                          "font-semibold text-neutral-700",
                       )}
                     >
                       {crumb.label}
                     </Link>
                   ) : (
-                    <span className="truncate font-semibold text-white">
+                    <span
+                      className={cn(
+                        "truncate text-neutral-500",
+                        index === breadcrumbs.length - 1 &&
+                          "font-semibold text-neutral-700",
+                      )}
+                    >
                       {crumb.label}
                     </span>
                   )}
@@ -335,13 +379,20 @@ export function AppSidebarLayout({
           )}
 
           {userEmail && (
-            <div className="ml-auto flex shrink-0 items-center gap-2">
-              <span className="hidden max-w-40 truncate text-sm text-white sm:block">
+            <div className={cn("ml-auto flex shrink-0 items-center gap-2")}>
+              <span
+                className={cn(
+                  "hidden max-w-40 truncate text-sm text-neutral-700 sm:block",
+                )}
+              >
                 {userEmail}
               </span>
               <div
                 aria-hidden="true"
-                className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-700 text-xs font-bold uppercase text-white"
+                className={cn(
+                  "flex h-7 w-7 items-center justify-center rounded-full bg-brand-600",
+                  "text-xs font-bold uppercase text-white",
+                )}
               >
                 {userEmail.charAt(0)}
               </div>
@@ -349,7 +400,9 @@ export function AppSidebarLayout({
           )}
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6">{children}</main>
+        <main className={cn("flex-1 overflow-y-auto p-4 lg:p-6")}>
+          {children}
+        </main>
       </div>
     </div>
   );

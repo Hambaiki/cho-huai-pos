@@ -9,6 +9,7 @@ export { FormSelectOption } from "./FormSelectOption";
 export type { FormSelectOptionProps } from "./FormSelectOption";
 export { FormTextarea } from "./FormTextarea";
 export { FormError } from "./FormError";
+export { FormSuccess } from "./FormSuccess";
 export { FormHelp } from "./FormHelp";
 export { FormCheckbox } from "./FormCheckbox";
 export { FormToggle } from "./FormToggle";

@@ -24,7 +24,11 @@ import {
 } from "@/components/ui/Modal";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/Button";
-import { SectionCard } from "@/components/ui/SectionCard";
+import {
+  SectionCard,
+  SectionCardBody,
+  SectionCardHeader,
+} from "@/components/ui/SectionCard";
 import {
   FormField,
   FormLabel,
@@ -147,48 +151,56 @@ function GeneralSettingsTab({
     <form action={formAction} className="space-y-6">
       <input type="hidden" name="storeId" value={storeId} />
 
-      <SectionCard title="Store Details" bodyClassName="p-4">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <FormField>
-            <FormLabel htmlFor="name" required>
-              Store Name
-            </FormLabel>
-            <FormInput
-              id="name"
-              name="name"
-              defaultValue={store.name}
+      <SectionCard>
+        <SectionCardHeader title="Store Details" />
+        <SectionCardBody>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FormField>
+              <FormLabel htmlFor="name" required>
+                Store Name
+              </FormLabel>
+              <FormInput
+                id="name"
+                name="name"
+                defaultValue={store.name}
+                disabled={!isOwner}
+                required
+              />
+            </FormField>
+            <FormField>
+              <FormLabel htmlFor="taxRate">Tax Rate (%)</FormLabel>
+              <FormInput
+                id="taxRate"
+                name="taxRate"
+                type="number"
+                min={0}
+                max={100}
+                step={0.01}
+                defaultValue={store.tax_rate}
+                disabled={!isOwner}
+              />
+            </FormField>
+          </div>
+
+          <FormField className="mt-4">
+            <FormLabel htmlFor="address">Address</FormLabel>
+            <FormTextarea
+              id="address"
+              name="address"
+              defaultValue={store.address ?? ""}
               disabled={!isOwner}
-              required
+              rows={2}
             />
           </FormField>
-          <FormField>
-            <FormLabel htmlFor="taxRate">Tax Rate (%)</FormLabel>
-            <FormInput
-              id="taxRate"
-              name="taxRate"
-              type="number"
-              min={0}
-              max={100}
-              step={0.01}
-              defaultValue={store.tax_rate}
-              disabled={!isOwner}
-            />
-          </FormField>
-        </div>
-        <FormField className="mt-4">
-          <FormLabel htmlFor="address">Address</FormLabel>
-          <FormTextarea
-            id="address"
-            name="address"
-            defaultValue={store.address ?? ""}
-            disabled={!isOwner}
-            rows={2}
-          />
-        </FormField>
+        </SectionCardBody>
       </SectionCard>
 
-      <SectionCard title="Currency" bodyClassName="space-y-4 p-4">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <SectionCard>
+        <SectionCardHeader
+          title="Currency"
+          description="Set the currency used for sales and reporting."
+        />
+        <SectionCardBody className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <FormField>
             <FormLabel htmlFor="currencyCode">Code (ISO 4217)</FormLabel>
             <FormInput
@@ -236,11 +248,15 @@ function GeneralSettingsTab({
               <FormSelectOption value="suffix">Suffix (100฿)</FormSelectOption>
             </FormSelect>
           </FormField>
-        </div>
+        </SectionCardBody>
       </SectionCard>
 
-      <SectionCard title="Receipt" bodyClassName="space-y-4 p-4">
-        <div className="grid gap-4 sm:grid-cols-2">
+      <SectionCard>
+        <SectionCardHeader
+          title="Receipt"
+          description="Customize the header and footer of printed receipts"
+        />
+        <SectionCardBody className="grid gap-4 sm:grid-cols-2">
           <FormField>
             <FormLabel htmlFor="receiptHeader">Header message</FormLabel>
             <FormTextarea
@@ -263,29 +279,35 @@ function GeneralSettingsTab({
               placeholder="e.g. No refunds after 7 days"
             />
           </FormField>
-        </div>
+        </SectionCardBody>
       </SectionCard>
 
-      <SectionCard title="Inventory Costing" bodyClassName="space-y-4 p-4">
-        <FormField>
-          <FormLabel htmlFor="costMethod">Cost Method</FormLabel>
-          <FormSelect
-            id="costMethod"
-            name="costMethod"
-            defaultValue={store.cost_method ?? "fifo"}
-            disabled={!isOwner}
-          >
-            <FormSelectOption value="fifo">
-              FIFO – First In, First Out
-            </FormSelectOption>
-            <FormSelectOption value="lifo">
-              LIFO – Last In, First Out
-            </FormSelectOption>
-          </FormSelect>
-          <p className="mt-1 text-xs text-neutral-500">
-            Determines which purchase lot cost is used when recording a sale.
-          </p>
-        </FormField>
+      <SectionCard>
+        <SectionCardHeader
+          title="Inventory Costing Method"
+          description="Choose how the cost of goods sold is calculated for each sale."
+        />
+        <SectionCardBody>
+          <FormField>
+            <FormLabel htmlFor="costMethod">Cost Method</FormLabel>
+            <FormSelect
+              id="costMethod"
+              name="costMethod"
+              defaultValue={store.cost_method ?? "fifo"}
+              disabled={!isOwner}
+            >
+              <FormSelectOption value="fifo">
+                FIFO – First In, First Out
+              </FormSelectOption>
+              <FormSelectOption value="lifo">
+                LIFO – Last In, First Out
+              </FormSelectOption>
+            </FormSelect>
+            <p className="mt-1 text-xs text-neutral-500">
+              Determines which purchase lot cost is used when recording a sale.
+            </p>
+          </FormField>
+        </SectionCardBody>
       </SectionCard>
 
       <FormError message={state.error} />
@@ -706,7 +728,7 @@ function QrChannelsTab({
                       })
                     }
                     className={cn(
-                      "h-auto px-0 text-xs text-danger-600 hover:text-danger-800",
+                      "text-xs text-danger-600 hover:text-danger-800",
                     )}
                   >
                     Delete

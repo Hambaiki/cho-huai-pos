@@ -1,7 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { CreditCard, DollarSign, Package, ShoppingCart } from "lucide-react";
+import {
+  CreditCard,
+  DollarSign,
+  ExternalLink,
+  Package,
+  ShoppingCart,
+} from "lucide-react";
 import { formatCurrency } from "@/lib/utils/currency";
 import type { CurrencyStore } from "@/lib/utils/currency";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -114,10 +120,17 @@ export default async function StoreDashboardPage({
   const storeMembers = storeMembersResult.data ?? [];
 
   const todaySales = todayOrders.reduce((sum, o) => sum + Number(o.total), 0);
-  const yesterdaySales = yesterdayOrders.reduce((sum, o) => sum + Number(o.total), 0);
+  const yesterdaySales = yesterdayOrders.reduce(
+    (sum, o) => sum + Number(o.total),
+    0,
+  );
   const todayTransactions = todayOrders.length;
-  const avgOrderValue = todayTransactions > 0 ? todaySales / todayTransactions : 0;
-  const openBnplBalance = bnplAccounts.reduce((sum, a) => sum + Number(a.balance_due), 0);
+  const avgOrderValue =
+    todayTransactions > 0 ? todaySales / todayTransactions : 0;
+  const openBnplBalance = bnplAccounts.reduce(
+    (sum, a) => sum + Number(a.balance_due),
+    0,
+  );
   const bnplAccountCount = bnplAccounts.length;
 
   const salesDeltaPct =
@@ -132,7 +145,9 @@ export default async function StoreDashboardPage({
     paymentTotals[order.payment_method] =
       (paymentTotals[order.payment_method] ?? 0) + Number(order.total);
   });
-  const paymentEntries = Object.entries(paymentTotals).sort((a, b) => b[1] - a[1]);
+  const paymentEntries = Object.entries(paymentTotals).sort(
+    (a, b) => b[1] - a[1],
+  );
 
   const activeProducts = products.filter((product) => product.is_active);
   const lowStockProducts = activeProducts.filter(
@@ -151,7 +166,9 @@ export default async function StoreDashboardPage({
       : Math.max(
           0,
           Math.round(
-            ((activeProducts.length - lowStockProducts.length) / activeProducts.length) * 100,
+            ((activeProducts.length - lowStockProducts.length) /
+              activeProducts.length) *
+              100,
           ),
         );
 
@@ -174,23 +191,23 @@ export default async function StoreDashboardPage({
         })}
         meta={
           <div className="flex flex-wrap items-center gap-2 text-xs">
-            <span className="rounded-full bg-neutral-100 px-3 py-2 font-medium text-neutral-700">
+            <span className="rounded-full bg-neutral-200 px-3 py-2 font-medium text-neutral-700">
               Role: <span className="capitalize">{membership.role}</span>
             </span>
             <span
               className={`rounded-full px-3 py-2 font-medium ${
                 salesDeltaPct > 0
-                  ? "bg-success-100 text-success-700"
+                  ? "bg-success-200 text-success-700"
                   : salesDeltaPct < 0
-                    ? "bg-danger-100 text-danger-700"
-                    : "bg-neutral-100 text-neutral-600"
+                    ? "bg-danger-200 text-danger-700"
+                    : "bg-neutral-200 text-neutral-600"
               }`}
             >
               vs yesterday: {formatDelta(salesDeltaPct)}
             </span>
             <Link
               href={`${basePath}/reports#sales-trend-7d`}
-              className="rounded-full bg-neutral-100 px-3 py-2 font-medium text-neutral-700 hover:bg-neutral-200"
+              className="rounded-full bg-neutral-200 px-3 py-2 font-medium text-neutral-700 hover:bg-neutral-300"
             >
               Open analysis
             </Link>
@@ -247,8 +264,14 @@ export default async function StoreDashboardPage({
       <div className="grid gap-6 xl:grid-cols-[1.65fr_1fr]">
         <article className="rounded-xl border border-neutral-200 bg-white">
           <div className="flex items-center justify-between border-b border-neutral-100 px-5 py-4">
-            <h2 className="text-sm font-semibold text-neutral-800">Recent Orders</h2>
-            <Link href={`${basePath}/orders`} className="text-xs font-medium text-brand-700 hover:text-brand-800">
+            <h2 className="text-sm font-semibold text-neutral-800">
+              Recent Orders
+            </h2>
+            <Link
+              href={`${basePath}/orders`}
+              className="inline-flex items-center gap-1 text-sm font-medium text-neutral-500 transition hover:text-neutral-800"
+            >
+              <ExternalLink size={14} />
               View all
             </Link>
           </div>
@@ -260,9 +283,14 @@ export default async function StoreDashboardPage({
           ) : (
             <ul className="divide-y divide-neutral-100">
               {recentOrders.map((order) => (
-                <li key={order.id} className="flex items-center justify-between gap-3 px-5 py-4">
+                <li
+                  key={order.id}
+                  className="flex items-center justify-between gap-3 px-5 py-2"
+                >
                   <div>
-                    <p className="font-mono text-xs text-neutral-500">#{order.id.slice(0, 8)}</p>
+                    <p className="font-mono text-xs text-neutral-500">
+                      #{order.id.slice(0, 8)}
+                    </p>
                     <p className="mt-1 text-xs text-neutral-500">
                       {new Date(order.created_at).toLocaleString()}
                     </p>
@@ -274,11 +302,13 @@ export default async function StoreDashboardPage({
                     </p>
                     <div className="mt-1 flex items-center justify-end gap-2">
                       <span className="text-[11px] text-neutral-500">
-                        {PAYMENT_LABELS[order.payment_method] ?? order.payment_method}
+                        {PAYMENT_LABELS[order.payment_method] ??
+                          order.payment_method}
                       </span>
                       <span
                         className={`rounded-full px-2 py-1 text-[11px] font-medium capitalize ${
-                          ORDER_STATUS_CLASSES[order.status] ?? "bg-neutral-100 text-neutral-600"
+                          ORDER_STATUS_CLASSES[order.status] ??
+                          "bg-neutral-100 text-neutral-600"
                         }`}
                       >
                         {order.status}
@@ -293,10 +323,14 @@ export default async function StoreDashboardPage({
 
         <div className="space-y-6">
           <article className="rounded-xl border border-neutral-200 bg-white p-5">
-            <h2 className="text-sm font-semibold text-neutral-800">Payment Mix Today</h2>
+            <h2 className="text-sm font-semibold text-neutral-800">
+              Payment Mix Today
+            </h2>
 
             {paymentEntries.length === 0 ? (
-              <p className="mt-4 text-sm text-neutral-400">No payment data yet for today.</p>
+              <p className="mt-4 text-sm text-neutral-400">
+                No payment data yet for today.
+              </p>
             ) : (
               <ul className="mt-4 space-y-3">
                 {paymentEntries.map(([method, total]) => {
@@ -307,11 +341,13 @@ export default async function StoreDashboardPage({
                         <span className="font-medium text-neutral-600">
                           {PAYMENT_LABELS[method] ?? method}
                         </span>
-                        <span className="text-neutral-500">{ratio.toFixed(0)}%</span>
+                        <span className="text-neutral-500">
+                          {ratio.toFixed(0)}%
+                        </span>
                       </div>
                       <div className="mt-1 h-2 overflow-hidden rounded-full bg-neutral-100">
                         <div
-                          className="h-full rounded-full bg-brand-600"
+                          className="h-full rounded-full bg-brand-500"
                           style={{ width: `${Math.max(4, ratio)}%` }}
                         />
                       </div>
@@ -323,44 +359,52 @@ export default async function StoreDashboardPage({
           </article>
 
           <article className="rounded-xl border border-neutral-200 bg-white p-5">
-            <h2 className="text-sm font-semibold text-neutral-800">Operations Snapshot</h2>
+            <h2 className="text-sm font-semibold text-neutral-800">
+              Operations Snapshot
+            </h2>
             <dl className="mt-4 space-y-3 text-sm">
               <div className="flex items-center justify-between">
                 <dt className="text-neutral-500">Active products</dt>
-                <dd className="font-semibold text-neutral-900">{activeProducts.length}</dd>
+                <dd className="font-semibold text-neutral-900">
+                  {activeProducts.length}
+                </dd>
               </div>
               <div className="flex items-center justify-between">
                 <dt className="text-neutral-500">Low stock alerts</dt>
-                <dd className="font-semibold text-warning-700">{lowStockProducts.length}</dd>
+                <dd className="font-semibold text-warning-700">
+                  {lowStockProducts.length}
+                </dd>
               </div>
               <div className="flex items-center justify-between">
                 <dt className="text-neutral-500">Team members</dt>
-                <dd className="font-semibold text-neutral-900">{storeMembers.length}</dd>
+                <dd className="font-semibold text-neutral-900">
+                  {storeMembers.length}
+                </dd>
               </div>
             </dl>
 
             <div className="mt-5 grid grid-cols-2 gap-2 text-xs">
               <Link
                 href={`${basePath}/pos`}
-                className="rounded-lg border border-neutral-200 px-3 py-2 text-center font-medium text-neutral-700 hover:bg-neutral-50"
+                className="rounded-md border border-neutral-200 px-3 py-2 text-center font-medium text-neutral-700 hover:bg-neutral-50"
               >
                 Open POS
               </Link>
               <Link
                 href={`${basePath}/inventory`}
-                className="rounded-lg border border-neutral-200 px-3 py-2 text-center font-medium text-neutral-700 hover:bg-neutral-50"
+                className="rounded-md border border-neutral-200 px-3 py-2 text-center font-medium text-neutral-700 hover:bg-neutral-50"
               >
                 Manage Stock
               </Link>
               <Link
                 href={`${basePath}/bnpl`}
-                className="rounded-lg border border-neutral-200 px-3 py-2 text-center font-medium text-neutral-700 hover:bg-neutral-50"
+                className="rounded-md border border-neutral-200 px-3 py-2 text-center font-medium text-neutral-700 hover:bg-neutral-50"
               >
                 BNPL Accounts
               </Link>
               <Link
                 href={`${basePath}/reports`}
-                className="rounded-lg border border-neutral-200 px-3 py-2 text-center font-medium text-neutral-700 hover:bg-neutral-50"
+                className="rounded-md border border-neutral-200 px-3 py-2 text-center font-medium text-neutral-700 hover:bg-neutral-50"
               >
                 View Reports
               </Link>

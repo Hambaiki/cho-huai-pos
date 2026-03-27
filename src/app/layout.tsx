@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Sans_Thai, Sarabun } from "next/font/google";
 import { cn } from "@/lib/utils/cn";
 import { AppToaster } from "@/components/ui/AppToaster";
+import { PendingActionProvider } from "@/components/ui/PendingActionProvider";
 import "./globals.css";
 
 const sarabun = Sarabun({
@@ -34,14 +35,19 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="th">
+      <head>
+        <meta name="apple-mobile-web-app-title" content="MyWebSite" />
+      </head>
       <body
         className={cn(
           `${sarabun.variable} ${ibmPlexSansThai.variable}`,
           `antialiased`,
         )}
       >
-        {children}
-        <AppToaster />
+        <PendingActionProvider>
+          {children}
+          <AppToaster />
+        </PendingActionProvider>
       </body>
     </html>
   );

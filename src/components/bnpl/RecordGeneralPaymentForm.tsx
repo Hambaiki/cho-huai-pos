@@ -9,6 +9,7 @@ import {
 } from "@/components/pos/QrPaymentScreen";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
+import { useSyncPendingAction } from "@/components/ui/PendingActionProvider";
 import { formatCurrency, type CurrencyStore } from "@/lib/utils/currency";
 import {
   FormField,
@@ -52,6 +53,10 @@ export default function RecordGeneralPaymentForm({
       error: null,
     },
   );
+
+  useSyncPendingAction(isPending, {
+    message: "Recording payment…",
+  });
 
   if (state.data !== null) {
     onDone();

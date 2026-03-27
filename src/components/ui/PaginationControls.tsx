@@ -58,7 +58,7 @@ export function PaginationControls({
   const visiblePages = getVisiblePages(currentPage, totalPages);
 
   return (
-    <div className="flex flex-col gap-3 border-t border-neutral-100 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-3 border-t border-neutral-100 sm:flex-row sm:items-center sm:justify-between">
       <p className="text-sm text-neutral-500">
         Showing {startItem}-{endItem} of {totalItems}
       </p>

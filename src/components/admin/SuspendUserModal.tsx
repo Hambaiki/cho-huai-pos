@@ -10,6 +10,7 @@ import {
   ModalHeader,
 } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
+import { useSyncPendingAction } from "@/components/ui/PendingActionProvider";
 
 interface SuspendUserModalProps {
   open: boolean;
@@ -31,6 +32,12 @@ export function SuspendUserModal({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
+  useSyncPendingAction(isPending, {
+    message: "Updating user suspension status...",
+    subMessage:
+      "This may take a moment. Please do not close or refresh the page.",
+  });
+
   const handleConfirm = () => {
     startTransition(async () => {
       const formData = new FormData();
@@ -47,26 +54,28 @@ export function SuspendUserModal({
   };
 
   return (
-    <Modal open={open} onClose={onClose} size="md">
-      <ModalHeader
-        title={nextValue ? "Suspend User" : "Approve User Access"}
-        onClose={onClose}
-      />
-      <ModalBody>
-        <p className="text-sm text-neutral-600">
-          {nextValue
-            ? "This user will be redirected to Access Pending and blocked from normal app routes."
-            : "This user will regain access to the application."}
-        </p>
-      </ModalBody>
-      <ModalFooter>
-        <Button type="button" variant="outline" onClick={onClose}>
-          Cancel
-        </Button>
-        <Button type="button" isLoading={isPending} onClick={handleConfirm}>
-          {isPending ? "Saving..." : "Confirm"}
-        </Button>
-      </ModalFooter>
-    </Modal>
+    <>
+      <Modal open={open} onClose={onClose} size="md">
+        <ModalHeader
+          title={nextValue ? "Suspend User" : "Approve User Access"}
+          onClose={onClose}
+        />
+        <ModalBody>
+          <p className="text-sm text-neutral-600">
+            {nextValue
+              ? "This user will be redirected to Access Pending and blocked from normal app routes."
+              : "This user will regain access to the application."}
+          </p>
+        </ModalBody>
+        <ModalFooter>
+          <Button type="button" variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="button" isLoading={isPending} onClick={handleConfirm}>
+            {isPending ? "Saving..." : "Confirm"}
+          </Button>
+        </ModalFooter>
+      </Modal>
+    </>
   );
 }

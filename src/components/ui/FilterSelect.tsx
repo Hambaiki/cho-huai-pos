@@ -141,7 +141,7 @@ export function FilterSelect({
                   type="checkbox"
                   checked={selected.includes(option.value)}
                   onChange={() => toggleOption(option.value)}
-                  className="h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500"
+                  className="h-4 w-4 rounded border-neutral-200 text-brand-600 focus:ring-brand-500"
                 />
                 <span className="flex-1 text-sm text-neutral-700">
                   {option.label}

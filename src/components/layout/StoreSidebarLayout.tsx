@@ -4,7 +4,7 @@ import {
   ArrowLeft,
   BarChart2,
   ClipboardList,
-  CreditCard,
+  DollarSign,
   Home,
   Package,
   Settings,
@@ -36,7 +36,7 @@ const NAV_SECTIONS: AppSidebarNavSection[] = [
       { href: "/pos", label: "POS", icon: ShoppingCart },
       { href: "/orders", label: "Orders", icon: ClipboardList },
       { href: "/inventory", label: "Inventory", icon: Package },
-      { href: "/bnpl", label: "BNPL", icon: CreditCard },
+      { href: "/bnpl", label: "BNPL", icon: DollarSign },
     ],
   },
   {

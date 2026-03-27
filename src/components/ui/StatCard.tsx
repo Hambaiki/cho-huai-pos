@@ -41,7 +41,7 @@ export function StatCard({
               "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl",
               isDanger
                 ? "bg-danger-50 text-danger-600"
-                : "bg-brand-50 text-brand-700",
+                : "bg-brand-50 text-brand-600",
             )}
           >
             <Icon size={18} />

@@ -2,7 +2,6 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { formatCurrency } from "@/lib/utils/currency";
 import type { CurrencyStore } from "@/lib/utils/currency";
-import VoidOrderButton from "./VoidOrderButton";
 import {
   Table,
   TableBody,
@@ -12,6 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/Table";
 import { PageHeader } from "@/components/ui/PageHeader";
+import VoidOrderButton from "./VoidOrderButton";
 
 export const metadata = { title: "Order Detail" };
 
@@ -85,7 +85,7 @@ export default async function OrderDetailPage({
   return (
     <section className="space-y-6">
       <PageHeader
-        title={`${order.id.slice(0, 8)}…`}
+        title={`${order.id} — ${METHOD_LABELS[order.payment_method] ?? order.payment_method}`}
         description={new Date(order.created_at).toLocaleString()}
         backHref={backHref}
         backLabel="Back to Orders"
@@ -95,7 +95,8 @@ export default async function OrderDetailPage({
       {order.status === "voided" && (
         <div className="rounded-lg border border-danger-200 bg-danger-50 px-4 py-3">
           <p className="text-sm font-medium text-danger-700">
-            Order voided{voidedAt ? ` on ${new Date(voidedAt).toLocaleString()}` : ""}
+            Order voided
+            {voidedAt ? ` on ${new Date(voidedAt).toLocaleString()}` : ""}
           </p>
           {voidReason && (
             <p className="text-xs text-danger-600 mt-1">Reason: {voidReason}</p>
@@ -117,16 +118,22 @@ export default async function OrderDetailPage({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {(order.order_items as unknown as Array<{
-              product_name: string;
-              quantity: number;
-              unit_price: number;
-              discount: number;
-              subtotal: number;
-            }>).map((item, i) => (
+            {(
+              order.order_items as unknown as Array<{
+                product_name: string;
+                quantity: number;
+                unit_price: number;
+                discount: number;
+                subtotal: number;
+              }>
+            ).map((item, i) => (
               <TableRow key={i} className="border-t border-neutral-100">
-                <TableCell className="py-3 text-neutral-800">{item.product_name}</TableCell>
-                <TableCell className="py-3 text-right text-neutral-600">{item.quantity}</TableCell>
+                <TableCell className="py-3 text-neutral-800">
+                  {item.product_name}
+                </TableCell>
+                <TableCell className="py-3 text-right text-neutral-600">
+                  {item.quantity}
+                </TableCell>
                 <TableCell className="py-3 text-right text-neutral-600">
                   {formatCurrency(Number(item.unit_price), currency)}
                 </TableCell>
@@ -172,13 +179,17 @@ export default async function OrderDetailPage({
           {order.amount_tendered != null && (
             <div className="flex justify-between text-neutral-500">
               <span>Amount tendered</span>
-              <span>{formatCurrency(Number(order.amount_tendered), currency)}</span>
+              <span>
+                {formatCurrency(Number(order.amount_tendered), currency)}
+              </span>
             </div>
           )}
           {Number(order.change_amount) > 0 && (
             <div className="flex justify-between text-neutral-500">
               <span>Change</span>
-              <span>{formatCurrency(Number(order.change_amount), currency)}</span>
+              <span>
+                {formatCurrency(Number(order.change_amount), currency)}
+              </span>
             </div>
           )}
         </div>

@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useFormStatus } from "react-dom";
 import {
   BadgeCheck,
+  Edit,
   Mail,
   Shield,
   UserCog,
@@ -19,6 +20,7 @@ import {
   updateMemberRoleAction,
 } from "@/lib/actions/settingsActions";
 import { StaffRemovalModal } from "@/components/settings/StaffRemovalModal";
+import { useSyncPendingAction } from "@/components/ui/PendingActionProvider";
 import { Button } from "@/components/ui/Button";
 import {
   Table,
@@ -78,7 +80,7 @@ export function StaffManagement({
   const [actionState, setActionState] = useState<StaffActionState>({
     error: null,
   });
-  const [isMutating, startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();
   const [selectedForRemoval, setSelectedForRemoval] =
     useState<StaffMember | null>(null);
   const [selectedForRoleEdit, setSelectedForRoleEdit] =
@@ -89,6 +91,10 @@ export function StaffManagement({
   const [memberActionError, setMemberActionError] = useState<string | null>(
     null,
   );
+
+  useSyncPendingAction(isPending, {
+    message: "Saving changes…",
+  });
 
   function resetInviteFlow() {
     setActionState({ error: null });
@@ -117,12 +123,12 @@ export function StaffManagement({
   }
 
   function closeRemovalModal() {
-    if (isMutating) return;
+    if (isPending) return;
     setSelectedForRemoval(null);
   }
 
   function closeRoleModal() {
-    if (isMutating) return;
+    if (isPending) return;
     setSelectedForRoleEdit(null);
   }
 
@@ -274,27 +280,28 @@ export function StaffManagement({
                     {isOwner && (
                       <TableCell className="text-right">
                         {member.role !== "owner" ? (
-                          <div className="flex justify-end gap-3">
+                          <div className="flex justify-end gap-1">
                             <Button
                               type="button"
                               variant="ghost"
                               size="sm"
-                              disabled={isMutating}
-                              onClick={() => openRoleModal(member)}
-                              className="h-auto px-0 text-xs text-brand-600 hover:text-brand-800"
+                              disabled={isPending}
+                              onClick={() => openRemovalModal(member)}
+                              icon={<UserMinus size={16} />}
+                              className="inline-flex items-center gap-1 text-sm font-medium text-danger-500 transition hover:text-danger-800"
                             >
-                              Edit role
+                              Remove
                             </Button>
                             <Button
                               type="button"
                               variant="ghost"
                               size="sm"
-                              disabled={isMutating}
-                              onClick={() => openRemovalModal(member)}
-                              icon={<UserMinus size={12} />}
-                              className="h-auto px-0 text-xs text-danger-600 hover:text-danger-800"
+                              disabled={isPending}
+                              onClick={() => openRoleModal(member)}
+                              icon={<Edit size={16} />}
+                              className="inline-flex items-center gap-1 text-sm font-medium text-neutral-500 transition hover:text-neutral-800"
                             >
-                              Remove
+                              Edit role
                             </Button>
                           </div>
                         ) : null}
@@ -398,7 +405,7 @@ export function StaffManagement({
             </label>
             <FormSelect
               value={pendingRole}
-              disabled={isMutating}
+              disabled={isPending}
               onChange={(value) =>
                 setPendingRole(value as "manager" | "cashier" | "viewer")
               }
@@ -424,15 +431,15 @@ export function StaffManagement({
             type="button"
             variant="outline"
             onClick={closeRoleModal}
-            disabled={isMutating}
+            disabled={isPending}
           >
             Cancel
           </Button>
           <Button
             type="button"
             onClick={confirmRoleChange}
-            disabled={isMutating}
-            isLoading={isMutating}
+            disabled={isPending}
+            isLoading={isPending}
           >
             Save role
           </Button>
@@ -442,7 +449,7 @@ export function StaffManagement({
       <StaffRemovalModal
         open={Boolean(selectedForRemoval)}
         memberName={selectedForRemoval?.displayName ?? "this staff member"}
-        isPending={isMutating}
+        isPending={isPending}
         onClose={closeRemovalModal}
         onConfirm={confirmRemoveMember}
       />

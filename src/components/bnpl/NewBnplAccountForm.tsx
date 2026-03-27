@@ -12,6 +12,7 @@ import {
   FormTextarea,
   FormError,
 } from "@/components/ui/form";
+import { useSyncPendingAction } from "@/components/ui/PendingActionProvider";
 
 interface NewBnplAccountFormProps {
   storeId: string;
@@ -26,12 +27,19 @@ export default function NewBnplAccountForm({
   onSuccess,
   submitLabel = "Create Account",
 }: NewBnplAccountFormProps) {
-  const [state, formAction, isPending] = useActionState(createBnplAccountAction, {
-    data: null,
-    error: null,
-  });
+  const [state, formAction, isPending] = useActionState(
+    createBnplAccountAction,
+    {
+      data: null,
+      error: null,
+    },
+  );
   const router = useRouter();
   const handledAccountIdRef = useRef<string | null>(null);
+
+  useSyncPendingAction(isPending, {
+    message: "Creating account…",
+  });
 
   useEffect(() => {
     if (!state.data) return;
@@ -48,6 +56,7 @@ export default function NewBnplAccountForm({
   }, [onSuccess, router, state.data, storeId]);
 
   return (
+    <>
     <form action={formAction} className="space-y-5 max-w-lg">
       <input type="hidden" name="storeId" value={storeId} />
 
@@ -55,21 +64,12 @@ export default function NewBnplAccountForm({
         <FormLabel htmlFor="customerName" required>
           Customer Name
         </FormLabel>
-        <FormInput
-          id="customerName"
-          name="customerName"
-          required
-        />
+        <FormInput id="customerName" name="customerName" required />
       </FormField>
 
       <FormField>
         <FormLabel htmlFor="phone">Phone</FormLabel>
-        <FormInput
-          id="phone"
-          name="phone"
-          type="tel"
-          placeholder="Optional"
-        />
+        <FormInput id="phone" name="phone" type="tel" placeholder="Optional" />
       </FormField>
 
       <FormField>
@@ -82,18 +82,14 @@ export default function NewBnplAccountForm({
           type="number"
           min="1"
           step="1"
+          defaultValue={1000}
           required
         />
       </FormField>
 
       <FormField>
         <FormLabel htmlFor="notes">Notes</FormLabel>
-        <FormTextarea
-          id="notes"
-          name="notes"
-          rows={2}
-          placeholder="Optional"
-        />
+        <FormTextarea id="notes" name="notes" rows={2} placeholder="Optional" />
       </FormField>
 
       <FormError message={state.error} />
@@ -122,5 +118,7 @@ export default function NewBnplAccountForm({
         </button>
       </div>
     </form>
+
+    </>
   );
 }

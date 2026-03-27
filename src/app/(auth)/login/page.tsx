@@ -11,11 +11,18 @@ import {
   FormInput,
   FormError,
 } from "@/components/ui/form";
+import { useSyncPendingAction } from "@/components/ui/PendingActionProvider";
 
 const initialState: AuthActionState = { error: null };
 
 export default function LoginPage() {
   const [state, action, isPending] = useActionState(signInAction, initialState);
+
+  useSyncPendingAction(isPending, {
+    message: "Signing in...",
+    subMessage:
+      "This may take a moment. Please do not close or refresh the page.",
+  });
 
   return (
     <div
@@ -77,6 +84,7 @@ export default function LoginPage() {
             Create an owner account
           </Link>
         </p>
+
       </main>
     </div>
   );

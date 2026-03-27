@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils/cn";
-import { Coins } from "lucide-react";
+import { Logo } from "@/components/ui/Logo";
 
 export default async function Home() {
   const supabase = await createClient();
@@ -18,16 +18,7 @@ export default async function Home() {
     >
       <main className="mx-auto flex min-h-full w-full max-w-5xl flex-col items-center justify-center gap-10 px-6 py-16 text-center">
         <div className="flex flex-col items-center space-y-4">
-          <div className="flex items-center">
-            <Coins size={60} className="mr-2 text-brand-600" />
-            <p
-              className={cn(
-                "whitespace-nowrap text-4xl font-black uppercase tracking-widest text-brand-700",
-              )}
-            >
-              Cho-Huai POS
-            </p>
-          </div>
+          <Logo variant="full-dark" size="xl" />
           <h1 className="text-4xl font-semibold leading-tight text-slate-900 sm:text-5xl">
             Fast checkout for small stores.
             <br />

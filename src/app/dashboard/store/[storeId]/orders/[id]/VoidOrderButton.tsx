@@ -10,6 +10,8 @@ import {
   ModalFooter,
 } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
+import { useSyncPendingAction } from "@/components/ui/PendingActionProvider";
+import { XCircle } from "lucide-react";
 
 export default function VoidOrderButton({ orderId }: { orderId: string }) {
   const [open, setOpen] = useState(false);
@@ -17,6 +19,12 @@ export default function VoidOrderButton({ orderId }: { orderId: string }) {
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
+
+  useSyncPendingAction(isPending, {
+    message: "Voiding the order...",
+    subMessage:
+      "This may take a moment. Please do not close or refresh the page.",
+  });
 
   function handleVoid() {
     if (!reason.trim()) {
@@ -36,7 +44,11 @@ export default function VoidOrderButton({ orderId }: { orderId: string }) {
 
   return (
     <>
-      <Button onClick={() => setOpen(true)} variant="destructive">
+      <Button
+        icon={<XCircle size={16} />}
+        onClick={() => setOpen(true)}
+        variant="destructive"
+      >
         Void Order
       </Button>
 

@@ -396,13 +396,13 @@ export default async function ReportsPage({
         description="Historical analytics and financial overview"
         meta={
           <div className="flex flex-wrap gap-2 text-xs">
-            <span className="rounded-full bg-neutral-100 px-3 py-2 text-neutral-700">
+            <span className="rounded-full bg-neutral-200 px-3 py-2 text-neutral-700">
               7-day revenue: {formatDelta(delta7dPct)}
             </span>
-            <span className="rounded-full bg-neutral-100 px-3 py-2 text-neutral-700">
+            <span className="rounded-full bg-neutral-200 px-3 py-2 text-neutral-700">
               7-day profit: {formatDelta(delta7dProfitPct)}
             </span>
-            <span className="rounded-full bg-neutral-100 px-3 py-2 text-neutral-700">
+            <span className="rounded-full bg-neutral-200 px-3 py-2 text-neutral-700">
               30-day profit: {formatDelta(delta30dProfitPct)}
             </span>
           </div>
@@ -512,7 +512,7 @@ export default async function ReportsPage({
                   <div className="mt-2 h-20 rounded-md bg-white p-1">
                     <div className="flex h-full items-end justify-center">
                       <div
-                        className="w-full rounded-sm bg-brand-600"
+                        className="w-full rounded-sm bg-brand-500"
                         style={{ height: `${Math.max(8, ratio)}%` }}
                         title={`${displayDate.toLocaleDateString()}: ${formatCurrency(revenue, currency)}`}
                       />
@@ -624,7 +624,7 @@ export default async function ReportsPage({
                       </div>
                       <div className="mt-1 h-2 overflow-hidden rounded-full bg-neutral-100">
                         <div
-                          className="h-full rounded-full bg-brand-600"
+                          className="h-full rounded-full bg-brand-500"
                           style={{ width: `${Math.max(4, ratio)}%` }}
                         />
                       </div>

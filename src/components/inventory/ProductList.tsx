@@ -289,14 +289,14 @@ export function ProductList({
             )}
           </TableBody>
         </Table>
-
-        <PaginationControls
-          currentPage={currentPage}
-          pageSize={pageSize}
-          totalItems={totalItems}
-          onPageChange={(page) => updateParams({ page: String(page) })}
-        />
       </TableContainer>
+
+      <PaginationControls
+        currentPage={currentPage}
+        pageSize={pageSize}
+        totalItems={totalItems}
+        onPageChange={(page) => updateParams({ page: String(page) })}
+      />
     </div>
   );
 }

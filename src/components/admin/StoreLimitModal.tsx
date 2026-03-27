@@ -10,6 +10,7 @@ import {
   ModalHeader,
 } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
+import { useSyncPendingAction } from "@/components/ui/PendingActionProvider";
 
 interface StoreLimitModalProps {
   open: boolean;
@@ -32,6 +33,10 @@ export function StoreLimitModal({
     Record<string, string>
   >({});
   const [error, setError] = useState<string | null>(null);
+
+  useSyncPendingAction(isPending, {
+    message: "Updating store limit…",
+  });
 
   const defaultStoreLimitInput = profile.store_limit_override
     ? String(profile.store_limit_override)
@@ -72,6 +77,7 @@ export function StoreLimitModal({
   };
 
   return (
+    <>
     <Modal open={open} onClose={handleClose} size="md">
       <ModalHeader title="Update Store Limit" onClose={handleClose} />
       <ModalBody>
@@ -107,5 +113,6 @@ export function StoreLimitModal({
         </Button>
       </ModalFooter>
     </Modal>
+    </>
   );
 }

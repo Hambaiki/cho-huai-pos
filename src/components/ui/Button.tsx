@@ -17,7 +17,7 @@ const buttonVariants = cva(
         active:
           "border border-brand-300 bg-brand-50 text-brand-700 hover:bg-brand-100 active:bg-brand-200",
         ghost:
-          "border border-transparent text-neutral-700 hover:bg-neutral-100 active:bg-neutral-200",
+          "border border-transparent text-neutral-700 hover:bg-neutral-200 active:bg-neutral-200",
         ghostDark:
           "border border-transparent text-white hover:bg-neutral-700/10 active:bg-neutral-700/20",
         destructive:

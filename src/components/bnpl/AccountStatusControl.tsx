@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { updateBnplAccountStatusAction } from "@/lib/actions/bnpl";
 import type { BnplActionResult } from "@/lib/actions/bnpl";
 import { FormSelect, FormSelectOption } from "../ui/form";
+import { useSyncPendingAction } from "../ui/PendingActionProvider";
 
 const STATUS_OPTIONS = ["active", "frozen", "closed", "settled"] as const;
 type AccountStatus = (typeof STATUS_OPTIONS)[number];
@@ -21,6 +22,10 @@ export default function AccountStatusControl({
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+
+  useSyncPendingAction(isPending, {
+    message: "Updating account status…",
+  });
 
   function handleChange(status: string) {
     const newStatus = status as AccountStatus;
@@ -42,7 +47,7 @@ export default function AccountStatusControl({
         value={currentStatus}
         onChange={handleChange}
         disabled={isPending}
-        className="border border-neutral-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 disabled:opacity-60"
+        className="w-36"
       >
         {STATUS_OPTIONS.map((s) => (
           <FormSelectOption key={s} value={s}>

@@ -374,7 +374,7 @@ const FormSelect = forwardRef<HTMLButtonElement, FormSelectProps>(
                 className={cn(
                   "z-1000",
                   "rounded-md border border-neutral-200 bg-white shadow-lg",
-                  "p-1 space-y-0 outline-none overflow-y-auto",
+                  "p-1 space-y-1 outline-none overflow-y-auto",
                 )}
               >
                 {allOptions.length === 0 ? (

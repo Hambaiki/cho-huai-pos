@@ -234,6 +234,19 @@ export async function createProductAction(
     return { data: null, error: error?.message ?? "Failed to create product." };
   }
 
+  // Create an initial purchase lot if the product starts with stock
+  if (parsed.data.stockQty > 0) {
+    await supabase.from("purchase_lots").insert({
+      store_id: storeId,
+      product_id: product.id,
+      received_qty: parsed.data.stockQty,
+      remaining_qty: parsed.data.stockQty,
+      unit_cost: parsed.data.costPrice ?? 0,
+      source_ref: "initial-balance",
+      created_by: user.id,
+    });
+  }
+
   revalidatePath(`/dashboard/store/${storeId}/inventory`);
 
   return { data: { productId: product.id }, error: null };
@@ -327,7 +340,6 @@ export async function updateProductAction(
       barcode: parsed.data.barcode || null,
       price: parsed.data.price,
       cost_price: parsed.data.costPrice || null,
-      stock_qty: parsed.data.stockQty,
       low_stock_at: parsed.data.lowStockAt,
       unit: parsed.data.unit,
       image_url: nextImageUrl,

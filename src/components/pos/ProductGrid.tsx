@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { formatCurrency, type CurrencyStore } from "@/lib/utils/currency";
-import { ImageOff, Search, Barcode, ScanBarcode } from "lucide-react";
+import { ImageOff, Search, ScanBarcode } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { FormInput } from "@/components/ui/form";
 import { cn } from "@/lib/utils/cn";
@@ -232,7 +232,7 @@ export function ProductGrid({
                 return (
                   <Button
                     size="lg"
-                    variant="active"
+                    variant="outline"
                     className={cn(
                       "grid h-auto grid-cols-1 items-stretch gap-3 p-2 text-left",
                       "disabled:cursor-not-allowed disabled:opacity-50",

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useStoreContext } from "@/lib/store-context";
 import { ProductList } from "./ProductList";
 import { ProductModal } from "./ProductModal";
@@ -54,27 +53,14 @@ export function InventoryContent({
   categoryOptions,
 }: InventoryContentProps) {
   const store = useStoreContext();
-  const router = useRouter();
   const [modalOpen, setModalOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   const handleOpenNewProduct = () => {
-    setSelectedProduct(null);
-    setModalOpen(true);
-  };
-
-  const handleOpenEditProduct = (product: Product) => {
-    setSelectedProduct(product);
     setModalOpen(true);
   };
 
   const handleCloseModal = () => {
     setModalOpen(false);
-    setSelectedProduct(null);
-  };
-
-  const handleSuccess = () => {
-    router.refresh();
   };
 
   return (
@@ -101,31 +87,12 @@ export function InventoryContent({
         initialCategoryIds={initialCategoryIds}
         categoryOptions={categoryOptions}
         onNewProduct={handleOpenNewProduct}
-        onEditProduct={handleOpenEditProduct}
       />
 
       <ProductModal
         open={modalOpen}
         onClose={handleCloseModal}
-        product={
-          selectedProduct
-            ? {
-                id: selectedProduct.id,
-                name: selectedProduct.name,
-                sku: selectedProduct.sku,
-                barcode: selectedProduct.barcode,
-                price: selectedProduct.price,
-                costPrice: selectedProduct.costPrice,
-                stockQty: selectedProduct.stockQty,
-                lowStockAt: selectedProduct.lowStockAt,
-                unit: selectedProduct.unit,
-                categoryId: selectedProduct.categoryId,
-                imageUrl: selectedProduct.imageUrl,
-              }
-            : undefined
-        }
         categories={categoryOptions}
-        onSuccess={handleSuccess}
       />
     </>
   );

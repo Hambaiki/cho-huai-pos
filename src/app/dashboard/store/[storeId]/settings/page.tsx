@@ -30,7 +30,7 @@ export default async function SettingsPage({
   const { data: membershipRow } = await supabase
     .from("store_members")
     .select(
-      "store_id, role, stores(id, name, address, tax_rate, receipt_header, receipt_footer, currency_code, currency_symbol, currency_decimals, symbol_position)",
+      "store_id, role, stores(id, name, address, tax_rate, receipt_header, receipt_footer, currency_code, currency_symbol, currency_decimals, symbol_position, cost_method)",
     )
     .eq("user_id", user.id)
     .eq("store_id", storeId)
@@ -50,6 +50,7 @@ export default async function SettingsPage({
     currency_symbol: string;
     currency_decimals: number;
     symbol_position: "prefix" | "suffix";
+    cost_method: "fifo" | "lifo";
   } | null;
 
   if (!storeRow) redirect("/dashboard");

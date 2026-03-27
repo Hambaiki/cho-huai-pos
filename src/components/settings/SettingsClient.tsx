@@ -34,6 +34,7 @@ import {
   FormError,
   FormSelectOption,
   FormToggle,
+  FormFileUpload,
 } from "@/components/ui/form";
 import { cn } from "@/lib/utils/cn";
 import { Plus } from "lucide-react";
@@ -49,6 +50,7 @@ interface StoreData {
   currency_symbol: string;
   currency_decimals: number;
   symbol_position: "prefix" | "suffix";
+  cost_method: "fifo" | "lifo";
 }
 
 interface SettingsClientProps {
@@ -145,7 +147,7 @@ function GeneralSettingsTab({
     <form action={formAction} className="space-y-6">
       <input type="hidden" name="storeId" value={storeId} />
 
-      <SectionCard title="Store Details" bodyClassName="space-y-4">
+      <SectionCard title="Store Details" bodyClassName="p-4">
         <div className="grid gap-4 sm:grid-cols-2">
           <FormField>
             <FormLabel htmlFor="name" required>
@@ -173,7 +175,7 @@ function GeneralSettingsTab({
             />
           </FormField>
         </div>
-        <FormField>
+        <FormField className="mt-4">
           <FormLabel htmlFor="address">Address</FormLabel>
           <FormTextarea
             id="address"
@@ -262,6 +264,28 @@ function GeneralSettingsTab({
             />
           </FormField>
         </div>
+      </SectionCard>
+
+      <SectionCard title="Inventory Costing" bodyClassName="space-y-4 p-4">
+        <FormField>
+          <FormLabel htmlFor="costMethod">Cost Method</FormLabel>
+          <FormSelect
+            id="costMethod"
+            name="costMethod"
+            defaultValue={store.cost_method ?? "fifo"}
+            disabled={!isOwner}
+          >
+            <FormSelectOption value="fifo">
+              FIFO – First In, First Out
+            </FormSelectOption>
+            <FormSelectOption value="lifo">
+              LIFO – Last In, First Out
+            </FormSelectOption>
+          </FormSelect>
+          <p className="mt-1 text-xs text-neutral-500">
+            Determines which purchase lot cost is used when recording a sale.
+          </p>
+        </FormField>
       </SectionCard>
 
       <FormError message={state.error} />
@@ -560,10 +584,9 @@ function QrChannelsTab({
               <FormLabel htmlFor="imageFile" required>
                 QR image
               </FormLabel>
-              <input
+              <FormFileUpload
                 id="imageFile"
                 name="imageFile"
-                type="file"
                 accept="image/*"
                 required
                 onChange={(event) => {
@@ -582,7 +605,7 @@ function QrChannelsTab({
                 className="block w-full rounded-md border border-neutral-200 px-3 py-2 text-sm text-neutral-700 file:mr-3 file:rounded-md file:border-0 file:bg-neutral-100 file:px-3 file:py-2 file:text-sm file:font-medium"
               />
               <p className="mt-1 text-xs text-neutral-500">
-                PNG, JPG, or WEBP up to 5MB.
+                PNG, JPG, or WEBP up to 1MB.
               </p>
             </FormField>
 

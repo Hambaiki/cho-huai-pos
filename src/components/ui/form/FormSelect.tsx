@@ -1,20 +1,22 @@
 "use client";
 
 import {
+  Children,
+  ReactNode,
   forwardRef,
+  isValidElement,
+  useCallback,
+  useEffect,
   useId,
+  useImperativeHandle,
+  useLayoutEffect,
+  useMemo,
   useRef,
   useState,
-  useEffect,
-  useCallback,
-  useImperativeHandle,
-  ReactNode,
-  Children,
-  isValidElement,
-  useMemo,
 } from "react";
-import { cn } from "@/lib/utils/cn";
+import { createPortal } from "react-dom";
 import { CheckIcon, ChevronDown } from "lucide-react";
+import { cn } from "@/lib/utils/cn";
 import { FormSelectOption, FormSelectOptionProps } from "./FormSelectOption";
 
 export interface SelectOption {
@@ -41,6 +43,18 @@ export interface FormSelectProps {
   children?: ReactNode;
 }
 
+interface DropdownPosition {
+  top: number;
+  left: number;
+  width: number;
+  maxHeight: number;
+  openUpward: boolean;
+}
+
+const VIEWPORT_PADDING = 8;
+const DROPDOWN_GAP = 8;
+const MIN_DROPDOWN_HEIGHT = 80;
+
 const FormSelect = forwardRef<HTMLButtonElement, FormSelectProps>(
   (
     {
@@ -49,10 +63,11 @@ const FormSelect = forwardRef<HTMLButtonElement, FormSelectProps>(
       value,
       defaultValue,
       onChange,
+      onBlur,
       error,
       disabled,
       isLoading,
-      placeholder = "Select…",
+      placeholder = "Select...",
       options = [],
       className,
       wrapperClassName,
@@ -63,7 +78,6 @@ const FormSelect = forwardRef<HTMLButtonElement, FormSelectProps>(
     const autoId = useId();
     const inputId = id ?? autoId;
 
-    // NOTE: extract SelectOption from FormSelectOption children
     const extractedOptions = useMemo(() => {
       const childOptions: SelectOption[] = [];
 
@@ -83,13 +97,11 @@ const FormSelect = forwardRef<HTMLButtonElement, FormSelectProps>(
       return childOptions;
     }, [children]);
 
-    // NOTE: merge options from prop and children, children take precedence
     const allOptions = useMemo(
       () => (extractedOptions.length > 0 ? extractedOptions : options),
       [extractedOptions, options],
     );
 
-    // NOTE: manage controlled vs uncontrolled value
     const [internalValue, setInternalValue] = useState(
       defaultValue ?? value ?? "",
     );
@@ -97,17 +109,28 @@ const FormSelect = forwardRef<HTMLButtonElement, FormSelectProps>(
     const selectedValue = value !== undefined ? value : internalValue;
     const selectedOption = allOptions.find((o) => o.value === selectedValue);
 
-    // NOTE: open state is always internal
     const [open, setOpen] = useState(false);
-    const close = useCallback(() => setOpen(false), []);
+    const [keyboardIndex, setKeyboardIndex] = useState<number>(-1);
+
+    const close = useCallback(() => {
+      setKeyboardIndex(-1);
+      setOpen(false);
+      onBlur?.();
+    }, [onBlur]);
 
     const containerRef = useRef<HTMLDivElement>(null);
     const buttonRef = useRef<HTMLButtonElement>(null);
+    const dropdownRef = useRef<HTMLUListElement>(null);
 
     useImperativeHandle(ref, () => buttonRef.current!);
 
-    // NOTE: activeIndex for keyboard navigation
-    const [keyboardIndex, setKeyboardIndex] = useState<number>(-1);
+    const [dropdownPosition, setDropdownPosition] = useState<DropdownPosition>({
+      top: 0,
+      left: 0,
+      width: 0,
+      maxHeight: 240,
+      openUpward: false,
+    });
 
     const selectedIndex = useMemo(() => {
       return allOptions.findIndex(
@@ -121,42 +144,96 @@ const FormSelect = forwardRef<HTMLButtonElement, FormSelectProps>(
       return selectedIndex >= 0 ? selectedIndex : 0;
     }, [open, keyboardIndex, selectedIndex]);
 
-    useEffect(() => {
-      if (!open) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setKeyboardIndex(-1);
-      }
-    }, [open]);
+    const updateDropdownPosition = useCallback(() => {
+      const trigger = buttonRef.current;
+      if (!trigger) return;
+
+      const rect = trigger.getBoundingClientRect();
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+
+      const availableBelow = viewportHeight - rect.bottom - DROPDOWN_GAP;
+      const availableAbove = rect.top - DROPDOWN_GAP;
+      const openUpward =
+        availableBelow < MIN_DROPDOWN_HEIGHT && availableAbove > availableBelow;
+
+      const maxLeft = Math.max(
+        VIEWPORT_PADDING,
+        viewportWidth - rect.width - VIEWPORT_PADDING,
+      );
+      const left = Math.min(Math.max(rect.left, VIEWPORT_PADDING), maxLeft);
+
+      const top = openUpward
+        ? Math.max(VIEWPORT_PADDING, rect.top - DROPDOWN_GAP)
+        : Math.min(
+            viewportHeight - VIEWPORT_PADDING,
+            rect.bottom + DROPDOWN_GAP,
+          );
+
+      const availableHeight = openUpward ? availableAbove : availableBelow;
+
+      setDropdownPosition({
+        top,
+        left,
+        width: rect.width,
+        maxHeight: Math.max(MIN_DROPDOWN_HEIGHT, availableHeight),
+        openUpward,
+      });
+    }, []);
+
+    useLayoutEffect(() => {
+      if (!open) return;
+      updateDropdownPosition();
+    }, [open, updateDropdownPosition]);
+
     useEffect(() => {
       if (!open) return;
 
-      const handler = (e: MouseEvent) => {
-        if (!containerRef.current?.contains(e.target as Node)) {
+      const handleReposition = () => updateDropdownPosition();
+      window.addEventListener("resize", handleReposition);
+      window.addEventListener("scroll", handleReposition, true);
+
+      return () => {
+        window.removeEventListener("resize", handleReposition);
+        window.removeEventListener("scroll", handleReposition, true);
+      };
+    }, [open, updateDropdownPosition]);
+
+    useEffect(() => {
+      if (!open) return;
+
+      const handleOutsidePointerDown = (e: MouseEvent) => {
+        const target = e.target as Node;
+        const insideTrigger = containerRef.current?.contains(target);
+        const insideDropdown = dropdownRef.current?.contains(target);
+
+        if (!insideTrigger && !insideDropdown) {
           close();
         }
       };
 
-      document.addEventListener("mousedown", handler);
-      return () => document.removeEventListener("mousedown", handler);
+      document.addEventListener("mousedown", handleOutsidePointerDown);
+      return () =>
+        document.removeEventListener("mousedown", handleOutsidePointerDown);
     }, [open, close]);
 
-    // NOTE: close dropdown on focus out
     useEffect(() => {
       if (!open) return;
 
-      const handleFocusOut = (e: FocusEvent) => {
-        if (container && !container.contains(e.relatedTarget as Node)) {
+      const handleFocusIn = (e: FocusEvent) => {
+        const target = e.target as Node;
+        const insideTrigger = containerRef.current?.contains(target);
+        const insideDropdown = dropdownRef.current?.contains(target);
+
+        if (!insideTrigger && !insideDropdown) {
           close();
         }
       };
 
-      const container = containerRef.current;
-      container?.addEventListener("focusout", handleFocusOut);
-
-      return () => container?.removeEventListener("focusout", handleFocusOut);
+      document.addEventListener("focusin", handleFocusIn);
+      return () => document.removeEventListener("focusin", handleFocusIn);
     }, [open, close]);
 
-    // NOTE: handle option selection
     const select = (opt: SelectOption) => {
       if (opt.disabled) return;
 
@@ -169,7 +246,6 @@ const FormSelect = forwardRef<HTMLButtonElement, FormSelectProps>(
       buttonRef.current?.focus();
     };
 
-    // NOTE: handle keyboard events on trigger button
     const handleTriggerKeyDown = (e: React.KeyboardEvent) => {
       if (disabled || isLoading) return;
 
@@ -179,6 +255,7 @@ const FormSelect = forwardRef<HTMLButtonElement, FormSelectProps>(
         case "Enter":
         case " ":
           e.preventDefault();
+          setKeyboardIndex(-1);
           setOpen(true);
           break;
         case "Escape":
@@ -187,7 +264,6 @@ const FormSelect = forwardRef<HTMLButtonElement, FormSelectProps>(
       }
     };
 
-    // NOTE: handle keyboard events in dropdown
     const handleDropdownKeyDown = (e: React.KeyboardEvent) => {
       if (!open) return;
 
@@ -224,10 +300,8 @@ const FormSelect = forwardRef<HTMLButtonElement, FormSelectProps>(
         onKeyDown={handleDropdownKeyDown}
         className={cn("w-full flex flex-col", wrapperClassName)}
       >
-        {/* Hidden native input for forms */}
         <input type="hidden" name={name} value={selectedValue} />
 
-        {/* Trigger */}
         <div className="relative w-full">
           <button
             ref={buttonRef}
@@ -239,27 +313,31 @@ const FormSelect = forwardRef<HTMLButtonElement, FormSelectProps>(
             aria-controls={`${inputId}-listbox`}
             aria-invalid={!!error}
             disabled={isDisabledOrLoading}
-            onClick={() => !isDisabledOrLoading && setOpen((o) => !o)}
+            onClick={() => {
+              if (isDisabledOrLoading) return;
+
+              if (open) {
+                close();
+                return;
+              }
+
+              setKeyboardIndex(-1);
+              setOpen(true);
+            }}
             onKeyDown={handleTriggerKeyDown}
             className={cn(
               "block w-full rounded-md border px-3 py-2 pr-10 text-sm",
               "text-left appearance-none cursor-pointer",
               "outline-none transition-colors",
-              // Default state
               "border-neutral-200 text-neutral-900 bg-white",
-              // Hover state
               !isDisabledOrLoading && "hover:border-neutral-300",
-              // Focus state
               !isDisabledOrLoading &&
                 "focus:border-brand-300 focus:ring-2 focus:ring-brand-200",
-              // Error state
               error &&
                 !isDisabledOrLoading &&
                 "border-danger-300 focus:ring-danger-200 focus:border-danger-300",
-              // Disabled/Loading state
               isDisabledOrLoading &&
                 "bg-neutral-50 text-neutral-500 cursor-not-allowed",
-              // Placeholder text color
               !selectedOption && "text-neutral-400",
               className,
             )}
@@ -267,7 +345,6 @@ const FormSelect = forwardRef<HTMLButtonElement, FormSelectProps>(
             {selectedOption ? selectedOption.label : placeholder}
           </button>
 
-          {/* Chevron */}
           <div
             className={cn(
               "pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 transition-transform",
@@ -278,64 +355,71 @@ const FormSelect = forwardRef<HTMLButtonElement, FormSelectProps>(
             <ChevronDown size={16} />
           </div>
 
-          {/* Dropdown */}
-          {open && (
-            <ul
-              id={`${inputId}-listbox`}
-              role="listbox"
-              className={cn(
-                "absolute z-50 mt-2 w-full",
-                "rounded-md border border-neutral-200 bg-white shadow-lg",
-                "p-1 space-y-0 outline-none",
-              )}
-            >
-              {allOptions.length === 0 ? (
-                <li className="px-3 py-2 text-sm text-neutral-500">
-                  No options available
-                </li>
-              ) : (
-                allOptions.map((opt, index) => {
-                  const isSelected = opt.value === selectedValue;
-                  const isActive = index === activeIndex;
+          {open &&
+            createPortal(
+              <ul
+                ref={dropdownRef}
+                id={`${inputId}-listbox`}
+                role="listbox"
+                style={{
+                  position: "fixed",
+                  top: dropdownPosition.top,
+                  left: dropdownPosition.left,
+                  width: dropdownPosition.width,
+                  maxHeight: dropdownPosition.maxHeight,
+                  transform: dropdownPosition.openUpward
+                    ? "translateY(-100%)"
+                    : undefined,
+                }}
+                className={cn(
+                  "z-1000",
+                  "rounded-md border border-neutral-200 bg-white shadow-lg",
+                  "p-1 space-y-0 outline-none overflow-y-auto",
+                )}
+              >
+                {allOptions.length === 0 ? (
+                  <li className="px-3 py-2 text-sm text-neutral-500">
+                    No options available
+                  </li>
+                ) : (
+                  allOptions.map((opt, index) => {
+                    const isSelected = opt.value === selectedValue;
+                    const isActive = index === activeIndex;
 
-                  return (
-                    <li
-                      key={opt.value}
-                      role="option"
-                      aria-selected={isSelected}
-                      aria-disabled={opt.disabled}
-                      onMouseEnter={() => setKeyboardIndex(index)}
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => select(opt)}
-                      className={cn(
-                        "flex items-center gap-2 px-3 py-2 text-sm",
-                        "rounded cursor-pointer select-none transition-colors",
-
-                        // Selected state
-                        isSelected &&
-                          !opt.disabled &&
-                          "bg-neutral-100 text-brand-600 font-medium",
-                        // Active/hovering state
-                        isActive && !opt.disabled && "bg-neutral-200",
-                        // Disabled state
-                        opt.disabled &&
-                          "text-neutral-400 cursor-not-allowed opacity-50",
-                        // Default text color
-                        !opt.disabled && "text-neutral-900",
-                      )}
-                    >
-                      <span className="w-4 h-4 flex items-center justify-center shrink-0">
-                        {isSelected && (
-                          <CheckIcon size={16} className="text-brand-600" />
+                    return (
+                      <li
+                        key={opt.value}
+                        role="option"
+                        aria-selected={isSelected}
+                        aria-disabled={opt.disabled}
+                        onMouseEnter={() => setKeyboardIndex(index)}
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => select(opt)}
+                        className={cn(
+                          "flex items-center gap-2 px-3 py-2 text-sm",
+                          "rounded cursor-pointer select-none transition-colors",
+                          isSelected &&
+                            !opt.disabled &&
+                            "bg-neutral-100 text-brand-600 font-medium",
+                          isActive && !opt.disabled && "bg-neutral-200",
+                          opt.disabled &&
+                            "text-neutral-400 cursor-not-allowed opacity-50",
+                          !opt.disabled && "text-neutral-900",
                         )}
-                      </span>
-                      <span className="flex-1">{opt.label}</span>
-                    </li>
-                  );
-                })
-              )}
-            </ul>
-          )}
+                      >
+                        <span className="w-4 h-4 flex items-center justify-center shrink-0">
+                          {isSelected && (
+                            <CheckIcon size={16} className="text-brand-600" />
+                          )}
+                        </span>
+                        <span className="flex-1">{opt.label}</span>
+                      </li>
+                    );
+                  })
+                )}
+              </ul>,
+              document.body,
+            )}
         </div>
       </div>
     );

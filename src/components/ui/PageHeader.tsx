@@ -21,17 +21,18 @@ export function PageHeader({
 }: PageHeaderProps) {
   return (
     <header>
+      {backHref && (
+        <Link
+          href={backHref}
+          className="mb-3 flex items-center text-sm text-brand-600 hover:text-brand-800"
+        >
+          <ChevronLeft className="inline -ml-1" />
+          {backLabel ?? "Back"}
+        </Link>
+      )}
+
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
-          {backHref && (
-            <Link
-              href={backHref}
-              className="flex items-center text-sm text-brand-600 hover:text-brand-800"
-            >
-              <ChevronLeft className="inline -ml-1" />
-              {backLabel ?? "Back"}
-            </Link>
-          )}
           <h1
             className={`${backHref ? "mt-1" : ""} text-2xl font-semibold text-neutral-900`}
           >

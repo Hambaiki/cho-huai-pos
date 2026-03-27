@@ -258,21 +258,32 @@ export function ProductModal({
               />
             </FormField>
 
-            <FormField>
-              <FormLabel htmlFor="stockQty" required>
-                Stock Qty
-              </FormLabel>
-              <FormInput
-                type="number"
-                id="stockQty"
+            {isEdit ? (
+              <input
+                type="hidden"
                 name="stockQty"
-                min="0"
-                step="1"
-                placeholder="0"
-                defaultValue={product?.stockQty || 0}
-                required
+                value={String(product?.stockQty ?? 0)}
               />
-            </FormField>
+            ) : (
+              <FormField>
+                <FormLabel htmlFor="stockQty" required>
+                  Initial Stock
+                </FormLabel>
+                <FormInput
+                  type="number"
+                  id="stockQty"
+                  name="stockQty"
+                  min="0"
+                  step="1"
+                  placeholder="0"
+                  defaultValue={0}
+                  required
+                />
+                <p className="mt-1 text-xs text-neutral-500">
+                  After creation, stock is managed from the product detail page.
+                </p>
+              </FormField>
+            )}
 
             <FormField>
               <FormLabel htmlFor="lowStockAt" required>

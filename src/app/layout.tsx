@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Sarabun } from "next/font/google";
+import { IBM_Plex_Sans_Thai, Sarabun } from "next/font/google";
 import { cn } from "@/lib/utils/cn";
 import { AppToaster } from "@/components/ui/AppToaster";
 import "./globals.css";
@@ -8,6 +8,12 @@ const sarabun = Sarabun({
   subsets: ["latin", "thai"],
   variable: "--font-sarabun",
   weight: ["100", "200", "300", "400", "500", "600", "700", "800"],
+});
+
+const ibmPlexSansThai = IBM_Plex_Sans_Thai({
+  subsets: ["latin", "thai"],
+  variable: "--font-ibm-plex-sans-thai",
+  weight: ["100", "200", "300", "400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -28,7 +34,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="th">
-      <body className={cn(`${sarabun.variable}`, `antialiased`)}>
+      <body
+        className={cn(
+          `${sarabun.variable} ${ibmPlexSansThai.variable}`,
+          `antialiased`,
+        )}
+      >
         {children}
         <AppToaster />
       </body>

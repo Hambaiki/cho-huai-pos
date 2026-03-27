@@ -421,6 +421,7 @@ const updateStoreSchema = z.object({
   currencySymbol: z.string().min(1).max(10).trim(),
   currencyDecimals: z.number().int().min(0).max(4),
   symbolPosition: z.enum(["prefix", "suffix"]),
+  costMethod: z.enum(["fifo", "lifo"]).default("fifo"),
 });
 
 export async function updateStoreSettingsAction(
@@ -438,6 +439,7 @@ export async function updateStoreSettingsAction(
     currencySymbol: formData.get("currencySymbol"),
     currencyDecimals: parseInt(formData.get("currencyDecimals") as string) || 0,
     symbolPosition: formData.get("symbolPosition"),
+    costMethod: (formData.get("costMethod") as string) || "fifo",
   });
 
   if (!parsed.success) {
@@ -474,6 +476,7 @@ export async function updateStoreSettingsAction(
       currency_symbol: parsed.data.currencySymbol,
       currency_decimals: parsed.data.currencyDecimals,
       symbol_position: parsed.data.symbolPosition,
+      cost_method: parsed.data.costMethod,
     })
     .eq("id", parsed.data.storeId);
 

@@ -1,8 +1,9 @@
 "use client";
 
 import { useMemo } from "react";
+import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { AlertTriangle, CirclePlus, PencilLine } from "lucide-react";
+import { AlertTriangle, CirclePlus, ExternalLink } from "lucide-react";
 import { formatCurrency, type CurrencyStore } from "@/lib/utils/currency";
 import { cn } from "@/lib/utils/cn";
 import { SearchInput } from "@/components/ui/SearchInput";
@@ -52,7 +53,6 @@ interface ProductListProps {
   initialCategoryIds: string[];
   categoryOptions: CategoryOption[];
   onNewProduct?: () => void;
-  onEditProduct?: (product: Product) => void;
 }
 
 export function ProductList({
@@ -67,7 +67,6 @@ export function ProductList({
   initialCategoryIds,
   categoryOptions,
   onNewProduct,
-  onEditProduct,
 }: ProductListProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -275,16 +274,15 @@ export function ProductList({
                     </span>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      type="button"
-                      onClick={() => onEditProduct?.(product)}
-                      variant="ghost"
-                      size="sm"
-                      icon={<PencilLine size={14} />}
-                      className="h-auto px-0 font-medium text-brand-600 transition hover:text-brand-700"
-                    >
-                      Edit
-                    </Button>
+                    <div className="flex items-center justify-end gap-3">
+                      <Link
+                        href={`${pathname.replace(/\?.*$/, "")}/${product.id}`}
+                        className="inline-flex items-center gap-1 text-sm font-medium text-neutral-500 transition hover:text-neutral-800"
+                      >
+                        <ExternalLink size={14} />
+                        Details
+                      </Link>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))

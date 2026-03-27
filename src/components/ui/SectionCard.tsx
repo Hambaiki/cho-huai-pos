@@ -46,7 +46,7 @@ export function SectionCard({
           {headerRight}
         </div>
       </div>
-      <div className={cn("p-4", bodyClassName)}>{children}</div>
+      <div className={cn(bodyClassName)}>{children}</div>
     </section>
   );
 }

@@ -76,12 +76,12 @@ export function AppSidebarLayout({
 
   const sidebarContent = (
     <div className="flex h-full flex-col">
-      <div className="flex h-14 items-center justify-between border-b border-neutral-200 px-4 py-4">
+      <div className="flex h-14 items-center justify-between border-b border-brand-800 bg-brand-700 px-4 py-4">
         <div className="flex items-center">
-          <Coins size={30} className="mr-2 text-brand-600" />
+          <Coins size={30} className="mr-2 text-white" />
           <p
             className={cn(
-              "overflow-hidden whitespace-nowrap text-lg font-black uppercase tracking-widest text-brand-700 transition-[max-width,opacity] duration-200 ease-out md:max-w-40 md:opacity-100",
+              "overflow-hidden whitespace-nowrap text-lg font-black uppercase tracking-widest text-white transition-[max-width,opacity] duration-200 ease-out md:max-w-40 md:opacity-100",
               !compactExpanded &&
                 "md:max-w-0 md:opacity-0 xl:max-w-40 xl:opacity-100",
             )}
@@ -100,23 +100,23 @@ export function AppSidebarLayout({
         </div>
         <Button
           type="button"
-          variant="ghost"
+          variant="ghostDark"
           size="icon-sm"
           onClick={() => setSidebarOpen(false)}
-          className="text-neutral-500 md:hidden"
+          className="text-white md:hidden"
           aria-label="Close menu"
         >
           <X size={20} />
         </Button>
       </div>
 
-      <div className="hidden border-b border-neutral-200 px-2 py-3 md:block xl:hidden">
+      <div className="hidden border-b border-brand-800 px-2 py-3 md:block xl:hidden">
         <Button
           type="submit"
-          variant="ghost"
+          variant="ghostDark"
           onClick={() => setCompactExpanded((prev) => !prev)}
           aria-label="Collapse sidebar"
-          className="h-auto w-full justify-start gap-3 px-3 py-3 text-neutral-600 transition-colors duration-200 ease-out hover:text-neutral-900"
+          className="h-auto w-full justify-start gap-3 px-3 py-3"
         >
           {compactExpanded ? (
             <PanelLeftClose size={20} className="shrink-0" />
@@ -141,7 +141,7 @@ export function AppSidebarLayout({
             {section.title ? (
               <p
                 className={cn(
-                  "overflow-hidden whitespace-nowrap px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-neutral-400 transition-opacity duration-200 ease-out md:min-h-5 md:opacity-100",
+                  "overflow-hidden whitespace-nowrap px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-neutral-100 transition-opacity duration-200 ease-out md:min-h-5 md:opacity-100",
                   !compactExpanded && "md:opacity-0 xl:opacity-100",
                 )}
               >
@@ -165,10 +165,11 @@ export function AppSidebarLayout({
                     aria-label={label}
                     title={label}
                     className={cn(
-                      "flex items-center gap-3 rounded-lg p-3 text-sm font-medium transition-colors duration-200 ease-out",
-                      active
-                        ? "bg-brand-50 text-brand-700"
-                        : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900",
+                      "flex items-center gap-3 rounded-lg px-3 py-3 font-medium text-sm text-neutral-50",
+                      "hover:bg-neutral-700/10 active:bg-neutral-700/20 hover:text-white",
+                      active &&
+                        "bg-neutral-700/30 hover:bg-neutral-700/40 text-white",
+                      "transition-colors duration-200 ease-out",
                     )}
                   >
                     <Icon size={20} className="shrink-0" />
@@ -190,7 +191,7 @@ export function AppSidebarLayout({
       </nav>
 
       {footerLinks.length > 0 && (
-        <div className="border-t border-neutral-200 px-2 py-3">
+        <div className="border-t border-brand-800 px-2 py-3">
           {footerLinks.map(({ href, label, icon: Icon }) => (
             <Link
               key={href}
@@ -199,7 +200,9 @@ export function AppSidebarLayout({
               aria-label={label}
               title={label}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium text-neutral-600 transition-colors duration-200 ease-out hover:bg-neutral-100 hover:text-neutral-900",
+                "flex items-center gap-3 rounded-lg px-3 py-3 font-medium text-sm text-neutral-50",
+                "hover:bg-neutral-700/10 active:bg-neutral-700/20 hover:text-white",
+                "transition-colors duration-200 ease-out",
               )}
             >
               <Icon size={20} className="shrink-0" />
@@ -217,14 +220,14 @@ export function AppSidebarLayout({
         </div>
       )}
 
-      <div className="border-t border-neutral-200 px-2 py-3">
+      <div className="border-t border-brand-800 px-2 py-3">
         <form action={signOutAction}>
           <Button
             type="submit"
-            variant="ghost"
+            variant="ghostDark"
             onClick={() => setSidebarOpen(false)}
             aria-label="Logout"
-            className="h-auto w-full justify-start gap-3 px-3 py-3 text-neutral-600 transition-colors duration-200 ease-out hover:text-neutral-900"
+            className="h-auto w-full justify-start gap-3 px-3 py-3"
           >
             <LogOut size={20} className="shrink-0" />
             <span
@@ -243,10 +246,10 @@ export function AppSidebarLayout({
   );
 
   return (
-    <div className="min-h-dvh overflow-hidden bg-neutral-50 text-neutral-900">
+    <div className="min-h-dvh overflow-hidden bg-white text-neutral-900">
       <aside
         className={cn(
-          "hidden border-r border-neutral-200 bg-white md:fixed md:inset-y-0 md:left-0 md:z-30 md:flex md:flex-col md:w-16 xl:w-56 md:transition-[width] md:duration-300 md:ease-in-out",
+          "hidden border-r border-brand-800 bg-brand-700 md:fixed md:inset-y-0 md:left-0 md:z-30 md:flex md:flex-col md:w-16 xl:w-56 md:transition-[width] md:duration-300 md:ease-in-out",
           compactExpanded && "md:w-56",
         )}
       >
@@ -269,7 +272,7 @@ export function AppSidebarLayout({
         />
         <aside
           className={cn(
-            "relative z-50 flex w-64 flex-col bg-white shadow-xl transition-transform duration-250 ease-out",
+            "relative z-50 flex w-64 flex-col bg-brand-700 shadow-xl transition-transform duration-250 ease-out",
             sidebarOpen ? "translate-x-0" : "-translate-x-full",
           )}
         >
@@ -284,15 +287,15 @@ export function AppSidebarLayout({
       >
         <header
           className={cn(
-            "fixed inset-x-0 top-0 z-20 flex h-14 items-center gap-3 border-b border-neutral-200 bg-white px-6 md:right-0 md:left-16 xl:left-56",
+            "fixed inset-x-0 top-0 z-20 flex h-14 items-center gap-3 border-b border-brand-800 bg-brand-700 px-6 md:right-0 md:left-16 xl:left-56",
           )}
         >
           <Button
             type="button"
-            variant="ghost"
+            variant="ghostDark"
             size="icon-sm"
             onClick={() => setSidebarOpen(true)}
-            className="text-neutral-500 md:hidden"
+            className="text-white md:hidden"
             aria-label="Open menu"
           >
             <Menu size={20} />
@@ -307,19 +310,22 @@ export function AppSidebarLayout({
                 <Fragment key={index}>
                   {index > 0 && (
                     <ChevronRight
-                      size={14}
-                      className="shrink-0 text-neutral-400"
+                      size={16}
+                      className="shrink-0 text-white/70"
                     />
                   )}
                   {crumb.href ? (
                     <Link
                       href={crumb.href}
-                      className="truncate font-medium text-neutral-500 hover:text-neutral-900"
+                      className={cn(
+                        "truncate font-semibold text-white hover:text-white/80",
+                        "transition-colors duration-200 ease-out",
+                      )}
                     >
                       {crumb.label}
                     </Link>
                   ) : (
-                    <span className="truncate font-semibold text-neutral-800">
+                    <span className="truncate font-semibold text-white">
                       {crumb.label}
                     </span>
                   )}
@@ -330,12 +336,12 @@ export function AppSidebarLayout({
 
           {userEmail && (
             <div className="ml-auto flex shrink-0 items-center gap-2">
-              <span className="hidden max-w-40 truncate text-sm text-neutral-500 sm:block">
+              <span className="hidden max-w-40 truncate text-sm text-white sm:block">
                 {userEmail}
               </span>
               <div
                 aria-hidden="true"
-                className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-600 text-xs font-bold uppercase text-white"
+                className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-700 text-xs font-bold uppercase text-white"
               >
                 {userEmail.charAt(0)}
               </div>

@@ -3,11 +3,19 @@
 import { useActionState, useMemo, useState, useTransition } from "react";
 import { recordGeneralBnplPaymentAction } from "@/lib/actions/bnpl";
 import { Numpad } from "@/components/pos/Numpad";
-import { QrPaymentScreen, type QrChannel } from "@/components/pos/QrPaymentScreen";
+import {
+  QrPaymentScreen,
+  type QrChannel,
+} from "@/components/pos/QrPaymentScreen";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { formatCurrency, type CurrencyStore } from "@/lib/utils/currency";
-import { FormField, FormLabel, FormInput, FormError } from "@/components/ui/form";
+import {
+  FormField,
+  FormLabel,
+  FormInput,
+  FormError,
+} from "@/components/ui/form";
 
 type PaymentMethod = "cash" | "qr_transfer";
 
@@ -27,25 +35,35 @@ export default function RecordGeneralPaymentForm({
   onDone: () => void;
 }) {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
-  const [numpadValue, setNumpadValue] = useState<string>(String(maxAmount.toFixed(2)));
+  const [numpadValue, setNumpadValue] = useState<string>(
+    String(maxAmount.toFixed(2)),
+  );
   const [note, setNote] = useState("");
-  const [selectedChannel, setSelectedChannel] = useState<QrChannel | null>(null);
+  const [selectedChannel, setSelectedChannel] = useState<QrChannel | null>(
+    null,
+  );
   const [showQrScreen, setShowQrScreen] = useState(false);
   const [, startTransition] = useTransition();
 
-  const [state, formAction, isPending] = useActionState(recordGeneralBnplPaymentAction, {
-    data: null,
-    error: null,
-  });
+  const [state, formAction, isPending] = useActionState(
+    recordGeneralBnplPaymentAction,
+    {
+      data: null,
+      error: null,
+    },
+  );
 
   if (state.data !== null) {
     onDone();
   }
 
   const amountPaid = parseFloat(numpadValue) || 0;
-  const enabledChannels = qrChannels.filter((channel) => channel.is_enabled !== false);
+  const enabledChannels = qrChannels.filter(
+    (channel) => channel.is_enabled !== false,
+  );
   const isCashInvalid = amountPaid <= 0 || amountPaid > maxAmount;
-  const isQrInvalid = amountPaid <= 0 || amountPaid > maxAmount || !selectedChannel;
+  const isQrInvalid =
+    amountPaid <= 0 || amountPaid > maxAmount || !selectedChannel;
 
   const quickAmounts = useMemo(() => {
     const exact = Number(maxAmount.toFixed(2));
@@ -93,9 +111,16 @@ export default function RecordGeneralPaymentForm({
   }
 
   return (
-    <Modal open onClose={onDone} size="lg" className="flex max-h-[95dvh] flex-col">
+    <Modal
+      open
+      onClose={onDone}
+      size="lg"
+      className="flex max-h-[95dvh] flex-col"
+    >
       <div className="border-b border-border px-5 py-4">
-        <h3 className="text-lg font-semibold text-neutral-900">Record account payment</h3>
+        <h3 className="text-lg font-semibold text-neutral-900">
+          Record account payment
+        </h3>
         <p className="mt-1 text-sm text-neutral-600">
           Balance due: <strong>{formatCurrency(maxAmount, currency)}</strong>
         </p>
@@ -124,7 +149,9 @@ export default function RecordGeneralPaymentForm({
         {paymentMethod === "cash" && (
           <div className="space-y-3">
             <div>
-              <p className="mb-2 text-xs font-medium text-neutral-500">Quick amounts</p>
+              <p className="mb-2 text-xs font-medium text-neutral-500">
+                Quick amounts
+              </p>
               <div className="flex flex-wrap gap-2">
                 {quickAmounts.map((quickAmount) => (
                   <Button
@@ -140,7 +167,11 @@ export default function RecordGeneralPaymentForm({
               </div>
             </div>
 
-            <Numpad value={numpadValue} onChange={setNumpadValue} currency={currency} />
+            <Numpad
+              value={numpadValue}
+              onChange={setNumpadValue}
+              currency={currency}
+            />
           </div>
         )}
 
@@ -159,7 +190,9 @@ export default function RecordGeneralPaymentForm({
               />
             </FormField>
 
-            <p className="pt-2 text-xs font-medium text-neutral-600">Select channel</p>
+            <p className="pt-2 text-xs font-medium text-neutral-600">
+              Select channel
+            </p>
             <div className="grid gap-2">
               {enabledChannels.map((channel) => (
                 <button
@@ -217,7 +250,7 @@ export default function RecordGeneralPaymentForm({
         <input type="hidden" name="paymentMethod" value={paymentMethod} />
         <input type="hidden" name="note" value={note} />
 
-        <div className="flex gap-3">
+        <div className="flex justify-end gap-3">
           <button
             type="button"
             onClick={onDone}

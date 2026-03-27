@@ -17,7 +17,7 @@ export default function SignupPage() {
   const [state, action, isPending] = useActionState(signUpAction, initialState);
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-6 py-12">
+    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center px-6 py-12">
       <h1 className="text-3xl font-semibold text-neutral-900">
         Create your account
       </h1>

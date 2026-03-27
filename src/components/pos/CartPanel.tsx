@@ -65,7 +65,7 @@ export function CartPanel({
         <div className="flex items-center justify-between border-b border-border p-4">
           <h2 className="inline-flex items-center text-lg font-semibold text-neutral-900">
             <ShoppingCart size={16} className="mr-2" />
-            Cart
+            Cart ({items.reduce((sum, item) => sum + item.quantity, 0)})
           </h2>
           <div className="flex items-center gap-2">
             {onScanProduct && products.length > 0 && (
@@ -90,7 +90,11 @@ export function CartPanel({
               title={isCollapsed ? "Expand cart" : "Collapse cart"}
               className="lg:hidden"
               icon={
-                isCollapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />
+                isCollapsed ? (
+                  <ChevronDown size={16} />
+                ) : (
+                  <ChevronUp size={16} />
+                )
               }
             />
           </div>

@@ -3,11 +3,19 @@
 import { useActionState, useMemo, useState, useTransition } from "react";
 import { recordBnplPaymentAction } from "@/lib/actions/bnpl";
 import { Numpad } from "@/components/pos/Numpad";
-import { QrPaymentScreen, type QrChannel } from "@/components/pos/QrPaymentScreen";
+import {
+  QrPaymentScreen,
+  type QrChannel,
+} from "@/components/pos/QrPaymentScreen";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { formatCurrency, type CurrencyStore } from "@/lib/utils/currency";
-import { FormField, FormLabel, FormInput, FormError } from "@/components/ui/form";
+import {
+  FormField,
+  FormLabel,
+  FormInput,
+  FormError,
+} from "@/components/ui/form";
 
 type PaymentMethod = "cash" | "qr_transfer";
 
@@ -33,14 +41,19 @@ export default function RecordPaymentForm({
     String(maxAmount.toFixed(2)),
   );
   const [note, setNote] = useState("");
-  const [selectedChannel, setSelectedChannel] = useState<QrChannel | null>(null);
+  const [selectedChannel, setSelectedChannel] = useState<QrChannel | null>(
+    null,
+  );
   const [showQrScreen, setShowQrScreen] = useState(false);
   const [, startTransition] = useTransition();
 
-  const [state, formAction, isPending] = useActionState(recordBnplPaymentAction, {
-    data: null,
-    error: null,
-  });
+  const [state, formAction, isPending] = useActionState(
+    recordBnplPaymentAction,
+    {
+      data: null,
+      error: null,
+    },
+  );
 
   if (state.data !== null) {
     // Payment recorded — parent will refresh
@@ -48,10 +61,13 @@ export default function RecordPaymentForm({
   }
 
   const amountPaid = parseFloat(numpadValue) || 0;
-  const enabledChannels = qrChannels.filter((channel) => channel.is_enabled !== false);
+  const enabledChannels = qrChannels.filter(
+    (channel) => channel.is_enabled !== false,
+  );
   const change = Math.max(0, amountPaid - maxAmount);
   const isCashInvalid = amountPaid <= 0 || amountPaid > maxAmount;
-  const isQrInvalid = amountPaid <= 0 || amountPaid > maxAmount || !selectedChannel;
+  const isQrInvalid =
+    amountPaid <= 0 || amountPaid > maxAmount || !selectedChannel;
 
   const quickAmounts = useMemo(() => {
     const exact = Number(maxAmount.toFixed(2));
@@ -100,9 +116,16 @@ export default function RecordPaymentForm({
   }
 
   return (
-    <Modal open onClose={onDone} size="lg" className="flex max-h-[95dvh] flex-col">
+    <Modal
+      open
+      onClose={onDone}
+      size="lg"
+      className="flex max-h-[95dvh] flex-col"
+    >
       <div className="border-b border-border px-5 py-4">
-        <h3 className="text-lg font-semibold text-neutral-900">Record installment payment</h3>
+        <h3 className="text-lg font-semibold text-neutral-900">
+          Record installment payment
+        </h3>
         <p className="mt-1 text-sm text-neutral-600">
           Due amount: <strong>{formatCurrency(maxAmount, currency)}</strong>
         </p>
@@ -131,7 +154,9 @@ export default function RecordPaymentForm({
         {paymentMethod === "cash" && (
           <div className="space-y-3">
             <div>
-              <p className="mb-2 text-xs font-medium text-neutral-500">Quick amounts</p>
+              <p className="mb-2 text-xs font-medium text-neutral-500">
+                Quick amounts
+              </p>
               <div className="flex flex-wrap gap-2">
                 {quickAmounts.map((quickAmount) => (
                   <Button
@@ -147,11 +172,17 @@ export default function RecordPaymentForm({
               </div>
             </div>
 
-            <Numpad value={numpadValue} onChange={setNumpadValue} currency={currency} />
+            <Numpad
+              value={numpadValue}
+              onChange={setNumpadValue}
+              currency={currency}
+            />
 
             <div className="flex items-center justify-between rounded-xl bg-neutral-50 px-4 py-3">
               <span className="text-sm text-neutral-600">Change</span>
-              <span className={`text-base font-bold tabular-nums ${change > 0 ? "text-success-700" : "text-neutral-900"}`}>
+              <span
+                className={`text-base font-bold tabular-nums ${change > 0 ? "text-success-700" : "text-neutral-900"}`}
+              >
                 {formatCurrency(change, currency)}
               </span>
             </div>
@@ -173,14 +204,18 @@ export default function RecordPaymentForm({
               />
             </FormField>
 
-            <p className="pt-2 text-xs font-medium text-neutral-600">Select channel</p>
+            <p className="pt-2 text-xs font-medium text-neutral-600">
+              Select channel
+            </p>
             <div className="grid gap-2">
               {enabledChannels.map((channel) => (
                 <Button
                   key={channel.id}
                   type="button"
                   onClick={() => setSelectedChannel(channel)}
-                  variant={selectedChannel?.id === channel.id ? "active" : "outline"}
+                  variant={
+                    selectedChannel?.id === channel.id ? "active" : "outline"
+                  }
                   className="justify-start"
                 >
                   <span className="font-medium">{channel.label}</span>
@@ -229,12 +264,8 @@ export default function RecordPaymentForm({
         <input type="hidden" name="paymentMethod" value={paymentMethod} />
         <input type="hidden" name="note" value={note} />
 
-        <div className="flex gap-3">
-          <Button
-            type="button"
-            onClick={onDone}
-            variant="outline"
-          >
+        <div className="flex justify-end gap-3">
+          <Button type="button" onClick={onDone} variant="outline">
             Cancel
           </Button>
           {paymentMethod === "cash" && (
@@ -247,11 +278,7 @@ export default function RecordPaymentForm({
             </Button>
           )}
           {paymentMethod === "qr_transfer" && (
-            <Button
-              type="button"
-              disabled
-              variant="secondary"
-            >
+            <Button type="button" disabled variant="secondary">
               Confirm on QR screen
             </Button>
           )}

@@ -598,7 +598,7 @@ function QrChannelsTab({
                 <img
                   src={imagePreviewUrl}
                   alt="QR image preview"
-                  className="mt-3 max-h-40 rounded-md border border-neutral-200 bg-white object-contain"
+                  className="mt-3 max-h-40 rounded-md border border-neutral-200 bg-white object-contain shrink-0"
                 />
               </div>
             )}
@@ -639,7 +639,7 @@ function QrChannelsTab({
                 <img
                   src={ch.image_url}
                   alt={ch.label}
-                  className="h-full w-full object-contain"
+                  className="h-full w-full object-contain shrink-0"
                 />
               </div>
               <div className="flex-1 min-w-0">

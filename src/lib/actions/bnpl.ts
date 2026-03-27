@@ -250,7 +250,7 @@ export async function recordBnplPaymentAction(
     amount_paid: amountPaid,
     payment_method: paymentMethod,
     received_by: user.id,
-    note: finalNote,
+    notes: finalNote,
   });
 
   if (error) return { data: null, error: error.message };
@@ -335,7 +335,7 @@ export async function recordGeneralBnplPaymentAction(
     amount_paid: number;
     payment_method: "cash" | "qr_transfer";
     received_by: string;
-    note: string | null;
+    notes: string | null;
   }> = [];
 
   for (const installment of pendingInstallments) {
@@ -353,7 +353,7 @@ export async function recordGeneralBnplPaymentAction(
       amount_paid: allocationCents / 100,
       payment_method: paymentMethod,
       received_by: user.id,
-      note: finalNote,
+      notes: finalNote,
     });
     remainingCents -= allocationCents;
   }

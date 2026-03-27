@@ -401,13 +401,15 @@ export function BarcodeCameraScanner({
       >
         <div className="flex flex-col items-center justify-center w-full max-w-xs">
           {error ? (
-            <div className="mb-4 rounded-lg bg-red-50 p-4">
-              <p className="text-sm text-red-700">Camera access error</p>
-              <p className="mt-2 text-xs text-red-600">{error}</p>
+            <div className="mb-4 aspect-square w-full h-auto bg-black rounded-2xl">
+              <div className="rounded-lg bg-red-50 p-4">
+                <p className="text-sm text-red-700">Camera access error</p>
+                <p className="mt-2 text-xs text-red-600">{error}</p>
+              </div>
             </div>
           ) : cameraActive ? (
             <>
-              <div className="relative mb-4 aspect-square overflow-hidden rounded-2xl">
+              <div className="relative mb-4 aspect-square w-full h-auto overflow-hidden bg-black rounded-2xl">
                 <video
                   ref={videoRef}
                   className="h-full w-full object-cover"
@@ -415,6 +417,12 @@ export function BarcodeCameraScanner({
                   autoPlay
                   muted
                 />
+
+                <div className="absolute top-0 left-0 z-10 w-full p-3">
+                  <p className="text-xs text-white bg-warning-500 text-center rounded-full px-3 py-1 animate-pulse">
+                    Scanning for barcode... Point camera at barcode
+                  </p>
+                </div>
 
                 <div
                   className={cn(
@@ -448,10 +456,6 @@ export function BarcodeCameraScanner({
                 </div>
               </div>
 
-              <p className="mb-4 text-xs text-neutral-600">
-                Scanning for barcode... Point camera at barcode
-              </p>
-
               {zoomSupported ? (
                 <div className="mb-4 w-full rounded-lg border border-neutral-200 bg-surface-muted p-3">
                   <div className="flex items-center justify-between">
@@ -484,7 +488,13 @@ export function BarcodeCameraScanner({
                 </div>
               ) : null}
             </>
-          ) : null}
+          ) : (
+            <div className="mb-4 aspect-square w-full h-auto bg-black rounded-2xl">
+              <div className="flex h-full w-full items-center justify-center">
+                <CameraOff size={48} className="text-white" />
+              </div>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="mb-4 w-full space-y-2">
             <label className="block text-sm font-medium text-neutral-900">
@@ -513,7 +523,7 @@ export function BarcodeCameraScanner({
           <div className="mt-4 flex gap-3 w-full">
             <Button
               onClick={() => setCameraActive(cameraActive ? false : true)}
-              variant="outline"
+              variant={cameraActive ? "warning" : "primary"}
               type="button"
               icon={
                 cameraActive ? <CameraOff size={16} /> : <Camera size={16} />
@@ -524,7 +534,7 @@ export function BarcodeCameraScanner({
             </Button>
             <Button
               onClick={onClose}
-              variant="outline"
+              variant="destructive"
               type="button"
               className="flex-1"
             >

@@ -140,7 +140,7 @@ export function ProductModal({
                   <img
                     src={product.imageUrl}
                     alt={`${product.name} image`}
-                    className="h-20 w-20 rounded object-cover"
+                    className="h-20 w-20 rounded object-cover shrink-0"
                   />
                   <label className="mt-2 flex items-center gap-2 text-sm text-neutral-700">
                     <input

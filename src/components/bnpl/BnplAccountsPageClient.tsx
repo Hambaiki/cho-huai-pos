@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/Table";
 import { formatCurrency, type CurrencyStore } from "@/lib/utils/currency";
 import type { BnplAccountSummary } from "@/lib/types/bnpl";
-import { Plus } from "lucide-react";
+import { ArrowUpRight, Plus } from "lucide-react";
 
 const STATUS_CLASSES: Record<string, string> = {
   active: "bg-success-100 text-success-700",
@@ -214,9 +214,10 @@ export function BnplAccountsPageClient({
                   <TableCell className="text-right">
                     <Link
                       href={`/dashboard/store/${storeId}/bnpl/${account.id}`}
-                      className="text-xs font-medium text-brand-600 hover:text-brand-800"
+                      className="inline-flex items-center gap-1 text-xs font-medium text-brand-600 hover:text-brand-800"
                     >
                       View
+                      <ArrowUpRight size={13} />
                     </Link>
                   </TableCell>
                 </TableRow>

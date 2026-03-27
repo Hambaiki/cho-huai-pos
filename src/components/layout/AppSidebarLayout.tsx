@@ -171,11 +171,7 @@ export function AppSidebarLayout({
                         : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900",
                     )}
                   >
-                    <Icon
-                      size={20}
-                      strokeWidth={active ? 3 : 2}
-                      className="shrink-0"
-                    />
+                    <Icon size={20} className="shrink-0" />
                     <span
                       className={cn(
                         "overflow-hidden whitespace-nowrap transition-[max-width,opacity] duration-200 ease-out md:max-w-40 md:opacity-100",

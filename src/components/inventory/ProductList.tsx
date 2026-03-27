@@ -215,7 +215,7 @@ export function ProductList({
                         <img
                           src={product.imageUrl}
                           alt={`${product.name} image`}
-                          className="h-10 w-10 rounded object-cover"
+                          className="h-10 w-10 rounded object-cover shrink-0"
                         />
                       ) : (
                         <div className="flex h-10 w-10 items-center justify-center rounded bg-neutral-100 text-xs font-medium text-neutral-500">

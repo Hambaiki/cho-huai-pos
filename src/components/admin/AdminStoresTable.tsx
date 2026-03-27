@@ -31,8 +31,9 @@ interface AdminStoresTableProps {
 export function AdminStoresTable({ stores }: AdminStoresTableProps) {
   // Modal states
   const [suspendModalOpen, setSuspendModalOpen] = useState(false);
-  const [suspendModalStore, setSuspendModalStore] =
-    useState<AdminStore | null>(null);
+  const [suspendModalStore, setSuspendModalStore] = useState<AdminStore | null>(
+    null,
+  );
   const [suspendNextValue, setSuspendNextValue] = useState(false);
 
   const [staffLimitModalOpen, setStaffLimitModalOpen] = useState(false);
@@ -87,7 +88,7 @@ export function AdminStoresTable({ stores }: AdminStoresTableProps) {
                   <TableCell>
                     {store.staff_limit_override ? (
                       <span className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2 py-1 text-xs font-medium text-brand-700">
-                        <Users size={12} />
+                        <Users size={16} />
                         {store.staff_limit_override}
                       </span>
                     ) : (
@@ -97,12 +98,12 @@ export function AdminStoresTable({ stores }: AdminStoresTableProps) {
                   <TableCell>
                     {store.is_suspended ? (
                       <span className="inline-flex items-center gap-1 rounded-full bg-warning-100 px-2 py-1 text-xs font-medium text-warning-700">
-                        <ShieldAlert size={12} />
+                        <ShieldAlert size={16} />
                         Suspended
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1 rounded-full bg-success-100 px-2 py-1 text-xs font-medium text-success-700">
-                        <ShieldCheck size={12} />
+                        <ShieldCheck size={16} />
                         Active
                       </span>
                     )}
@@ -117,7 +118,7 @@ export function AdminStoresTable({ stores }: AdminStoresTableProps) {
                         variant="secondary"
                         size="sm"
                         onClick={() => openStaffLimitModal(store)}
-                        icon={<Users size={12} />}
+                        icon={<Users size={16} />}
                       >
                         {store.staff_limit_override
                           ? "Edit Limit"
@@ -132,9 +133,9 @@ export function AdminStoresTable({ stores }: AdminStoresTableProps) {
                         size="sm"
                         icon={
                           store.is_suspended ? (
-                            <ShieldCheck size={12} />
+                            <ShieldCheck size={16} />
                           ) : (
-                            <ShieldAlert size={12} />
+                            <ShieldAlert size={16} />
                           )
                         }
                       >
@@ -159,7 +160,13 @@ export function AdminStoresTable({ stores }: AdminStoresTableProps) {
       <StaffLimitModal
         open={staffLimitModalOpen}
         onClose={() => setStaffLimitModalOpen(false)}
-        store={staffLimitModalStore || { id: "", name: "", staff_limit_override: null }}
+        store={
+          staffLimitModalStore || {
+            id: "",
+            name: "",
+            staff_limit_override: null,
+          }
+        }
       />
     </>
   );

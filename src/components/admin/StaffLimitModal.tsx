@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { useSyncPendingAction } from "../ui/PendingActionProvider";
+import { FormInput } from "../ui/form";
 
 interface StaffLimitModalProps {
   open: boolean;
@@ -88,7 +89,7 @@ export function StaffLimitModal({
               Set a staff limit override for this store. Leave the field empty
               to use the global default from site settings.
             </p>
-            <input
+            <FormInput
               type="number"
               min={1}
               step={1}
@@ -100,7 +101,6 @@ export function StaffLimitModal({
                 }));
                 setError(null);
               }}
-              className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-brand-500"
               placeholder="Use default"
             />
           </div>

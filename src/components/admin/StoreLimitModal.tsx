@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { useSyncPendingAction } from "@/components/ui/PendingActionProvider";
+import { FormInput } from "../ui/form";
 
 interface StoreLimitModalProps {
   open: boolean;
@@ -78,41 +79,40 @@ export function StoreLimitModal({
 
   return (
     <>
-    <Modal open={open} onClose={handleClose} size="md">
-      <ModalHeader title="Update Store Limit" onClose={handleClose} />
-      <ModalBody>
-        <div className="space-y-3">
-          <p className="text-sm text-neutral-600">
-            Set a store limit override for this user. Leave the field empty to
-            use the global default from site settings.
-          </p>
-          <input
-            type="number"
-            min={1}
-            step={1}
-            value={storeLimitInput}
-            onChange={(event) => {
-              setStoreLimitDraftByUser((current) => ({
-                ...current,
-                [profile.id]: event.target.value,
-              }));
-              setError(null);
-            }}
-            className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-brand-500"
-            placeholder="Use default"
-          />
-        </div>
-        {error && <p className="mt-3 text-sm text-danger-700">{error}</p>}
-      </ModalBody>
-      <ModalFooter>
-        <Button type="button" variant="outline" onClick={handleClose}>
-          Cancel
-        </Button>
-        <Button type="button" isLoading={isPending} onClick={handleConfirm}>
-          {isPending ? "Saving..." : "Confirm"}
-        </Button>
-      </ModalFooter>
-    </Modal>
+      <Modal open={open} onClose={handleClose} size="md">
+        <ModalHeader title="Update Store Limit" onClose={handleClose} />
+        <ModalBody>
+          <div className="space-y-3">
+            <p className="text-sm text-neutral-600">
+              Set a store limit override for this user. Leave the field empty to
+              use the global default from site settings.
+            </p>
+            <FormInput
+              type="number"
+              min={1}
+              step={1}
+              value={storeLimitInput}
+              onChange={(event) => {
+                setStoreLimitDraftByUser((current) => ({
+                  ...current,
+                  [profile.id]: event.target.value,
+                }));
+                setError(null);
+              }}
+              placeholder="Use default"
+            />
+          </div>
+          {error && <p className="mt-3 text-sm text-danger-700">{error}</p>}
+        </ModalBody>
+        <ModalFooter>
+          <Button type="button" variant="outline" onClick={handleClose}>
+            Cancel
+          </Button>
+          <Button type="button" isLoading={isPending} onClick={handleConfirm}>
+            {isPending ? "Saving..." : "Confirm"}
+          </Button>
+        </ModalFooter>
+      </Modal>
     </>
   );
 }

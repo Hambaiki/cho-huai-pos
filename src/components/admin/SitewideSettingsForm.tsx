@@ -3,13 +3,13 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { updateSitewideSettingsAction } from "@/lib/actions/admin";
-import { FormCheckbox } from "@/components/ui/form/FormCheckbox";
 import { FormTextarea } from "@/components/ui/form/FormTextarea";
 import { FormLabel } from "@/components/ui/form/FormLabel";
 import { FormHelp } from "@/components/ui/form/FormHelp";
 import { Button } from "@/components/ui/Button";
 import { AlertCircle } from "lucide-react";
 import { useSyncPendingAction } from "../ui/PendingActionProvider";
+import { FormToggle } from "../ui/form";
 
 interface SitewideSettingsFormProps {
   maintenanceMode: boolean;
@@ -75,13 +75,12 @@ export function SitewideSettingsForm({
               other users will see a maintenance page.
             </FormHelp>
           </div>
-          <FormCheckbox
+          <FormToggle
             id="maintenance_mode"
             name="maintenance_mode"
-            checked={maintenanceMode}
-            onChange={(e) => setMaintenanceMode(e.target.checked)}
+            value={maintenanceMode}
             disabled={isPending}
-            label={maintenanceMode ? "On" : "Off"}
+            onChange={(enabled) => setMaintenanceMode(enabled)}
           />
         </div>
 

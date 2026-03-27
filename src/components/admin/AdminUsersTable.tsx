@@ -110,7 +110,7 @@ export function AdminUsersTable({
                     <TableCell>
                       {profile.is_super_admin ? (
                         <span className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2 py-1 text-xs font-medium text-brand-700">
-                          <Crown size={12} />
+                          <Crown size={16} />
                           Yes
                         </span>
                       ) : (
@@ -120,7 +120,7 @@ export function AdminUsersTable({
                     <TableCell>
                       {profile.store_limit_override ? (
                         <span className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2 py-1 text-xs font-medium text-brand-700">
-                          <Store size={12} />
+                          <Store size={16} />
                           {profile.store_limit_override}
                         </span>
                       ) : (
@@ -135,12 +135,12 @@ export function AdminUsersTable({
                         </span>
                       ) : profile.is_suspended ? (
                         <span className="inline-flex items-center gap-1 rounded-full bg-warning-100 px-2 py-1 text-xs font-medium text-warning-700">
-                          <ShieldAlert size={12} />
+                          <ShieldAlert size={16} />
                           Suspended
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 rounded-full bg-success-100 px-2 py-1 text-xs font-medium text-success-700">
-                          <ShieldCheck size={12} />
+                          <ShieldCheck size={16} />
                           Active
                         </span>
                       )}
@@ -156,7 +156,7 @@ export function AdminUsersTable({
                             variant="secondary"
                             size="sm"
                             onClick={() => openStoreLimitModal(profile)}
-                            icon={<Store size={12} />}
+                            icon={<Store size={16} />}
                           >
                             {profile.store_limit_override
                               ? "Edit Limit"
@@ -170,7 +170,7 @@ export function AdminUsersTable({
                             size="sm"
                             disabled={isSelf}
                             onClick={() => openSuperAdminModal(profile, false)}
-                            icon={<ShieldX size={12} />}
+                            icon={<ShieldX size={16} />}
                           >
                             Revoke Admin
                           </Button>
@@ -180,7 +180,7 @@ export function AdminUsersTable({
                             variant="secondary"
                             size="sm"
                             onClick={() => openSuperAdminModal(profile, true)}
-                            icon={<Crown size={12} />}
+                            icon={<Crown size={16} />}
                           >
                             Make Admin
                           </Button>
@@ -198,9 +198,9 @@ export function AdminUsersTable({
                             }
                             icon={
                               profile.is_suspended ? (
-                                <ShieldCheck size={12} />
+                                <ShieldCheck size={16} />
                               ) : (
-                                <ShieldAlert size={12} />
+                                <ShieldAlert size={16} />
                               )
                             }
                           >

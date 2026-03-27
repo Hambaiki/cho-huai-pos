@@ -15,12 +15,17 @@ export default async function AdminStoresPage() {
 
   const { data: stores } = await supabase
     .from("stores")
-    .select("id, name, currency_code, is_suspended, staff_limit_override, created_at")
+    .select(
+      "id, name, currency_code, is_suspended, staff_limit_override, created_at",
+    )
     .order("created_at", { ascending: false });
 
   return (
     <section className="space-y-6">
-      <PageHeader title="All Stores" description="Store directory and metadata" />
+      <PageHeader
+        title="All Stores"
+        description="Store directory and metadata"
+      />
 
       <AdminStoresTable stores={stores ?? []} />
     </section>

@@ -2,7 +2,8 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { createTypedServerClient } from "@/lib/supabase/typed-client";
+import { createClient } from "@/lib/supabase/server";
+
 
 const createOrderSchema = z.object({
   storeId: z.uuid(),
@@ -59,7 +60,7 @@ export async function createOrderAction(
     return { data: null, error: "Invalid order input." };
   }
 
-  const supabase = await createTypedServerClient();
+  const supabase = await createClient();
   const {
     data: { user },
     error: userError,
@@ -288,7 +289,7 @@ export async function voidOrderAction(
     return { data: null, error: "Order ID and reason are required." };
   }
 
-  const supabase = await createTypedServerClient();
+  const supabase = await createClient();
   const {
     data: { user },
     error: userError,

@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
 import { StaffManagement } from "@/components/settings/StaffManagement";
-import { getStaffMembers } from "@/lib/actions/settingsActions";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { getCurrentUser } from "@/lib/queries/auth";
+import { getTeamPageData } from "@/lib/queries/settings";
 
 export const metadata = { title: "Team" };
 
@@ -13,23 +13,11 @@ export default async function TeamPage({
 }) {
   const { storeId } = await params;
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+  const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  const { data: membership } = await supabase
-    .from("store_members")
-    .select("store_id, role")
-    .eq("user_id", user.id)
-    .eq("store_id", storeId)
-    .single();
-
-  if (!membership?.store_id) redirect("/dashboard");
-
-  const staffMembers = await getStaffMembers(storeId);
+  const data = await getTeamPageData({ userId: user.id, storeId });
+  if (!data) redirect("/dashboard");
 
   return (
     <section className="space-y-6">
@@ -37,8 +25,8 @@ export default async function TeamPage({
 
       <StaffManagement
         storeId={storeId}
-        staffMembers={staffMembers}
-        role={membership.role as "owner" | "manager" | "cashier" | "viewer"}
+        staffMembers={data.staffMembers}
+        role={data.role}
       />
     </section>
   );

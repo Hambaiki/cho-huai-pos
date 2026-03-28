@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import sharp from "sharp";
 import { SupabaseClient } from "@supabase/supabase-js";
-import { createTypedServerClient } from "@/lib/supabase/typed-client";
+import { createClient } from "@/lib/supabase/server";
+
 import type { Database } from "@/lib/supabase/types";
 import { productFormSchema } from "@/lib/validations/product";
 
@@ -166,7 +167,7 @@ export async function createProductAction(
     return { data: null, error: imageError };
   }
 
-  const supabase = await createTypedServerClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -269,7 +270,7 @@ export async function updateProductAction(
     return { data: null, error: imageError };
   }
 
-  const supabase = await createTypedServerClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -372,7 +373,7 @@ export async function updateProductAction(
 export async function removeProductImageAction(
   productId: string,
 ): Promise<ProductActionResult> {
-  const supabase = await createTypedServerClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -427,7 +428,7 @@ export async function removeProductImageAction(
 export async function deleteProductAction(productId: string): Promise<{
   error: string | null;
 }> {
-  const supabase = await createTypedServerClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

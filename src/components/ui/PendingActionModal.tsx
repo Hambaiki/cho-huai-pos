@@ -22,7 +22,7 @@ export function PendingActionModal({
       <ModalBody className="flex flex-col items-center gap-4 p-10">
         <Loader />
         <p className="mt-6 text-center">
-          <span className="font-bold text-lg text-black animate-pulse">
+          <span className="font-bold text-lg text-black">
             {message}
           </span>
           {/* add 3 dot animation */}

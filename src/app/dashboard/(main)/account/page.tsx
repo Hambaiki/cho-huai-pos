@@ -1,27 +1,20 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
 import AccountSettingsClient from "@/components/settings/AccountSettingsClient";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { getCurrentUser } from "@/lib/queries/auth";
+import { getUserProfileForSettings } from "@/lib/queries/auth";
 
 export const metadata = {
   title: "Account Settings",
 };
 
 export default async function DashboardAccountPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+  const user = await getCurrentUser();
   if (!user) {
     redirect("/login");
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("display_name, created_at")
-    .eq("id", user.id)
-    .maybeSingle();
+  const profile = await getUserProfileForSettings(user.id);
 
   return (
     <div className="space-y-6">

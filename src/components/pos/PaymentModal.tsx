@@ -123,7 +123,7 @@ export function PaymentModal({
     return bnplAccounts.filter((account) => {
       return (
         account.customer_name.toLowerCase().includes(query) ||
-        account.phone?.toLowerCase().includes(query)
+        account.customer_phone?.toLowerCase().includes(query)
       );
     });
   }, [bnplAccounts, bnplSearch]);
@@ -350,7 +350,7 @@ export function PaymentModal({
                             {account.customer_name}
                           </p>
                           <p className="mt-1 text-xs text-neutral-500">
-                            {account.phone ?? "No phone"}
+                            {account.customer_phone ?? "No phone"}
                           </p>
                         </div>
                         <span

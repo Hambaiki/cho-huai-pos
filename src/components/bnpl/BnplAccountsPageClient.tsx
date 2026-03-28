@@ -193,7 +193,7 @@ export function BnplAccountsPageClient({
                     {account.customer_name}
                   </TableCell>
                   <TableCell className="text-neutral-500">
-                    {account.phone ?? "—"}
+                    {account.customer_phone ?? "—"}
                   </TableCell>
                   <TableCell className="text-right text-neutral-700">
                     {formatCurrency(Number(account.credit_limit), currency)}

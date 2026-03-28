@@ -2,7 +2,8 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { createTypedServerClient } from "@/lib/supabase/typed-client";
+import { createClient } from "@/lib/supabase/server";
+
 
 export type ReceiveStockResult =
   | { data: { lotId: string }; error: null }
@@ -86,7 +87,7 @@ export async function receiveStockAction(
     return { data: null, error: getFirstValidationError(parsed.error) };
   }
 
-  const supabase = await createTypedServerClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -196,7 +197,7 @@ export async function adjustStockAction(
     return { data: null, error: getFirstValidationError(parsed.error) };
   }
 
-  const supabase = await createTypedServerClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

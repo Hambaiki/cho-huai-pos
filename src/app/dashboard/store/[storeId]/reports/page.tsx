@@ -8,9 +8,13 @@ import {
   TriangleAlert,
   Wallet,
 } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
 import { formatCurrency } from "@/lib/utils/currency";
-import type { CurrencyStore } from "@/lib/utils/currency";
+import {
+  calculateDelta,
+  formatDelta,
+  isWithinRange,
+  summarizeFinancials,
+} from "@/lib/utils/reports";
 import {
   Table,
   TableBody,
@@ -22,94 +26,18 @@ import {
 } from "@/components/ui/Table";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatCard } from "@/components/ui/StatCard";
+import { getCurrentUser } from "@/lib/queries/auth";
+import { getReportsPageData } from "@/lib/queries/reports";
 
 export const metadata = { title: "Reports" };
 
-type ReportOrder = {
-  total: number;
-  payment_method: string;
-  created_at: string;
+const METHOD_LABELS: Record<string, string> = {
+  cash: "Cash",
+  qr_transfer: "QR Transfer",
+  card: "Card",
+  split: "Split",
+  bnpl: "BNPL",
 };
-
-type ReportOrderItem = {
-  product_name: string;
-  quantity: number;
-  subtotal: number;
-  unit_cost: number | null;
-  orders: {
-    created_at: string;
-  };
-};
-
-type PeriodFinancials = {
-  cost: number;
-  knownRevenue: number;
-  profit: number;
-  missingCostRevenue: number;
-  missingCostUnits: number;
-  coveragePct: number;
-  marginPct: number;
-};
-
-function formatDelta(delta: number): string {
-  if (delta === 0) return "0%";
-  const abs = Math.abs(delta);
-  return `${delta > 0 ? "+" : "-"}${abs.toFixed(abs >= 10 ? 0 : 1)}%`;
-}
-
-function calculateDelta(current: number, previous: number): number {
-  if (previous === 0) return current === 0 ? 0 : 100;
-  return ((current - previous) / Math.abs(previous)) * 100;
-}
-
-function isWithinRange(
-  value: string,
-  start: Date,
-  endInclusive?: Date,
-): boolean {
-  const time = new Date(value).getTime();
-  if (time < start.getTime()) return false;
-  if (endInclusive && time > endInclusive.getTime()) return false;
-  return true;
-}
-
-function summarizeFinancials(
-  items: ReportOrderItem[],
-  revenue: number,
-): PeriodFinancials {
-  let cost = 0;
-  let knownRevenue = 0;
-  let profit = 0;
-  let missingCostRevenue = 0;
-  let missingCostUnits = 0;
-
-  items.forEach((item) => {
-    const subtotal = Number(item.subtotal);
-    const quantity = Number(item.quantity);
-    const unitCost = item.unit_cost == null ? null : Number(item.unit_cost);
-
-    if (unitCost == null) {
-      missingCostRevenue += subtotal;
-      missingCostUnits += quantity;
-      return;
-    }
-
-    const itemCost = unitCost * quantity;
-    knownRevenue += subtotal;
-    cost += itemCost;
-    profit += subtotal - itemCost;
-  });
-
-  return {
-    cost,
-    knownRevenue,
-    profit,
-    missingCostRevenue,
-    missingCostUnits,
-    coveragePct: revenue > 0 ? (knownRevenue / revenue) * 100 : 100,
-    marginPct: knownRevenue > 0 ? (profit / knownRevenue) * 100 : 0,
-  };
-}
 
 export default async function ReportsPage({
   params,
@@ -118,31 +46,19 @@ export default async function ReportsPage({
 }) {
   const { storeId } = await params;
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+  const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  const { data: membership } = await supabase
-    .from("store_members")
-    .select(
-      "store_id, stores(currency_code, currency_symbol, currency_decimals, symbol_position)",
-    )
-    .eq("user_id", user.id)
-    .eq("store_id", storeId)
-    .single();
+  const data = await getReportsPageData({ userId: user.id, storeId });
+  if (!data) redirect("/dashboard");
 
-  if (!membership?.store_id) redirect("/dashboard");
-
-  const storeInfo = membership.stores as unknown as CurrencyStore;
-  const currency: CurrencyStore = {
-    currency_code: storeInfo.currency_code,
-    currency_symbol: storeInfo.currency_symbol,
-    currency_decimals: storeInfo.currency_decimals,
-    symbol_position: storeInfo.symbol_position,
-  };
+  const {
+    currency,
+    completedOrders: orderList,
+    completedOrderItems: orderItems,
+    bnplSummary,
+    overdueInstallments: overdueList,
+  } = data;
 
   // Date ranges
   const now = new Date();
@@ -160,46 +76,6 @@ export default async function ReportsPage({
   const startOfPrev30Days = new Date(startOf30Days);
   startOfPrev30Days.setDate(startOf30Days.getDate() - 30);
   const endOfPrev30Days = new Date(startOf30Days.getTime() - 1);
-
-  const [
-    { data: completedOrders },
-    { data: completedOrderItems },
-    { data: bnplSummary },
-    { data: overdueInstallments },
-  ] = await Promise.all([
-    supabase
-      .from("orders")
-      .select("total, payment_method, created_at")
-      .eq("store_id", storeId)
-      .eq("status", "completed")
-      .gte("created_at", startOfPrev30Days.toISOString()),
-
-    supabase
-      .from("order_items")
-      .select(
-        "product_name, quantity, subtotal, unit_cost, orders!inner(store_id, status, created_at)",
-      )
-      .eq("orders.store_id", storeId)
-      .eq("orders.status", "completed")
-      .gte("orders.created_at", startOfPrev30Days.toISOString()),
-
-    supabase
-      .from("bnpl_accounts")
-      .select("status, balance_due, credit_limit")
-      .eq("store_id", storeId),
-
-    supabase
-      .from("bnpl_installments")
-      .select(
-        "id, amount, due_date, account_id, bnpl_accounts!inner(store_id, customer_name)",
-      )
-      .eq("bnpl_accounts.store_id", storeId)
-      .eq("status", "pending")
-      .lt("due_date", now.toISOString().slice(0, 10)),
-  ]);
-
-  const orderList = (completedOrders ?? []) as ReportOrder[];
-  const orderItems = (completedOrderItems ?? []) as unknown as ReportOrderItem[];
 
   const ordersToday = orderList.filter((order) =>
     isWithinRange(order.created_at, startOfToday),
@@ -360,19 +236,11 @@ export default async function ReportsPage({
     .slice(0, 10);
 
   // BNPL
-  const activeBnpl = (bnplSummary ?? []).filter((a) => a.status === "active");
+  const activeBnpl = bnplSummary.filter((a) => a.status === "active");
   const totalBnplBalance = activeBnpl.reduce(
     (s, a) => s + Number(a.balance_due),
     0,
   );
-  type OverdueItem = {
-    id: string;
-    amount: number;
-    due_date: string;
-    account_id: string;
-    bnpl_accounts: { customer_name: string };
-  };
-  const overdueList = (overdueInstallments ?? []) as unknown as OverdueItem[];
   const overdueTotal = overdueList.reduce((s, i) => s + Number(i.amount), 0);
   const avgDaily30d = total30d / 30;
   const avgDaily7d = total7d / 7;
@@ -380,14 +248,6 @@ export default async function ReportsPage({
     0,
     total30d - financials30d.knownRevenue,
   );
-
-  const METHOD_LABELS: Record<string, string> = {
-    cash: "Cash",
-    qr_transfer: "QR Transfer",
-    card: "Card",
-    split: "Split",
-    bnpl: "BNPL",
-  };
 
   return (
     <section className="space-y-6">

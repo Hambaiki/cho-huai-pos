@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { createTypedServerClient } from "@/lib/supabase/typed-client";
+import { createClient } from "@/lib/supabase/server";
 
 type AdminActionResult = {
   ok: boolean;
@@ -68,7 +68,7 @@ const setUserStoreLimitOverrideSchema = z.object({
 });
 
 async function requireSuperAdminActor() {
-  const supabase = await createTypedServerClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -346,7 +346,7 @@ export async function updateSitewideSettingsAction(
 }
 
 export async function getSitewideSettings() {
-  const supabase = await createTypedServerClient();
+  const supabase = await createClient();
 
   const { data: settings } = await supabase
     .from("site_settings")
@@ -368,7 +368,7 @@ export async function getSitewideSettings() {
  * @returns Typed profile data with id, email, and admin status
  */
 export async function getCurrentUserProfile() {
-  const supabase = await createTypedServerClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

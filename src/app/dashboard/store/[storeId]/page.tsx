@@ -1,4 +1,3 @@
-import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
@@ -9,9 +8,11 @@ import {
   ShoppingCart,
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils/currency";
-import type { CurrencyStore } from "@/lib/utils/currency";
+import { formatDelta } from "@/lib/utils/reports";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatCard } from "@/components/ui/StatCard";
+import { getCurrentUser } from "@/lib/queries/auth";
+import { getStoreDashboardData } from "@/lib/queries/store-dashboard";
 
 export const metadata = { title: "Store Dashboard" };
 
@@ -29,95 +30,32 @@ const PAYMENT_LABELS: Record<string, string> = {
   bnpl: "BNPL",
 };
 
-function formatDelta(delta: number): string {
-  if (delta === 0) return "0%";
-  const abs = Math.abs(delta);
-  return `${delta > 0 ? "+" : "-"}${abs.toFixed(abs >= 10 ? 0 : 1)}%`;
-}
-
 export default async function StoreDashboardPage({
   params,
 }: {
   params: Promise<{ storeId: string }>;
 }) {
   const { storeId } = await params;
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+  const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  const { data: membership } = await supabase
-    .from("store_members")
-    .select(
-      "role, stores(id, currency_code, currency_symbol, currency_decimals, symbol_position)",
-    )
-    .eq("user_id", user.id)
-    .eq("store_id", storeId)
-    .single();
+  const data = await getStoreDashboardData({
+    userId: user.id,
+    storeId,
+  });
 
-  if (!membership?.stores) redirect("/dashboard");
+  if (!data) redirect("/dashboard");
 
-  const store = membership.stores as unknown as CurrencyStore & { id: string };
+  const { role, store, now } = data;
   const basePath = `/dashboard/store/${store.id}`;
-
-  const now = new Date();
-  const todayStart = new Date(now);
-  todayStart.setHours(0, 0, 0, 0);
-  const todayEnd = new Date(now);
-  todayEnd.setHours(23, 59, 59, 999);
-
-  const yesterdayStart = new Date(todayStart);
-  yesterdayStart.setDate(todayStart.getDate() - 1);
-  const yesterdayEnd = new Date(todayStart.getTime() - 1);
-
-  const [
-    todayOrdersResult,
-    yesterdayOrdersResult,
-    recentOrdersResult,
-    bnplResult,
-    productsResult,
-    storeMembersResult,
-  ] = await Promise.all([
-    supabase
-      .from("orders")
-      .select("id, total, payment_method")
-      .eq("store_id", store.id)
-      .eq("status", "completed")
-      .gte("created_at", todayStart.toISOString())
-      .lte("created_at", todayEnd.toISOString()),
-    supabase
-      .from("orders")
-      .select("total")
-      .eq("store_id", store.id)
-      .eq("status", "completed")
-      .gte("created_at", yesterdayStart.toISOString())
-      .lte("created_at", yesterdayEnd.toISOString()),
-    supabase
-      .from("orders")
-      .select("id, total, status, payment_method, created_at")
-      .eq("store_id", store.id)
-      .order("created_at", { ascending: false })
-      .limit(6),
-    supabase
-      .from("bnpl_accounts")
-      .select("id, balance_due")
-      .eq("store_id", store.id)
-      .eq("status", "active"),
-    supabase
-      .from("products")
-      .select("id, stock_qty, low_stock_at, is_active")
-      .eq("store_id", store.id),
-    supabase.from("store_members").select("id").eq("store_id", store.id),
-  ]);
-
-  const todayOrders = todayOrdersResult.data ?? [];
-  const yesterdayOrders = yesterdayOrdersResult.data ?? [];
-  const recentOrders = recentOrdersResult.data ?? [];
-  const bnplAccounts = bnplResult.data ?? [];
-  const products = productsResult.data ?? [];
-  const storeMembers = storeMembersResult.data ?? [];
+  const {
+    todayOrders,
+    yesterdayOrders,
+    recentOrders,
+    bnplAccounts,
+    products,
+    storeMembers,
+  } = data;
 
   const todaySales = todayOrders.reduce((sum, o) => sum + Number(o.total), 0);
   const yesterdaySales = yesterdayOrders.reduce(
@@ -172,12 +110,7 @@ export default async function StoreDashboardPage({
           ),
         );
 
-  const currency: CurrencyStore = {
-    currency_code: store.currency_code,
-    currency_symbol: store.currency_symbol,
-    currency_decimals: store.currency_decimals,
-    symbol_position: store.symbol_position,
-  };
+  const currency = store;
 
   return (
     <section className="space-y-6">
@@ -192,7 +125,7 @@ export default async function StoreDashboardPage({
         meta={
           <div className="flex flex-wrap items-center gap-2 text-xs">
             <span className="rounded-full bg-neutral-200 px-3 py-2 font-medium text-neutral-700">
-              Role: <span className="capitalize">{membership.role}</span>
+              Role: <span className="capitalize">{role}</span>
             </span>
             <span
               className={`rounded-full px-3 py-2 font-medium ${

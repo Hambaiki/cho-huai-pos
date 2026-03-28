@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/queries/auth";
+import { getOrderDetailData } from "@/lib/queries/orders";
 import { formatCurrency } from "@/lib/utils/currency";
-import type { CurrencyStore } from "@/lib/utils/currency";
 import {
   Table,
   TableBody,
@@ -29,56 +29,26 @@ export default async function OrderDetailPage({
   params: Promise<{ id: string; storeId: string }>;
 }) {
   const { id: orderId, storeId } = await params;
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
+  const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  const { data: membership } = await supabase
-    .from("store_members")
-    .select(
-      "store_id, role, stores(currency_code, currency_symbol, currency_decimals, symbol_position)",
-    )
-    .eq("user_id", user.id)
-    .eq("store_id", storeId)
-    .single();
+  const data = await getOrderDetailData({
+    userId: user.id,
+    storeId,
+    orderId,
+  });
 
-  if (!membership?.store_id) redirect("/dashboard");
+  if (!data) redirect("/dashboard");
+  if (!data.order) notFound();
 
-  const storeInfo = membership.stores as unknown as CurrencyStore;
-  const currency: CurrencyStore = {
-    currency_code: storeInfo.currency_code,
-    currency_symbol: storeInfo.currency_symbol,
-    currency_decimals: storeInfo.currency_decimals,
-    symbol_position: storeInfo.symbol_position,
-  };
-
-  const { data: order, error: orderError } = await supabase
-    .from("orders")
-    .select(
-      `*,
-       qr_channels(label),
-       order_items(product_name, quantity, unit_price, discount, subtotal)`,
-    )
-    .eq("id", orderId)
-    .eq("store_id", storeId)
-    .single();
-
-  if (orderError) {
-    throw new Error(orderError.message);
-  }
-
-  if (!order) notFound();
-
-  const isManager = ["owner", "manager"].includes(membership.role);
+  const { currency, isManager, order } = data;
   const canVoid = order.status === "completed" && isManager;
 
   type QrChannelRel = { label: string } | null;
   const qrChannel = order.qr_channels as unknown as QrChannelRel;
-  const voidedAt = "voided_at" in order ? order.voided_at : null;
-  const voidReason = "void_reason" in order ? order.void_reason : null;
+  const voidedAt = order.voided_at;
+  const voidReason = order.void_reason;
 
   const backHref = `/dashboard/store/${storeId}/orders`;
 

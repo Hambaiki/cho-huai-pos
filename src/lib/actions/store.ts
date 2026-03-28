@@ -2,7 +2,8 @@
 
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { createTypedServerClient } from "@/lib/supabase/typed-client";
+import { createClient } from "@/lib/supabase/server";
+
 import { DEFAULT_CURRENCY } from "@/lib/utils/currency";
 
 const createStoreSchema = z.object({
@@ -38,7 +39,7 @@ export async function createStoreAction(
     return { error: "Please check the store details and try again." };
   }
 
-  const supabase = await createTypedServerClient();
+  const supabase = await createClient();
   const {
     data: { user },
     error: userError,

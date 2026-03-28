@@ -2,7 +2,8 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { createTypedServerClient } from "@/lib/supabase/typed-client";
+import { createClient } from "@/lib/supabase/server";
+
 import type { BnplAccountSummary } from "@/lib/types/bnpl";
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -39,7 +40,7 @@ export type BnplPaymentRow = {
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 async function requireManagerInStore(storeId: string) {
-  const supabase = await createTypedServerClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -96,7 +97,7 @@ export async function createBnplAccountAction(
       notes: notes || null,
     })
     .select(
-      "id, customer_name, phone:customer_phone, credit_limit, balance_due, status, notes, created_at",
+      "id, customer_name, customer_phone, credit_limit, balance_due, status, notes, created_at",
     )
     .single();
 

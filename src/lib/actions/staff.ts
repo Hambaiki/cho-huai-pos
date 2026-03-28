@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { createTypedServerClient } from "@/lib/supabase/typed-client";
+import { createClient } from "@/lib/supabase/server";
+
 
 const inviteStaffSchema = z.object({
   storeId: z.uuid(),
@@ -33,7 +34,7 @@ export async function inviteStaffAction(
     return { error: "Invalid invite parameters." };
   }
 
-  const supabase = await createTypedServerClient();
+  const supabase = await createClient();
 
   // Get current user
   const {

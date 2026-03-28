@@ -1,28 +1,20 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
 import { signOutAction } from "@/lib/actions/auth";
+import { getCurrentUser } from "@/lib/queries/auth";
+import { getUserAccessStatus } from "@/lib/queries/auth";
 import { Button } from "@/components/ui/Button";
 
 export const metadata = { title: "Access Pending" };
 
 export default async function AccessPendingPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+  const user = await getCurrentUser();
   if (!user) {
     redirect("/login");
   }
 
-  const { data } = await supabase
-    .from("profiles")
-    .select("is_suspended, is_super_admin")
-    .eq("id", user.id)
-    .maybeSingle();
+  const profile = await getUserAccessStatus(user.id);
 
-  const profile = data as { is_suspended?: boolean; is_super_admin?: boolean } | null;
-
+  // If user is not suspended or is a super admin, redirect to dashboard
   if (!profile?.is_suspended || profile?.is_super_admin) {
     redirect("/dashboard");
   }

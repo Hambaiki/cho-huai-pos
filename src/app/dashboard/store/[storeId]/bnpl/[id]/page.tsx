@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/queries/auth";
+import { getBnplAccountDetailData } from "@/lib/queries/bnpl";
 import { formatCurrency } from "@/lib/utils/currency";
-import type { CurrencyStore } from "@/lib/utils/currency";
 import AccountStatusControl from "@/components/bnpl/AccountStatusControl";
 import InstallmentList from "@/components/bnpl/InstallmentList";
 import AddInstallmentModal from "@/components/bnpl/AddInstallmentModal";
@@ -11,7 +11,6 @@ import {
   SectionCardBody,
   SectionCardHeader,
 } from "@/components/ui/SectionCard";
-import type { QrChannel } from "@/components/pos/QrPaymentScreen";
 
 export const metadata = { title: "BNPL Account" };
 
@@ -28,71 +27,28 @@ export default async function BnplAccountDetailPage({
   params: Promise<{ id: string; storeId: string }>;
 }) {
   const { id: accountId, storeId } = await params;
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   if (!user) redirect("/login");
 
-  const { data: membership } = await supabase
-    .from("store_members")
-    .select(
-      "store_id, role, stores(currency_code, currency_symbol, currency_decimals, symbol_position)",
-    )
-    .eq("user_id", user.id)
-    .eq("store_id", storeId)
-    .single();
+  const { membership, isManager, currency, account, installments, qrChannels } =
+    await getBnplAccountDetailData({
+      userId: user.id,
+      storeId,
+      accountId,
+    });
 
   if (!membership?.store_id) redirect("/dashboard");
 
-  const storeInfo = membership.stores as unknown as CurrencyStore;
-  const currency: CurrencyStore = {
-    currency_code: storeInfo.currency_code,
-    currency_symbol: storeInfo.currency_symbol,
-    currency_decimals: storeInfo.currency_decimals,
-    symbol_position: storeInfo.symbol_position,
-  };
-
-  const isManager = ["owner", "manager"].includes(membership.role);
-
-  const [{ data: account }, { data: installments }, { data: qrChannels }] =
-    await Promise.all([
-      supabase
-        .from("bnpl_accounts")
-        .select(
-          "id, customer_name, phone:customer_phone, credit_limit, balance_due, status, notes, created_at",
-        )
-        .eq("id", accountId)
-        .eq("store_id", storeId)
-        .single(),
-      supabase
-        .from("bnpl_installments")
-        .select("id, amount, due_date, status")
-        .eq("account_id", accountId)
-        .order("due_date", { ascending: true }),
-      supabase
-        .from("qr_channels")
-        .select("id, label, image_url, is_enabled")
-        .eq("store_id", storeId)
-        .eq("is_enabled", true)
-        .order("sort_order", { ascending: true })
-        .returns<QrChannel[]>(),
-    ]);
-
   if (!account) notFound();
 
-  const typedInstallments = (installments ?? []) as Array<{
-    id: string;
-    amount: number;
-    due_date: string;
-    status: "pending" | "paid" | "waived";
-  }>;
-
-  const available = Number(account.credit_limit) - Number(account.balance_due);
-  const overdueCount = typedInstallments.filter(
-    (inst) => inst.status === "pending" && new Date(inst.due_date) < new Date(),
-  ).length;
+  const available = account.credit_limit - account.balance_due;
+  const overdueCount = installments
+    ? installments.filter(
+        (inst) =>
+          inst.status === "pending" && new Date(inst.due_date) < new Date(),
+      ).length
+    : 0;
 
   const backHref = `/dashboard/store/${storeId}/bnpl`;
 
@@ -102,7 +58,7 @@ export default async function BnplAccountDetailPage({
         title={account.customer_name}
         description={
           [
-            account.phone ? `Phone: ${account.phone}` : null,
+            account.customer_phone ? `Phone: ${account.customer_phone}` : null,
             `Opened: ${new Date(account.created_at).toLocaleDateString()}`,
           ]
             .filter(Boolean)
@@ -123,13 +79,13 @@ export default async function BnplAccountDetailPage({
         <div className="rounded-lg border border-neutral-200 bg-white p-4">
           <p className="text-xs text-neutral-500">Credit Limit</p>
           <p className="mt-1 text-2xl font-semibold text-neutral-900">
-            {formatCurrency(Number(account.credit_limit), currency)}
+            {formatCurrency(account.credit_limit, currency)}
           </p>
         </div>
         <div className="rounded-lg border border-danger-200 bg-danger-50 p-4">
           <p className="text-xs text-danger-500">Balance Due</p>
           <p className="mt-1 text-2xl font-semibold text-danger-700">
-            {formatCurrency(Number(account.balance_due), currency)}
+            {formatCurrency(account.balance_due, currency)}
           </p>
         </div>
         <div className="rounded-lg border border-success-200 bg-success-50 p-4">
@@ -141,7 +97,7 @@ export default async function BnplAccountDetailPage({
         <div className="rounded-lg border border-neutral-200 bg-white p-4">
           <p className="text-xs text-neutral-500">Installments</p>
           <p className="mt-1 text-2xl font-semibold text-neutral-900">
-            {typedInstallments.length}
+            {installments.length}
           </p>
         </div>
       </div>
@@ -186,13 +142,13 @@ export default async function BnplAccountDetailPage({
       )}
 
       <InstallmentList
-        installments={typedInstallments}
+        installments={installments}
         accountId={accountId}
         storeId={storeId}
-        accountBalanceDue={Number(account.balance_due)}
+        accountBalanceDue={account.balance_due}
         currency={currency}
         isManager={isManager}
-        qrChannels={qrChannels ?? []}
+        qrChannels={qrChannels}
       />
 
       {isManager && account.status === "active" && (

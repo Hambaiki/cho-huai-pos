@@ -25,7 +25,7 @@ import {
   FormSelectOption,
   FormFileUpload,
 } from "@/components/ui/form";
-import { useBarcodeScanner } from "@/lib/hooks/useBarcodeScanner";
+import { useBarcodeScanner } from "@/hooks/useBarcodeScanner";
 import { BarcodeCameraScanner } from "@/components/pos/BarcodeCameraScanner";
 import { useSyncPendingAction } from "@/components/ui/PendingActionProvider";
 

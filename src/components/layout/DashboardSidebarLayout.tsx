@@ -1,13 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { LayoutDashboard, Shield, Store, UserCog } from "lucide-react";
 import {
   AppSidebarLayout,
   type AppSidebarNavSection,
   type BreadcrumbItem,
 } from "@/components/layout/AppSidebarLayout";
-import { createClient } from "@/lib/supabase/client";
 
 const BASE_NAV_SECTIONS: AppSidebarNavSection[] = [
   {
@@ -54,26 +52,13 @@ function getBreadcrumbs(pathname: string): BreadcrumbItem[] {
 
 interface DashboardSidebarLayoutProps {
   children: React.ReactNode;
+  isSuperAdmin: boolean;
 }
 
 export function DashboardSidebarLayout({
   children,
+  isSuperAdmin,
 }: DashboardSidebarLayoutProps) {
-  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
-
-  useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getUser().then(async ({ data }) => {
-      if (!data.user) return;
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("is_super_admin")
-        .eq("id", data.user.id)
-        .maybeSingle();
-      setIsSuperAdmin(Boolean(profile?.is_super_admin));
-    });
-  }, []);
-
   const navSections = isSuperAdmin
     ? [...BASE_NAV_SECTIONS, SUPER_ADMIN_SECTION]
     : BASE_NAV_SECTIONS;

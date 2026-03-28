@@ -2,7 +2,8 @@
  * Admin dashboard queries
  */
 
-import { createTypedServerClient } from "@/lib/supabase/typed-client";
+import { createClient } from "@/lib/supabase/server";
+
 import type { Database } from "@/lib/supabase/types";
 
 type Store = Database["public"]["Tables"]["stores"]["Row"];
@@ -30,7 +31,7 @@ interface AdminDashboardStats {
  * Includes counts, revenue, and recent items.
  */
 export async function getAdminDashboardStats(): Promise<AdminDashboardStats> {
-  const supabase = await createTypedServerClient();
+  const supabase = await createClient();
 
   const [
     storeCountResult,
@@ -102,7 +103,7 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardStats> {
  * Fetch all user profiles for the admin users page.
  */
 export async function getAllUserProfiles() {
-  const supabase = await createTypedServerClient();
+  const supabase = await createClient();
 
   const { data: profiles, error } = await supabase
     .from("profiles")
@@ -122,7 +123,7 @@ export async function getAllUserProfiles() {
  * Fetch all stores for the admin stores page.
  */
 export async function getAllStores() {
-  const supabase = await createTypedServerClient();
+  const supabase = await createClient();
 
   const { data: stores, error } = await supabase
     .from("stores")

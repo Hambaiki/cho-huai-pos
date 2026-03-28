@@ -1,10 +1,7 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import {
-  getQrChannels,
-  getStoreCategories,
-} from "@/lib/actions/settingsActions";
 import SettingsClient from "@/components/settings/SettingsClient";
+import { getCurrentUser } from "@/lib/queries/auth";
+import { getSettingsPageData } from "@/lib/queries/settings";
 
 export const metadata = {
   title: "Settings",
@@ -17,56 +14,19 @@ export default async function SettingsPage({
 }) {
   const { storeId } = await params;
 
-  const supabase = await createClient();
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/login");
-  }
-
-  const { data: membershipRow } = await supabase
-    .from("store_members")
-    .select(
-      "store_id, role, stores(id, name, address, tax_rate, receipt_header, receipt_footer, currency_code, currency_symbol, currency_decimals, symbol_position, cost_method)",
-    )
-    .eq("user_id", user.id)
-    .eq("store_id", storeId)
-    .single();
-
-  if (!membershipRow?.store_id) {
-    redirect("/dashboard");
-  }
-  const storeRow = (membershipRow.stores as unknown) as {
-    id: string;
-    name: string;
-    address: string | null;
-    tax_rate: number;
-    receipt_header: string | null;
-    receipt_footer: string | null;
-    currency_code: string;
-    currency_symbol: string;
-    currency_decimals: number;
-    symbol_position: "prefix" | "suffix";
-    cost_method: "fifo" | "lifo";
-  } | null;
-
-  if (!storeRow) redirect("/dashboard");
-
-  const [qrChannels, categories] = await Promise.all([
-    getQrChannels(storeId),
-    getStoreCategories(storeId),
-  ]);
+  const data = await getSettingsPageData({ userId: user.id, storeId });
+  if (!data) redirect("/dashboard");
 
   return (
     <SettingsClient
-      qrChannels={qrChannels}
-      categories={categories}
+      qrChannels={data.qrChannels}
+      categories={data.categories}
       storeId={storeId}
-      role={membershipRow.role as "owner" | "manager" | "cashier" | "viewer"}
-      store={storeRow}
+      role={data.role}
+      store={data.store}
     />
   );
 }

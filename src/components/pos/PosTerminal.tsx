@@ -14,7 +14,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import type { QrChannel } from "@/components/pos/QrPaymentScreen";
 import type { CreateOrderResult } from "@/lib/actions/orders";
 import type { BnplAccountSummary } from "@/lib/types/bnpl";
-import { useBarcodeScanner } from "@/lib/hooks/useBarcodeScanner";
+import { useBarcodeScanner } from "@/hooks/useBarcodeScanner";
 import { toast } from "@/lib/utils/toast";
 import { useSyncPendingAction } from "@/components/ui/PendingActionProvider";
 

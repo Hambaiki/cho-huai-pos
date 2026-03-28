@@ -1,6 +1,15 @@
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
+import { Database } from "./types";
 
+/**
+ * Create a typed Supabase server client with full type safety.
+ * Use in Server Components and Server Actions.
+ *
+ * @example
+ * const supabase = await createClient();
+ * const { data } = await supabase.from("profiles").select("id, email");
+ */
 export async function createClient() {
   const cookieStore = await cookies();
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -10,7 +19,7 @@ export async function createClient() {
     throw new Error("Missing Supabase server environment variables.");
   }
 
-  return createServerClient(supabaseUrl, supabaseAnonKey, {
+  return createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
     cookies: {
       getAll() {
         return cookieStore.getAll();

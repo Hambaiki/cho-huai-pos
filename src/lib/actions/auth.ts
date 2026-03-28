@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { createTypedServerClient } from "@/lib/supabase/typed-client";
+import { createClient } from "@/lib/supabase/server";
+
 import { getSignUpEmailOptions } from "@/lib/utils/signup-email";
 
 const signInSchema = z.object({
@@ -39,7 +40,7 @@ export async function signInAction(
     return { error: "Please enter a valid email and password." };
   }
 
-  const supabase = await createTypedServerClient();
+  const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword(parsed.data);
 
   if (error) {
@@ -63,7 +64,7 @@ export async function signUpAction(
     return { error: "Please complete all required fields correctly." };
   }
 
-  const supabase = await createTypedServerClient();
+  const supabase = await createClient();
 
   // Create account
   const { data, error } = await supabase.auth.signUp({
@@ -84,7 +85,7 @@ export async function signUpAction(
 }
 
 export async function signOutAction() {
-  const supabase = await createTypedServerClient();
+  const supabase = await createClient();
   await supabase.auth.signOut();
   redirect("/login");
 }
@@ -101,7 +102,7 @@ export async function updateAccountProfileAction(
     return { error: "Please provide a valid display name.", success: null };
   }
 
-  const supabase = await createTypedServerClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -148,7 +149,7 @@ export async function updateAccountEmailAction(
     return { error: "Please enter a valid email address.", success: null };
   }
 
-  const supabase = await createTypedServerClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -203,7 +204,7 @@ export async function updateAccountPasswordAction(
     };
   }
 
-  const supabase = await createTypedServerClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

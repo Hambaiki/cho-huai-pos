@@ -2,20 +2,20 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createTypedServerClient } from "@/lib/supabase/typed-client";
 
 const createOrderSchema = z.object({
-  storeId: z.string().uuid(),
+  storeId: z.uuid(),
   paymentMethod: z.enum(["cash", "qr_transfer", "split", "bnpl"]),
   amountTendered: z.number().nonnegative().optional(),
-  qrChannelId: z.string().uuid().optional(),
+  qrChannelId: z.uuid().optional(),
   qrReference: z.string().optional(),
-  bnplAccountId: z.string().uuid().optional(),
+  bnplAccountId: z.uuid().optional(),
   bnplDueDate: z.string().optional(),
   items: z
     .array(
       z.object({
-        productId: z.string().uuid(),
+        productId: z.uuid(),
         productName: z.string().min(1),
         unitPrice: z.number().nonnegative(),
         quantity: z.number().int().positive(),
@@ -59,7 +59,7 @@ export async function createOrderAction(
     return { data: null, error: "Invalid order input." };
   }
 
-  const supabase = await createClient();
+  const supabase = await createTypedServerClient();
   const {
     data: { user },
     error: userError,
@@ -288,7 +288,7 @@ export async function voidOrderAction(
     return { data: null, error: "Order ID and reason are required." };
   }
 
-  const supabase = await createClient();
+  const supabase = await createTypedServerClient();
   const {
     data: { user },
     error: userError,

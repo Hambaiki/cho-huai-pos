@@ -1,28 +1,25 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
 import { AdminUsersTable } from "@/components/admin/AdminUsersTable";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { getCurrentUser } from "@/lib/queries/auth";
+import { getAllUserProfiles } from "@/lib/queries/admin";
 
 export const metadata = { title: "All Users — Admin" };
 
 export default async function AdminUsersPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+  const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  const { data: profiles } = await supabase
-    .from("profiles")
-    .select("id, display_name, is_super_admin, is_suspended, store_limit_override, created_at")
-    .order("created_at", { ascending: false });
+  const profiles = await getAllUserProfiles();
 
   return (
     <section className="space-y-6">
-      <PageHeader title="All Users" description="User directory across all stores" />
+      <PageHeader
+        title="All Users"
+        description="User directory across all stores"
+      />
 
-      <AdminUsersTable profiles={profiles ?? []} currentUserId={user.id} />
+      <AdminUsersTable profiles={profiles} currentUserId={user.id} />
     </section>
   );
 }

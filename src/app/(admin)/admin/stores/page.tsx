@@ -1,24 +1,16 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
 import { AdminStoresTable } from "@/components/admin/AdminStoresTable";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { getCurrentUser } from "@/lib/queries/auth";
+import { getAllStores } from "@/lib/queries/admin";
 
 export const metadata = { title: "All Stores — Admin" };
 
 export default async function AdminStoresPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+  const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  const { data: stores } = await supabase
-    .from("stores")
-    .select(
-      "id, name, currency_code, is_suspended, staff_limit_override, created_at",
-    )
-    .order("created_at", { ascending: false });
+  const stores = await getAllStores();
 
   return (
     <section className="space-y-6">
@@ -27,7 +19,7 @@ export default async function AdminStoresPage() {
         description="Store directory and metadata"
       />
 
-      <AdminStoresTable stores={stores ?? []} />
+      <AdminStoresTable stores={stores} />
     </section>
   );
 }

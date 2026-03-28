@@ -3,17 +3,17 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { createClient } from "@/lib/supabase/server";
+import { createTypedServerClient } from "@/lib/supabase/typed-client";
 import { getSignUpEmailOptions } from "@/lib/utils/signup-email";
 
 const signInSchema = z.object({
-  email: z.string().email().trim(),
+  email: z.email().trim(),
   password: z.string().min(8),
 });
 
 const signUpSchema = z.object({
   displayName: z.string().min(2).max(80).trim(),
-  email: z.string().email().trim(),
+  email: z.email().trim(),
   password: z.string().min(8),
 });
 
@@ -39,7 +39,7 @@ export async function signInAction(
     return { error: "Please enter a valid email and password." };
   }
 
-  const supabase = await createClient();
+  const supabase = await createTypedServerClient();
   const { error } = await supabase.auth.signInWithPassword(parsed.data);
 
   if (error) {
@@ -63,7 +63,7 @@ export async function signUpAction(
     return { error: "Please complete all required fields correctly." };
   }
 
-  const supabase = await createClient();
+  const supabase = await createTypedServerClient();
 
   // Create account
   const { data, error } = await supabase.auth.signUp({
@@ -84,7 +84,7 @@ export async function signUpAction(
 }
 
 export async function signOutAction() {
-  const supabase = await createClient();
+  const supabase = await createTypedServerClient();
   await supabase.auth.signOut();
   redirect("/login");
 }
@@ -101,7 +101,7 @@ export async function updateAccountProfileAction(
     return { error: "Please provide a valid display name.", success: null };
   }
 
-  const supabase = await createClient();
+  const supabase = await createTypedServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -133,7 +133,7 @@ export async function updateAccountProfileAction(
 }
 
 const updateEmailSchema = z.object({
-  email: z.string().email().trim(),
+  email: z.email().trim(),
 });
 
 export async function updateAccountEmailAction(
@@ -148,7 +148,7 @@ export async function updateAccountEmailAction(
     return { error: "Please enter a valid email address.", success: null };
   }
 
-  const supabase = await createClient();
+  const supabase = await createTypedServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -171,7 +171,8 @@ export async function updateAccountEmailAction(
   revalidatePath("/dashboard/account");
   return {
     error: null,
-    success: "Email update requested. Please check your inbox to confirm the new email.",
+    success:
+      "Email update requested. Please check your inbox to confirm the new email.",
   };
 }
 
@@ -196,12 +197,13 @@ export async function updateAccountPasswordAction(
 
   if (!parsed.success) {
     return {
-      error: parsed.error.issues[0]?.message ?? "Please provide a valid password.",
+      error:
+        parsed.error.issues[0]?.message ?? "Please provide a valid password.",
       success: null,
     };
   }
 
-  const supabase = await createClient();
+  const supabase = await createTypedServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

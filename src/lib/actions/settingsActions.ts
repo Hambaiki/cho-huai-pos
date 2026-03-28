@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { createClient } from "@/lib/supabase/server";
+import { createTypedServerClient } from "@/lib/supabase/typed-client";
 
 export interface StaffMember {
   id: string;
@@ -32,8 +32,8 @@ export type SettingsActionResult<T = null> =
   | { data: null; error: string };
 
 const categorySchema = z.object({
-  storeId: z.string().uuid(),
-  categoryId: z.string().uuid().optional(),
+  storeId: z.uuid(),
+  categoryId: z.uuid().optional(),
   name: z.string().min(1).max(80).trim(),
   sortOrder: z.number().int().min(0).max(9999),
 });
@@ -41,7 +41,7 @@ const categorySchema = z.object({
 async function requireStoreManager(
   storeId: string,
 ): Promise<SettingsActionResult<{ userId: string }>> {
-  const supabase = await createClient();
+  const supabase = await createTypedServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -65,7 +65,7 @@ async function requireStoreManager(
 // ─── Staff ────────────────────────────────────────────────────────────────────
 
 export async function getStaffMembers(storeId: string): Promise<StaffMember[]> {
-  const supabase = await createClient();
+  const supabase = await createTypedServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -101,7 +101,7 @@ export async function getStaffMembers(storeId: string): Promise<StaffMember[]> {
 export async function getStoreCategories(
   storeId: string,
 ): Promise<CategoryRow[]> {
-  const supabase = await createClient();
+  const supabase = await createTypedServerClient();
 
   const { data } = await supabase
     .from("categories")
@@ -131,7 +131,7 @@ export async function createCategoryAction(
   const guard = await requireStoreManager(parsed.data.storeId);
   if (guard.error) return guard;
 
-  const supabase = await createClient();
+  const supabase = await createTypedServerClient();
 
   const { data: existing } = await supabase
     .from("categories")
@@ -175,7 +175,7 @@ export async function updateCategoryAction(
   const guard = await requireStoreManager(parsed.data.storeId);
   if (guard.error) return guard;
 
-  const supabase = await createClient();
+  const supabase = await createTypedServerClient();
 
   const { data: duplicate } = await supabase
     .from("categories")
@@ -209,8 +209,8 @@ export async function deleteCategoryAction(
   categoryId: string,
   storeId: string,
 ): Promise<SettingsActionResult> {
-  const idCheck = z.string().uuid().safeParse(categoryId);
-  const storeCheck = z.string().uuid().safeParse(storeId);
+  const idCheck = z.uuid().safeParse(categoryId);
+  const storeCheck = z.uuid().safeParse(storeId);
   if (!idCheck.success || !storeCheck.success) {
     return { data: null, error: "Invalid category delete request." };
   }
@@ -218,7 +218,7 @@ export async function deleteCategoryAction(
   const guard = await requireStoreManager(storeId);
   if (guard.error) return guard;
 
-  const supabase = await createClient();
+  const supabase = await createTypedServerClient();
   const { error } = await supabase
     .from("categories")
     .delete()
@@ -236,7 +236,7 @@ export async function removeMemberAction(
   memberId: string,
   storeId: string,
 ): Promise<SettingsActionResult> {
-  const supabase = await createClient();
+  const supabase = await createTypedServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -280,8 +280,8 @@ export async function removeMemberAction(
 }
 
 const updateMemberRoleSchema = z.object({
-  memberId: z.string().uuid(),
-  storeId: z.string().uuid(),
+  memberId: z.uuid(),
+  storeId: z.uuid(),
   role: z.enum(["manager", "cashier", "viewer"]),
 });
 
@@ -295,7 +295,7 @@ export async function updateMemberRoleAction(
     return { data: null, error: "Invalid role update request." };
   }
 
-  const supabase = await createClient();
+  const supabase = await createTypedServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -355,7 +355,7 @@ export interface InviteCodeRow {
 }
 
 export async function getStoreInviteCodes(storeId: string): Promise<InviteCodeRow[]> {
-  const supabase = await createClient();
+  const supabase = await createTypedServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -377,7 +377,7 @@ export async function revokeInviteCodeAction(
   codeId: string,
   storeId: string,
 ): Promise<SettingsActionResult> {
-  const supabase = await createClient();
+  const supabase = await createTypedServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -411,7 +411,7 @@ export async function revokeInviteCodeAction(
 // ─── Store General Settings ───────────────────────────────────────────────────
 
 const updateStoreSchema = z.object({
-  storeId: z.string().uuid(),
+  storeId: z.uuid(),
   name: z.string().min(1).max(100).trim(),
   address: z.string().max(300).trim().optional(),
   taxRate: z.number().min(0).max(100),
@@ -446,7 +446,7 @@ export async function updateStoreSettingsAction(
     return { data: null, error: "Invalid input. Please check all fields." };
   }
 
-  const supabase = await createClient();
+  const supabase = await createTypedServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -491,7 +491,7 @@ export async function updateStoreSettingsAction(
 // ─── QR Channels ─────────────────────────────────────────────────────────────
 
 export async function getQrChannels(storeId: string): Promise<QrChannelRow[]> {
-  const supabase = await createClient();
+  const supabase = await createTypedServerClient();
   const { data } = await supabase
     .from("qr_channels")
     .select("id, label, image_url, is_enabled, sort_order")
@@ -527,7 +527,7 @@ export async function createQrChannelAction(
     return { data: null, error: "Image must be 5MB or smaller." };
   }
 
-  const supabase = await createClient();
+  const supabase = await createTypedServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -598,7 +598,7 @@ export async function toggleQrChannelAction(
   storeId: string,
   isEnabled: boolean,
 ): Promise<SettingsActionResult> {
-  const supabase = await createClient();
+  const supabase = await createTypedServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -633,7 +633,7 @@ export async function deleteQrChannelAction(
   channelId: string,
   storeId: string,
 ): Promise<SettingsActionResult> {
-  const supabase = await createClient();
+  const supabase = await createTypedServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

@@ -1,27 +1,16 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
 import { SitewideSettingsForm } from "@/components/admin/SitewideSettingsForm";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { getSitewideSettings } from "@/lib/actions/admin";
+import { getSitewideSettings, getCurrentUserProfile } from "@/lib/actions/admin";
 
 export const metadata = { title: "Sitewide Settings — Admin" };
 
 export default async function AdminSettingsPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { profile } = await getCurrentUserProfile();
 
-  if (!user) redirect("/login");
-
-  // Verify super admin access
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("is_super_admin")
-    .eq("id", user.id)
-    .single();
-
-  if (!profile?.is_super_admin) redirect("/dashboard");
+  if (!profile.is_super_admin) {
+    redirect("/dashboard");
+  }
 
   const settings = await getSitewideSettings();
 

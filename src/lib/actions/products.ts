@@ -2,7 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import sharp from "sharp";
-import { createClient } from "@/lib/supabase/server";
+import { SupabaseClient } from "@supabase/supabase-js";
+import { createTypedServerClient } from "@/lib/supabase/typed-client";
+import type { Database } from "@/lib/supabase/types";
 import { productFormSchema } from "@/lib/validations/product";
 
 export interface ProductActionResult {
@@ -60,7 +62,7 @@ function getImageInput(formData: FormData): {
 }
 
 async function uploadProductImage(
-  supabase: Awaited<ReturnType<typeof createClient>>,
+  supabase: SupabaseClient<Database>,
   storeId: string,
   imageFile: File,
 ) {
@@ -140,7 +142,7 @@ function getObjectPathFromPublicUrl(publicUrl: string, bucket: string) {
 }
 
 async function removeImageByPublicUrl(
-  supabase: Awaited<ReturnType<typeof createClient>>,
+  supabase: SupabaseClient<Database>,
   publicUrl: string,
 ) {
   const bucket = process.env.SUPABASE_ASSETS_BUCKET ?? "app-assets";
@@ -164,7 +166,7 @@ export async function createProductAction(
     return { data: null, error: imageError };
   }
 
-  const supabase = await createClient();
+  const supabase = await createTypedServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -267,7 +269,7 @@ export async function updateProductAction(
     return { data: null, error: imageError };
   }
 
-  const supabase = await createClient();
+  const supabase = await createTypedServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -370,7 +372,7 @@ export async function updateProductAction(
 export async function removeProductImageAction(
   productId: string,
 ): Promise<ProductActionResult> {
-  const supabase = await createClient();
+  const supabase = await createTypedServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -425,7 +427,7 @@ export async function removeProductImageAction(
 export async function deleteProductAction(productId: string): Promise<{
   error: string | null;
 }> {
-  const supabase = await createClient();
+  const supabase = await createTypedServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

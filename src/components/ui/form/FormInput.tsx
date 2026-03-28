@@ -3,8 +3,7 @@
 import { forwardRef } from "react";
 import { cn } from "@/lib/utils/cn";
 
-interface FormInputProps
-  extends React.InputHTMLAttributes<HTMLInputElement> {
+interface FormInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   error?: boolean;
   isLoading?: boolean;
 }
@@ -22,7 +21,8 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
           "outline-none transition-colors",
           "focus:border-brand-300 focus:ring-2 focus:ring-brand-200",
           "disabled:bg-neutral-50 disabled:text-neutral-500 disabled:cursor-not-allowed",
-          error && "border-danger-300 focus:ring-danger-200 focus:border-danger-300",
+          error &&
+            "border-danger-300 focus:ring-danger-200 focus:border-danger-300",
           className,
         )}
         {...props}

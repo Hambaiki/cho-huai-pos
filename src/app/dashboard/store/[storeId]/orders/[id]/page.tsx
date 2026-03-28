@@ -11,7 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/Table";
 import { PageHeader } from "@/components/ui/PageHeader";
-import VoidOrderButton from "./VoidOrderButton";
+import VoidOrderButton from "@/components/orders/VoidOrderButton";
 
 export const metadata = { title: "Order Detail" };
 

@@ -4,8 +4,7 @@ import { forwardRef } from "react";
 import { cn } from "@/lib/utils/cn";
 import { Check } from "lucide-react";
 
-interface FormCheckboxProps
-  extends React.InputHTMLAttributes<HTMLInputElement> {
+interface FormCheckboxProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: React.ReactNode;
 }
 

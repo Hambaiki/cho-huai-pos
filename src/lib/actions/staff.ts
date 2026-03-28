@@ -2,11 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { createClient } from "@/lib/supabase/server";
+import { createTypedServerClient } from "@/lib/supabase/typed-client";
 
 const inviteStaffSchema = z.object({
-  storeId: z.string().uuid(),
-  email: z.string().email().trim().toLowerCase(),
+  storeId: z.uuid(),
+  email: z.email().trim().toLowerCase(),
   role: z.enum(["manager", "cashier", "viewer"]), // Exclude 'owner' role
   note: z.string().max(255).optional(),
 });
@@ -33,7 +33,7 @@ export async function inviteStaffAction(
     return { error: "Invalid invite parameters." };
   }
 
-  const supabase = await createClient();
+  const supabase = await createTypedServerClient();
 
   // Get current user
   const {
@@ -68,7 +68,7 @@ export async function inviteStaffAction(
       p_store_id: parsed.data.storeId,
       p_email: parsed.data.email,
       p_role: parsed.data.role,
-      p_note: parsed.data.note ?? null,
+      p_note: parsed.data.note,
     },
   );
 

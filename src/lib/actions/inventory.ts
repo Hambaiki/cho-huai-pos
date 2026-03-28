@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createTypedServerClient } from "@/lib/supabase/typed-client";
 
 export type ReceiveStockResult =
   | { data: { lotId: string }; error: null }
@@ -13,8 +13,8 @@ export type AdjustStockResult =
   | { data: null; error: string };
 
 const receiveStockSchema = z.object({
-  storeId: z.string().uuid(),
-  productId: z.string().uuid(),
+  storeId: z.uuid(),
+  productId: z.uuid(),
   quantity: z.number().int().positive("Quantity must be at least 1"),
   unitCost: z.number().min(0, "Unit cost must be 0 or more"),
   sourceRef: z.string().max(100).optional(),
@@ -23,8 +23,8 @@ const receiveStockSchema = z.object({
 
 const adjustStockSchema = z
   .object({
-    storeId: z.string().uuid(),
-    productId: z.string().uuid(),
+    storeId: z.uuid(),
+    productId: z.uuid(),
     direction: z.enum(["increase", "decrease"]),
     reason: z.enum(["return", "damage", "loss", "correction", "initial"]),
     quantity: z.number().int().positive("Quantity must be at least 1"),
@@ -37,7 +37,7 @@ const adjustStockSchema = z
       !["return", "correction", "initial"].includes(value.reason)
     ) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         message: "Use return, correction, or initial for stock increases.",
         path: ["reason"],
       });
@@ -48,7 +48,7 @@ const adjustStockSchema = z
       !["damage", "loss", "correction"].includes(value.reason)
     ) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         message: "Use damage, loss, or correction for stock decreases.",
         path: ["reason"],
       });
@@ -56,7 +56,7 @@ const adjustStockSchema = z
 
     if (value.direction === "increase" && value.unitCost == null) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         message: "Unit cost is required when increasing stock.",
         path: ["unitCost"],
       });
@@ -86,7 +86,7 @@ export async function receiveStockAction(
     return { data: null, error: getFirstValidationError(parsed.error) };
   }
 
-  const supabase = await createClient();
+  const supabase = await createTypedServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -134,7 +134,10 @@ export async function receiveStockAction(
     .single();
 
   if (lotError || !lot) {
-    return { data: null, error: lotError?.message ?? "Failed to create purchase lot." };
+    return {
+      data: null,
+      error: lotError?.message ?? "Failed to create purchase lot.",
+    };
   }
 
   // Also record in stock_adjustments for audit trail (reason = purchase)
@@ -160,11 +163,16 @@ export async function receiveStockAction(
 
   if (stockError) {
     // Lot is already committed; log but don't fail the user action
-    console.error("Failed to sync product stock_qty after lot insert", stockError);
+    console.error(
+      "Failed to sync product stock_qty after lot insert",
+      stockError,
+    );
   }
 
   revalidatePath(`/dashboard/store/${parsed.data.storeId}/inventory`);
-  revalidatePath(`/dashboard/store/${parsed.data.storeId}/inventory/${parsed.data.productId}`);
+  revalidatePath(
+    `/dashboard/store/${parsed.data.storeId}/inventory/${parsed.data.productId}`,
+  );
 
   return { data: { lotId: lot.id }, error: null };
 }
@@ -188,7 +196,7 @@ export async function adjustStockAction(
     return { data: null, error: getFirstValidationError(parsed.error) };
   }
 
-  const supabase = await createClient();
+  const supabase = await createTypedServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -409,7 +417,8 @@ export async function adjustStockAction(
       .eq("id", parsed.data.productId);
     return {
       data: null,
-      error: adjustmentError?.message ?? "Failed to record the stock adjustment.",
+      error:
+        adjustmentError?.message ?? "Failed to record the stock adjustment.",
     };
   }
 

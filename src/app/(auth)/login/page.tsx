@@ -84,7 +84,6 @@ export default function LoginPage() {
             Create an owner account
           </Link>
         </p>
-
       </main>
     </div>
   );

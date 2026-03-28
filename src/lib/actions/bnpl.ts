@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createTypedServerClient } from "@/lib/supabase/typed-client";
 import type { BnplAccountSummary } from "@/lib/types/bnpl";
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -39,7 +39,7 @@ export type BnplPaymentRow = {
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 async function requireManagerInStore(storeId: string) {
-  const supabase = await createClient();
+  const supabase = await createTypedServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -62,7 +62,7 @@ async function requireManagerInStore(storeId: string) {
 // ── Account Actions ──────────────────────────────────────────────────────────
 
 const createAccountSchema = z.object({
-  storeId: z.string().uuid(),
+  storeId: z.uuid(),
   customerName: z.string().min(1, "Customer name is required"),
   phone: z.string().optional(),
   creditLimit: z.coerce.number().positive("Credit limit must be positive"),
@@ -107,8 +107,8 @@ export async function createBnplAccountAction(
 }
 
 const updateAccountStatusSchema = z.object({
-  accountId: z.string().uuid(),
-  storeId: z.string().uuid(),
+  accountId: z.uuid(),
+  storeId: z.uuid(),
   status: z.enum(["active", "frozen", "closed", "settled"]),
 });
 
@@ -139,8 +139,8 @@ export async function updateBnplAccountStatusAction(
 // ── Installment Actions ──────────────────────────────────────────────────────
 
 const createInstallmentSchema = z.object({
-  accountId: z.string().uuid(),
-  storeId: z.string().uuid(),
+  accountId: z.uuid(),
+  storeId: z.uuid(),
   amount: z.coerce.number().positive("Amount must be positive"),
   dueDate: z.string().min(1, "Due date is required"),
 });
@@ -193,22 +193,22 @@ export async function createInstallmentAction(
 // ── Payment Actions ──────────────────────────────────────────────────────────
 
 const recordPaymentSchema = z.object({
-  installmentId: z.string().uuid(),
-  accountId: z.string().uuid(),
-  storeId: z.string().uuid(),
+  installmentId: z.uuid(),
+  accountId: z.uuid(),
+  storeId: z.uuid(),
   amountPaid: z.coerce.number().positive("Amount must be positive"),
   paymentMethod: z.enum(["cash", "qr_transfer"]),
-  qrChannelId: z.string().uuid().optional(),
+  qrChannelId: z.uuid().optional(),
   qrReference: z.string().trim().max(120).optional(),
   note: z.string().optional(),
 });
 
 const recordGeneralPaymentSchema = z.object({
-  accountId: z.string().uuid(),
-  storeId: z.string().uuid(),
+  accountId: z.uuid(),
+  storeId: z.uuid(),
   amountPaid: z.coerce.number().positive("Amount must be positive"),
   paymentMethod: z.enum(["cash", "qr_transfer"]),
-  qrChannelId: z.string().uuid().optional(),
+  qrChannelId: z.uuid().optional(),
   qrReference: z.string().trim().max(120).optional(),
   note: z.string().optional(),
 });

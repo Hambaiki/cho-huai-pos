@@ -12,7 +12,6 @@ import {
   Users,
   XCircle,
 } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatCard } from "@/components/ui/StatCard";
 import {
@@ -20,69 +19,26 @@ import {
   SectionCardBody,
   SectionCardHeader,
 } from "@/components/ui/SectionCard";
+import { formatNumberThai } from "@/lib/utils/format";
+import { getCurrentUser } from "@/lib/queries/auth";
+import { getAdminDashboardStats } from "@/lib/queries/admin";
 
 export const metadata = { title: "Admin Dashboard" };
 
-function fmt(n: number) {
-  return new Intl.NumberFormat("th-TH", { maximumFractionDigits: 0 }).format(n);
-}
-
 export default async function AdminDashboardPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+  const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  const [
-    { count: storeCount },
-    { count: userCount },
-    { count: orderCount },
-    { count: pendingCount },
-    { data: revData },
-    { data: bnplData },
-    { data: recentStores },
-    { data: recentUsers },
-  ] = await Promise.all([
-    supabase.from("stores").select("id", { count: "exact", head: true }),
-    supabase.from("profiles").select("id", { count: "exact", head: true }),
-    supabase
-      .from("orders")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "completed"),
-    supabase
-      .from("profiles")
-      .select("id", { count: "exact", head: true })
-      .eq("is_suspended", true),
-    supabase
-      .from("orders")
-      .select("total.sum()")
-      .eq("status", "completed")
-      .single(),
-    supabase
-      .from("bnpl_accounts")
-      .select("balance_due.sum()")
-      .in("status", ["active", "frozen"])
-      .single(),
-    supabase
-      .from("stores")
-      .select("id, name, currency_code, is_suspended, created_at")
-      .order("created_at", { ascending: false })
-      .limit(5),
-    supabase
-      .from("profiles")
-      .select("id, display_name, is_provisioned, is_suspended, created_at")
-      .order("created_at", { ascending: false })
-      .limit(5),
-  ]);
-
-  const totalRevenue = Number(
-    (revData as { sum: string | null } | null)?.sum ?? 0,
-  );
-  const bnplOutstanding = Number(
-    (bnplData as { sum: string | null } | null)?.sum ?? 0,
-  );
+  const {
+    storeCount,
+    userCount,
+    orderCount,
+    pendingCount,
+    totalRevenue,
+    bnplOutstanding,
+    recentStores,
+    recentUsers,
+  } = await getAdminDashboardStats();
 
   return (
     <section className="space-y-6">
@@ -99,13 +55,13 @@ export default async function AdminDashboardPage() {
         />
         <StatCard
           label="Total Revenue"
-          value={`฿${fmt(totalRevenue)}`}
+          value={`฿${formatNumberThai(totalRevenue)}`}
           subLabel="Completed orders only"
           icon={Banknote}
         />
         <StatCard
           label="BNPL Outstanding"
-          value={`฿${fmt(bnplOutstanding)}`}
+          value={`฿${formatNumberThai(bnplOutstanding)}`}
           subLabel="Active & frozen accounts"
           icon={CreditCard}
         />
@@ -145,7 +101,7 @@ export default async function AdminDashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {(recentStores ?? []).map((store) => (
+                {recentStores.map((store) => (
                   <tr
                     key={store.id}
                     className="border-b border-neutral-50 last:border-0"
@@ -172,7 +128,7 @@ export default async function AdminDashboardPage() {
                     </td>
                   </tr>
                 ))}
-                {(recentStores ?? []).length === 0 && (
+                {recentStores.length === 0 && (
                   <tr>
                     <td
                       colSpan={4}
@@ -211,7 +167,7 @@ export default async function AdminDashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {(recentUsers ?? []).map((profile) => (
+                {recentUsers.map((profile) => (
                   <tr
                     key={profile.id}
                     className="border-b border-neutral-50 last:border-0"
@@ -239,7 +195,7 @@ export default async function AdminDashboardPage() {
                     </td>
                   </tr>
                 ))}
-                {(recentUsers ?? []).length === 0 && (
+                {recentUsers.length === 0 && (
                   <tr>
                     <td
                       colSpan={3}

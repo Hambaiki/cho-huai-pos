@@ -1,13 +1,10 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils/cn";
 import { Logo } from "@/components/ui/Logo";
+import { getCurrentUser } from "@/lib/queries/auth";
 
 export default async function Home() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   return (
     <div

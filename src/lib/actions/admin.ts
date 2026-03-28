@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { createClient } from "@/lib/supabase/server";
+import { createTypedServerClient } from "@/lib/supabase/typed-client";
 
 type AdminActionResult = {
   ok: boolean;
@@ -10,7 +10,7 @@ type AdminActionResult = {
 };
 
 const setUserSuspensionSchema = z.object({
-  userId: z.string().uuid(),
+  userId: z.uuid(),
   suspend: z
     .string()
     .transform((value) => value === "true")
@@ -18,7 +18,7 @@ const setUserSuspensionSchema = z.object({
 });
 
 const setUserSuperAdminSchema = z.object({
-  userId: z.string().uuid(),
+  userId: z.uuid(),
   makeSuperAdmin: z
     .string()
     .transform((value) => value === "true")
@@ -26,7 +26,7 @@ const setUserSuperAdminSchema = z.object({
 });
 
 const setStoreSuspensionSchema = z.object({
-  storeId: z.string().uuid(),
+  storeId: z.uuid(),
   suspend: z
     .string()
     .transform((value) => value === "true")
@@ -34,7 +34,7 @@ const setStoreSuspensionSchema = z.object({
 });
 
 const setStoreStaffLimitOverrideSchema = z.object({
-  storeId: z.string().uuid(),
+  storeId: z.uuid(),
   staffLimitOverride: z
     .string()
     .trim()
@@ -51,7 +51,7 @@ const setStoreStaffLimitOverrideSchema = z.object({
 });
 
 const setUserStoreLimitOverrideSchema = z.object({
-  userId: z.string().uuid(),
+  userId: z.uuid(),
   storeLimitOverride: z
     .string()
     .trim()
@@ -68,7 +68,7 @@ const setUserStoreLimitOverrideSchema = z.object({
 });
 
 async function requireSuperAdminActor() {
-  const supabase = await createClient();
+  const supabase = await createTypedServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -182,10 +182,7 @@ export async function setUserSuperAdminAction(
     updates.is_suspended = false;
   }
 
-  await supabase
-    .from("profiles")
-    .update(updates)
-    .eq("id", parsed.data.userId);
+  await supabase.from("profiles").update(updates).eq("id", parsed.data.userId);
 
   revalidatePath("/admin/users");
   return { ok: true };
@@ -349,7 +346,7 @@ export async function updateSitewideSettingsAction(
 }
 
 export async function getSitewideSettings() {
-  const supabase = await createClient();
+  const supabase = await createTypedServerClient();
 
   const { data: settings } = await supabase
     .from("site_settings")
@@ -362,4 +359,33 @@ export async function getSitewideSettings() {
     maintenanceMode: settingsMap.get("maintenance_mode") === "true",
     announcementText: settingsMap.get("announcement_text") ?? "",
   };
+}
+
+/**
+ * Fetch current user's profile with full type safety.
+ *
+ * @throws Will redirect to login if user is not authenticated
+ * @returns Typed profile data with id, email, and admin status
+ */
+export async function getCurrentUserProfile() {
+  const supabase = await createTypedServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error("Not authenticated");
+  }
+
+  const { data: profile, error } = await supabase
+    .from("profiles")
+    .select("id, is_super_admin")
+    .eq("id", user.id)
+    .single();
+
+  if (error || !profile) {
+    throw new Error("Profile not found");
+  }
+
+  return { user, profile };
 }

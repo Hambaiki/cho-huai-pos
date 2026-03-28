@@ -9,7 +9,8 @@ import {
   CreditCard,
   BarChart2,
 } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { createTypedServerClient } from "@/lib/supabase/typed-client";
+import { getUserDashboardData } from "@/lib/queries/dashboard";
 import { DashboardSidebarLayout } from "@/components/layout/DashboardSidebarLayout";
 
 export const metadata = { title: "Dashboard" };
@@ -52,27 +53,14 @@ function QuickLinkCard({
 }
 
 export default async function DashboardPage() {
-  const supabase = await createClient();
+  const supabase = await createTypedServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (!user) redirect("/login");
 
-  const [{ data: profile }, { count: storeCount }] = await Promise.all([
-    supabase
-      .from("profiles")
-      .select("display_name")
-      .eq("id", user.id)
-      .maybeSingle(),
-    supabase
-      .from("store_members")
-      .select("*", { count: "exact", head: true })
-      .eq("user_id", user.id),
-  ]);
-
-  const displayName =
-    profile?.display_name || user.email?.split("@")[0] || "there";
+  const { displayName, storeCount } = await getUserDashboardData(user.id);
 
   const storeLabel =
     storeCount == null

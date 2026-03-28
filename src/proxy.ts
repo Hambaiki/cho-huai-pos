@@ -15,7 +15,9 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
-  const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route));
+  const isPublicRoute = publicRoutes.some((route) =>
+    pathname.startsWith(route),
+  );
   const isProtectedRoute = protectedRoutes.some((route) =>
     pathname.startsWith(route),
   );
@@ -49,7 +51,11 @@ export async function proxy(request: NextRequest) {
         .maybeSingle();
 
       const isMaintenanceMode = maintenanceSetting?.value === "true";
-      if (isMaintenanceMode && !isSuperAdmin && !pathname.startsWith("/maintenance")) {
+      if (
+        isMaintenanceMode &&
+        !isSuperAdmin &&
+        !pathname.startsWith("/maintenance")
+      ) {
         const maintenanceUrl = request.nextUrl.clone();
         maintenanceUrl.pathname = "/maintenance";
         maintenanceUrl.searchParams.delete("next");

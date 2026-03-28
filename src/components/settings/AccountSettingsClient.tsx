@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import {
   signOutAction,
   updateAccountEmailAction,
@@ -8,6 +8,7 @@ import {
   updateAccountProfileAction,
   type AuthActionState,
 } from "@/lib/actions/auth";
+import { PWA_INSTALL_DISMISS_KEY } from "@/lib/utils/pwa";
 import { Button } from "@/components/ui/Button";
 import {
   FormField,
@@ -15,6 +16,7 @@ import {
   FormInput,
   FormError,
   FormSuccess,
+  FormToggle,
 } from "@/components/ui/form";
 import {
   SectionCard,
@@ -36,6 +38,10 @@ export default function AccountSettingsClient({
   displayName,
   createdAt,
 }: AccountSettingsClientProps) {
+  const [resetInstallPromptToggle, setResetInstallPromptToggle] =
+    useState(false);
+  const [qaFeedback, setQaFeedback] = useState<string | null>(null);
+
   const [profileState, profileAction, isProfilePending] = useActionState(
     updateAccountProfileAction,
     initialState,
@@ -48,6 +54,23 @@ export default function AccountSettingsClient({
     updateAccountPasswordAction,
     initialState,
   );
+
+  const handleResetInstallPromptDismissal = (nextValue: boolean) => {
+    setResetInstallPromptToggle(nextValue);
+
+    if (!nextValue) {
+      return;
+    }
+
+    window.localStorage.removeItem(PWA_INSTALL_DISMISS_KEY);
+    setQaFeedback(
+      "Install prompt dismissal reset for this browser. Reload and trigger install criteria to test again.",
+    );
+
+    window.setTimeout(() => {
+      setResetInstallPromptToggle(false);
+    }, 500);
+  };
 
   return (
     <section className="mx-auto space-y-6">
@@ -186,6 +209,33 @@ export default function AccountSettingsClient({
             <span className="text-danger-50">Delete your account.</span>
           }
         />
+      </SectionCard>
+
+      <SectionCard>
+        <SectionCardHeader
+          title="QA tools"
+          description="Helpers for local install prompt testing on this device/browser."
+        />
+        <SectionCardBody className="space-y-3">
+          <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 p-3">
+            <div>
+              <p className="text-sm font-medium text-slate-900">
+                Reset PWA install prompt dismissal
+              </p>
+              <p className="text-xs text-slate-600">
+                Clears the 7-day cooldown set when dismissing the install banner.
+              </p>
+            </div>
+
+            <FormToggle
+              aria-label="Reset PWA install prompt dismissal"
+              onChange={handleResetInstallPromptDismissal}
+              value={resetInstallPromptToggle}
+            />
+          </div>
+
+          <FormSuccess message={qaFeedback} />
+        </SectionCardBody>
       </SectionCard>
 
       <form action={signOutAction}>

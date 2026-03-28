@@ -3,6 +3,8 @@ import { IBM_Plex_Sans_Thai, Sarabun } from "next/font/google";
 import { cn } from "@/lib/utils/cn";
 import { AppToaster } from "@/components/ui/AppToaster";
 import { PendingActionProvider } from "@/components/ui/PendingActionProvider";
+import { PWAInstallPrompt } from "@/components/pwa/PWAInstallPrompt";
+import { PWARegister } from "@/components/pwa/PWARegister";
 import "./globals.css";
 
 const sarabun = Sarabun({
@@ -20,12 +22,23 @@ const ibmPlexSansThai = IBM_Plex_Sans_Thai({
 export const metadata: Metadata = {
   title: "CHO-HUAI POS",
   description: "Simple POS for small stores with BNPL support",
+  applicationName: "CHO-HUAI POS",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    title: "CHO-HUAI POS",
+    statusBarStyle: "default",
+  },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
+  themeColor: "#0f766e",
 };
 
 export default function RootLayout({
@@ -36,7 +49,8 @@ export default function RootLayout({
   return (
     <html lang="th">
       <head>
-        <meta name="apple-mobile-web-app-title" content="MyWebSite" />
+        <meta name="apple-mobile-web-app-title" content="CHO-HUAI POS" />
+        <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body
         className={cn(
@@ -44,6 +58,8 @@ export default function RootLayout({
           `antialiased`,
         )}
       >
+        <PWARegister />
+        <PWAInstallPrompt />
         <PendingActionProvider>
           {children}
           <AppToaster />

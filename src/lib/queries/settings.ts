@@ -1,6 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 
-import { getStaffMembers, type StaffMember } from "@/lib/actions/settingsActions";
+import {
+  getStaffMembers,
+  type StaffMember,
+} from "@/lib/actions/settingsActions";
 import type { Tables } from "@/lib/supabase/types";
 
 type StoreMemberRole = Tables<"store_members">["role"];
@@ -78,5 +81,39 @@ export async function getTeamPageData({
   return {
     role: membership.role as StoreMemberRole,
     staffMembers,
+  };
+}
+
+export async function getStoreLayoutData({
+  userId,
+  storeId,
+}: {
+  userId: string;
+  storeId: string;
+}) {
+  const supabase = await createClient();
+
+  const { data: membership } = await supabase
+    .from("store_members")
+    .select("role")
+    .eq("user_id", userId)
+    .eq("store_id", storeId)
+    .maybeSingle();
+
+  if (!membership) return null;
+
+  const { data: store } = await supabase
+    .from("stores")
+    .select(
+      "id, name, is_suspended, currency_code, currency_symbol, currency_decimals, symbol_position",
+    )
+    .eq("id", storeId)
+    .maybeSingle();
+
+  if (!store) return null;
+
+  return {
+    role: membership.role,
+    store,
   };
 }

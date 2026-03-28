@@ -42,6 +42,7 @@ import {
 } from "@/components/ui/form";
 import { cn } from "@/lib/utils/cn";
 import { Plus } from "lucide-react";
+import { useSyncPendingAction } from "@/components/ui/PendingActionProvider";
 
 interface StoreData {
   id: string;
@@ -146,6 +147,10 @@ function GeneralSettingsTab({
     SettingsActionResult,
     FormData
   >(updateStoreSettingsAction, { data: null, error: null });
+
+  useSyncPendingAction(isPending, {
+    message: "Saving store settings...",
+  });
 
   return (
     <form action={formAction} className="space-y-6">
@@ -336,7 +341,7 @@ function CategoriesTab({
 }) {
   const canManage = ["owner", "manager"].includes(role);
   const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
-  const [createState, createAction, isCreating] = useActionState<
+  const [createState, createAction, isPending] = useActionState<
     SettingsActionResult,
     FormData
   >(createCategoryAction, { data: null, error: null });
@@ -345,6 +350,10 @@ function CategoriesTab({
     FormData
   >(updateCategoryAction, { data: null, error: null });
   const [, startTransition] = useTransition();
+
+  useSyncPendingAction(isPending, {
+    message: "Saving category...",
+  });
 
   const nextSortOrder =
     categories.length > 0
@@ -423,11 +432,7 @@ function CategoriesTab({
               >
                 Cancel
               </Button>
-              <Button
-                type="submit"
-                disabled={isCreating}
-                isLoading={isCreating}
-              >
+              <Button type="submit" disabled={isPending} isLoading={isPending}>
                 Add category
               </Button>
             </ModalFooter>
@@ -521,14 +526,18 @@ function QrChannelsTab({
   const [hasSubmittedCreate, setHasSubmittedCreate] = useState(false);
   const [selectedFileName, setSelectedFileName] = useState("");
   const [imagePreviewUrl, setImagePreviewUrl] = useState("");
-  const [createState, createAction, isCreating] = useActionState<
+  const [createState, createAction, isPending] = useActionState<
     SettingsActionResult,
     FormData
   >(createQrChannelAction, { data: null, error: null });
   const [isTransitioning, startTransition] = useTransition();
 
+  useSyncPendingAction(isPending, {
+    message: "Saving QR channel...",
+  });
+
   useEffect(() => {
-    if (!hasSubmittedCreate || isCreating || createState.error) {
+    if (!hasSubmittedCreate || isPending || createState.error) {
       return;
     }
 
@@ -543,7 +552,7 @@ function QrChannelsTab({
     }, 0);
 
     return () => window.clearTimeout(timeoutId);
-  }, [createState.error, hasSubmittedCreate, imagePreviewUrl, isCreating]);
+  }, [createState.error, hasSubmittedCreate, imagePreviewUrl, isPending]);
 
   const resetAddModalState = () => {
     setShowAddModal(false);
@@ -659,7 +668,7 @@ function QrChannelsTab({
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isCreating} isLoading={isCreating}>
+            <Button type="submit" disabled={isPending} isLoading={isPending}>
               Add channel
             </Button>
           </ModalFooter>

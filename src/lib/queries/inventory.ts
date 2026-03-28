@@ -47,7 +47,7 @@ export async function getInventoryListData({
         p_query: query || undefined,
         p_statuses: statuses.length > 0 ? statuses : undefined,
         p_stock_statuses: stockStatuses.length > 0 ? stockStatuses : undefined,
-        p_category_ids: categoryIds.length > 0 ? categoryIds : undefined,
+        p_category_ids: categoryIds,
         p_page: page,
         p_page_size: pageSize,
       }),

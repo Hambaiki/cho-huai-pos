@@ -68,13 +68,10 @@ export function PWAInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] =
     useState<BeforeInstallPromptEvent | null>(null);
   const [isInstalling, setIsInstalling] = useState(false);
-  const [isDismissed, setIsDismissed] = useState(true);
-  const [isInstalled, setIsInstalled] = useState(false);
+  const [isDismissed, setIsDismissed] = useState(() => shouldSuppressPromptByDismissal());
+  const [isInstalled, setIsInstalled] = useState(() => isStandaloneMode());
 
   useEffect(() => {
-    setIsInstalled(isStandaloneMode());
-    setIsDismissed(shouldSuppressPromptByDismissal());
-
     const onBeforeInstallPrompt = (event: Event) => {
       const promptEvent = event as BeforeInstallPromptEvent;
       promptEvent.preventDefault();

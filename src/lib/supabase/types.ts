@@ -841,57 +841,33 @@ export type Database = {
           total_count: number
         }[]
       }
-      paginated_products:
-        | {
-            Args: {
-              p_category_ids?: string[]
-              p_page?: number
-              p_page_size?: number
-              p_query?: string
-              p_statuses?: string[]
-              p_stock_statuses?: string[]
-              p_store_id: string
-            }
-            Returns: {
-              barcode: string
-              category_id: string
-              category_name: string
-              cost_price: number
-              id: string
-              image_url: string
-              is_active: boolean
-              low_stock_at: number
-              name: string
-              price: number
-              sku: string
-              stock_qty: number
-              total_count: number
-              unit: string
-            }[]
-          }
-        | {
-            Args: {
-              p_page?: number
-              p_page_size?: number
-              p_query?: string
-              p_statuses?: string[]
-              p_stock_statuses?: string[]
-              p_store_id: string
-            }
-            Returns: {
-              barcode: string
-              cost_price: number
-              id: string
-              is_active: boolean
-              low_stock_at: number
-              name: string
-              price: number
-              sku: string
-              stock_qty: number
-              total_count: number
-              unit: string
-            }[]
-          }
+      paginated_products: {
+        Args: {
+          p_category_ids?: string[]
+          p_page?: number
+          p_page_size?: number
+          p_query?: string
+          p_statuses?: string[]
+          p_stock_statuses?: string[]
+          p_store_id: string
+        }
+        Returns: {
+          barcode: string
+          category_id: string
+          category_name: string
+          cost_price: number
+          id: string
+          image_url: string
+          is_active: boolean
+          low_stock_at: number
+          name: string
+          price: number
+          sku: string
+          stock_qty: number
+          total_count: number
+          unit: string
+        }[]
+      }
       process_order_stock: { Args: { p_order_id: string }; Returns: undefined }
     }
     Enums: {

@@ -1,25 +1,12 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
 import {
   StoreProvider,
-  type MemberRole,
   type StoreContextValue,
 } from "@/lib/store-context";
 import { StoreSidebarLayout } from "@/components/layout/StoreSidebarLayout";
 import { StoreSuspendedScreen } from "@/components/stores/StoreSuspendedScreen";
-
-type MembershipRow = {
-  role: MemberRole;
-  stores: {
-    id: string;
-    name: string;
-    is_suspended: boolean;
-    currency_code: string;
-    currency_symbol: string;
-    currency_decimals: number;
-    symbol_position: "prefix" | "suffix";
-  } | null;
-};
+import { getCurrentUser } from "@/lib/queries/auth";
+import { getStoreLayoutData } from "@/lib/queries/settings";
 
 export default async function StoreScopedLayout({
   children,
@@ -29,42 +16,30 @@ export default async function StoreScopedLayout({
   params: Promise<{ storeId: string }>;
 }) {
   const { storeId } = await params;
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
-  if (!user) {
-    redirect("/login");
-  }
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
 
-  const { data: membership, error } = await supabase
-    .from("store_members")
-    .select(
-      "role, stores(id, name, is_suspended, currency_code, currency_symbol, currency_decimals, symbol_position)",
-    )
-    .eq("user_id", user.id)
-    .eq("store_id", storeId)
-    .single()
-    .returns<MembershipRow>();
+  const data = await getStoreLayoutData({
+    userId: user.id,
+    storeId,
+  });
 
-  if (error || !membership?.stores) {
-    redirect("/dashboard");
-  }
+  if (!data) redirect("/dashboard");
 
-  if (membership.stores.is_suspended) {
-    return <StoreSuspendedScreen storeName={membership.stores.name} />;
+  if (data.store.is_suspended) {
+    return <StoreSuspendedScreen storeName={data.store.name} />;
   }
 
   const contextValue: StoreContextValue = {
-    storeId: membership.stores.id,
-    storeName: membership.stores.name,
-    role: membership.role,
+    storeId: data.store.id,
+    storeName: data.store.name,
+    role: data.role,
     currency: {
-      currency_code: membership.stores.currency_code,
-      currency_symbol: membership.stores.currency_symbol,
-      currency_decimals: membership.stores.currency_decimals,
-      symbol_position: membership.stores.symbol_position,
+      currency_code: data.store.currency_code,
+      currency_symbol: data.store.currency_symbol,
+      currency_decimals: data.store.currency_decimals,
+      symbol_position: data.store.symbol_position,
     },
   };
 

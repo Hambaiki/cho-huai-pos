@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
@@ -38,6 +38,14 @@ export function Modal({
   fullScreen = false,
 }: ModalProps) {
   const [phase, setPhase] = useState<Phase>(open ? "visible" : "hidden");
+
+  // Freeze the last children seen while the modal was open so content
+  // remains visible throughout the exit animation, regardless of what
+  // the parent renders while open=false.
+  const childrenSnapshot = useRef(children);
+  if (open) {
+    childrenSnapshot.current = children;
+  }
 
   useEffect(() => {
     if (open) {
@@ -95,7 +103,7 @@ export function Modal({
           if (e.currentTarget === e.target && isExiting) setPhase("hidden");
         }}
       >
-        {children}
+        {childrenSnapshot.current}
       </div>
     </div>,
     document.body,

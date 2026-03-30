@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 import { getSignUpEmailOptions } from "@/lib/utils/signup-email";
 
@@ -187,6 +188,29 @@ const updatePasswordSchema = z
     path: ["confirmPassword"],
   });
 
+const deleteAccountSchema = z
+  .object({
+    deleteConfirmation: z.string().trim(),
+    deleteAcknowledge: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.deleteConfirmation.toUpperCase() !== "DELETE") {
+      ctx.addIssue({
+        code: "custom",
+        path: ["deleteConfirmation"],
+        message: 'Type "DELETE" to confirm account deletion.',
+      });
+    }
+
+    if (data.deleteAcknowledge !== "on") {
+      ctx.addIssue({
+        code: "custom",
+        path: ["deleteAcknowledge"],
+        message: "Please acknowledge this action before continuing.",
+      });
+    }
+  });
+
 export async function updateAccountPasswordAction(
   _prevState: AuthActionState,
   formData: FormData,
@@ -222,4 +246,68 @@ export async function updateAccountPasswordAction(
   }
 
   return { error: null, success: "Password updated." };
+}
+
+export async function deleteAccountAction(
+  _prevState: AuthActionState,
+  formData: FormData,
+): Promise<AuthActionState> {
+  const parsed = deleteAccountSchema.safeParse({
+    deleteConfirmation: formData.get("deleteConfirmation"),
+    deleteAcknowledge: formData.get("deleteAcknowledge"),
+  });
+
+  if (!parsed.success) {
+    return {
+      error:
+        parsed.error.issues[0]?.message ??
+        "Please complete the delete confirmation fields.",
+      success: null,
+    };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "Authentication required.", success: null };
+  }
+
+  const { count: ownedStoreCount, error: ownedStoreError } = await supabase
+    .from("stores")
+    .select("id", { count: "exact", head: true })
+    .eq("owner_id", user.id);
+
+  if (ownedStoreError) {
+    return { error: ownedStoreError.message, success: null };
+  }
+
+  if ((ownedStoreCount ?? 0) > 0) {
+    return {
+      error: "Transfer or delete stores you own before deleting your account.",
+      success: null,
+    };
+  }
+
+  let adminClient: ReturnType<typeof createAdminClient>;
+
+  try {
+    adminClient = createAdminClient();
+  } catch {
+    return {
+      error: "Account deletion is not configured on this environment.",
+      success: null,
+    };
+  }
+
+  const { error: deleteError } = await adminClient.auth.admin.deleteUser(user.id);
+
+  if (deleteError) {
+    return { error: deleteError.message, success: null };
+  }
+
+  await supabase.auth.signOut();
+  redirect("/login");
 }

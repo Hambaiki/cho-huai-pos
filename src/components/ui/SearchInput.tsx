@@ -3,12 +3,14 @@
 import { CircleX, Search } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { FormInput } from "@/components/ui/form";
+import { cn } from "@/lib/utils/cn";
 
 interface SearchInputProps {
   placeholder?: string;
   onSearch: (query: string) => void;
   debounceMs?: number;
   initialValue?: string;
+  className?: string;
 }
 
 export function SearchInput({
@@ -16,6 +18,7 @@ export function SearchInput({
   onSearch,
   debounceMs = 300,
   initialValue = "",
+  className = "",
 }: SearchInputProps) {
   const [value, setValue] = useState(initialValue);
 
@@ -40,7 +43,7 @@ export function SearchInput({
   }, []);
 
   return (
-    <div className="relative flex-1">
+    <div className={cn("relative flex-1", className)}>
       <Search
         size={16}
         className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500"

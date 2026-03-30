@@ -3,6 +3,7 @@
 import { useEffect, useState, useTransition } from "react";
 import { useCartStore } from "@/lib/store/cart";
 import { useStoreContext } from "@/lib/store-context";
+import { formatCurrency } from "@/lib/utils/currency";
 import { createOrderAction } from "@/lib/actions/orders";
 import { ProductGrid, type PosProduct } from "@/components/pos/ProductGrid";
 import { BarcodeCameraScanner } from "@/components/pos/BarcodeCameraScanner";
@@ -11,12 +12,15 @@ import { CartPanel } from "@/components/pos/CartPanel";
 import { PaymentModal } from "@/components/pos/PaymentModal";
 import { ReceiptModal } from "@/components/pos/ReceiptModal";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { Modal } from "@/components/ui/Modal";
+import { Button } from "@/components/ui/Button";
 import type { QrChannel } from "@/components/pos/QrPaymentScreen";
 import type { CreateOrderResult } from "@/lib/actions/orders";
 import type { BnplAccountSummary } from "@/lib/types/bnpl";
 import { useBarcodeScanner } from "@/hooks/useBarcodeScanner";
 import { toast } from "@/lib/utils/toast";
 import { useSyncPendingAction } from "@/components/ui/PendingActionProvider";
+import { ChevronDown, ChevronUp, ShoppingCart } from "lucide-react";
 
 interface PosTerminalProps {
   products: PosProduct[];
@@ -37,6 +41,7 @@ export function PosTerminal({
 
   const [products, setProducts] = useState<PosProduct[]>(initialProducts);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
+  const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
   const [isReceiptOpen, setIsReceiptOpen] = useState(false);
   const [receipt, setReceipt] = useState<
     Extract<CreateOrderResult, { data: unknown }>["data"] | null
@@ -84,6 +89,13 @@ export function PosTerminal({
     removeItem(productId);
   };
 
+  const totalCartItems = items.reduce((sum, item) => sum + item.quantity, 0);
+
+  const handleCheckout = () => {
+    setIsMobileCartOpen(false);
+    setIsPaymentOpen(true);
+  };
+
   const [showCameraScanner, setShowCameraScanner] = useState(false);
 
   // Handle barcode scan
@@ -110,7 +122,7 @@ export function PosTerminal({
   useBarcodeScanner({ onBarcode: handleBarcodeDetected });
 
   return (
-    <section className="grid gap-4 lg:h-full lg:grid-cols-[1.55fr_0.7fr]">
+    <section className="grid gap-4 pb-24 lg:h-full lg:grid-cols-[1.55fr_0.7fr] lg:pb-0">
       <div className="flex min-h-0 flex-col space-y-3">
         <PageHeader title="POS Terminal" />
         <ProductGrid
@@ -122,15 +134,66 @@ export function PosTerminal({
       </div>
 
       <CartPanel
+        className="hidden lg:flex"
         currency={store.currency}
         items={items}
         onClearAll={clearCart}
-        onCheckout={() => setIsPaymentOpen(true)}
+        onCheckout={handleCheckout}
         onQuantityChange={setQuantity}
         onRemove={handleRemoveItem}
         total={payable}
         products={products}
       />
+
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-white/95 px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-3 shadow-[0_-8px_24px_rgba(15,23,42,0.12)] backdrop-blur lg:hidden">
+        <Button
+          type="button"
+          variant="primary"
+          className="flex w-full items-center justify-between"
+          onClick={() => setIsMobileCartOpen(true)}
+          icon={<ChevronUp size={16} />}
+        >
+          <span className="inline-flex items-center gap-2">
+            <ShoppingCart size={16} />
+            Cart ({totalCartItems})
+          </span>
+          <span className="font-semibold">
+            {formatCurrency(payable, store.currency)}
+          </span>
+        </Button>
+      </div>
+
+      <Modal
+        open={isMobileCartOpen}
+        onClose={() => setIsMobileCartOpen(false)}
+        fullScreen
+      >
+        <div className="flex h-dvh flex-col bg-surface p-3">
+          <div className="mb-2 flex justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsMobileCartOpen(false)}
+              icon={<ChevronDown size={16} />}
+            >
+              Close cart
+            </Button>
+          </div>
+          <div className="min-h-0 flex-1">
+            <CartPanel
+              className="h-full rounded-xl"
+              currency={store.currency}
+              items={items}
+              onClearAll={clearCart}
+              onCheckout={handleCheckout}
+              onQuantityChange={setQuantity}
+              onRemove={handleRemoveItem}
+              total={payable}
+              products={products}
+            />
+          </div>
+        </div>
+      </Modal>
 
       <PaymentModal
         amount={payable}

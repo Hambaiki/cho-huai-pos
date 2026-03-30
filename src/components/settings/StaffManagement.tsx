@@ -1,11 +1,9 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useFormStatus } from "react-dom";
 import {
   BadgeCheck,
   Edit,
-  Mail,
   Shield,
   UserCog,
   UserMinus,
@@ -50,20 +48,6 @@ interface StaffManagementProps {
   staffMembers: StaffMember[];
   storeId: string;
   role: "owner" | "manager" | "cashier" | "viewer";
-}
-
-function InviteStaffButton() {
-  const { pending } = useFormStatus();
-  return (
-    <Button
-      type="submit"
-      disabled={pending}
-      isLoading={pending}
-      icon={<UserPlus size={16} />}
-    >
-      Send invite
-    </Button>
-  );
 }
 
 export function StaffManagement({
@@ -325,7 +309,6 @@ export function StaffManagement({
           <ModalBody className="space-y-4">
             <FormField>
               <FormLabel htmlFor="email" required>
-                <Mail size={16} className="text-neutral-500" />
                 Email
               </FormLabel>
               <FormInput
@@ -341,7 +324,6 @@ export function StaffManagement({
             </FormField>
             <FormField>
               <FormLabel htmlFor="role" required>
-                <Shield size={16} className="text-neutral-500" />
                 Role
               </FormLabel>
               <FormSelect id="role" name="role" defaultValue="cashier" required>
@@ -379,7 +361,14 @@ export function StaffManagement({
             <Button type="button" variant="outline" onClick={closeInviteModal}>
               Cancel
             </Button>
-            <InviteStaffButton />
+            <Button
+              type="submit"
+              disabled={isPending}
+              isLoading={isPending}
+              icon={<UserPlus size={16} />}
+            >
+              Send invite
+            </Button>
           </ModalFooter>
         </form>
       </Modal>

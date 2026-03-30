@@ -114,6 +114,7 @@ export function BnplAccountsPageClient({
       {/* Search and Filter Bar */}
       <div className="flex flex-wrap gap-3">
         <SearchInput
+          className="min-w-60"
           placeholder="Search by customer name or phone..."
           initialValue={initialQuery}
           onSearch={(value) =>

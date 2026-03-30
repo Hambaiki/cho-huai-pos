@@ -133,6 +133,7 @@ export function OrdersPageClient({
 
       <div className="flex flex-wrap gap-3">
         <SearchInput
+        className="min-w-60"
           placeholder="Search by order ID or total..."
           initialValue={initialQuery}
           onSearch={(value) =>

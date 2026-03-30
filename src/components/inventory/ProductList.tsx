@@ -129,6 +129,7 @@ export function ProductList({
     <div className="space-y-4">
       <div className="flex flex-wrap gap-3">
         <SearchInput
+          className="min-w-60"
           placeholder="Search by product name, SKU, or barcode..."
           initialValue={initialQuery}
           onSearch={(value) =>
@@ -255,7 +256,7 @@ export function ProductList({
                       </span>
                       {product.stockQty <= product.lowStockAt && (
                         <span className="inline-flex items-center gap-1 text-xs font-medium text-danger-600">
-                          <AlertTriangle size={12} />
+                          <AlertTriangle size={12} className="shirnk-0" />
                           Low stock
                         </span>
                       )}

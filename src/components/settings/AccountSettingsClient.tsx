@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import {
+  deleteAccountAction,
   signOutAction,
   updateAccountEmailAction,
   updateAccountPasswordAction,
@@ -14,6 +15,7 @@ import {
   FormField,
   FormLabel,
   FormInput,
+  FormCheckbox,
   FormError,
   FormSuccess,
   FormToggle,
@@ -52,6 +54,10 @@ export default function AccountSettingsClient({
   );
   const [passwordState, passwordAction, isPasswordPending] = useActionState(
     updateAccountPasswordAction,
+    initialState,
+  );
+  const [deleteState, deleteAction, isDeletePending] = useActionState(
+    deleteAccountAction,
     initialState,
   );
 
@@ -202,13 +208,63 @@ export default function AccountSettingsClient({
         </form>
       </SectionCard>
 
-      <SectionCard className="bg-danger-500">
+      <SectionCard>
         <SectionCardHeader
-          title={<span className="text-white">Danger zone</span>}
+          title={<span className="text-danger-600">Danger zone</span>}
           description={
-            <span className="text-danger-50">Delete your account.</span>
+            <span className="text-danger-500">
+              Delete your account permanently. This action cannot be undone.
+            </span>
           }
         />
+        <form action={deleteAction}>
+          <SectionCardBody className="space-y-4">
+            <p className="text-sm">
+              Your account access will be removed immediately. Type DELETE and
+              confirm to continue.
+            </p>
+
+            <FormField>
+              <FormLabel
+                htmlFor="deleteConfirmation"
+                required
+                className="text-danger-600"
+              >
+                Type DELETE to confirm
+              </FormLabel>
+              <FormInput
+                id="deleteConfirmation"
+                name="deleteConfirmation"
+                type="text"
+                placeholder="DELETE"
+                required
+                className="border-danger-200 bg-danger-50 text-danger-950 placeholder:text-danger-400"
+              />
+            </FormField>
+
+            <FormCheckbox
+              id="deleteAcknowledge"
+              name="deleteAcknowledge"
+              required
+              label={
+                <span className="text-sm font-medium">
+                  I understand this permanently deletes my account.
+                </span>
+              }
+            />
+
+            <FormError message={deleteState.error} />
+          </SectionCardBody>
+          <SectionCardFooter>
+            <Button
+              type="submit"
+              variant="destructive"
+              isLoading={isDeletePending}
+            >
+              {isDeletePending ? "Deleting..." : "Delete account"}
+            </Button>
+          </SectionCardFooter>
+        </form>
       </SectionCard>
 
       <SectionCard>
@@ -223,7 +279,8 @@ export default function AccountSettingsClient({
                 Reset PWA install prompt dismissal
               </p>
               <p className="text-xs text-slate-600">
-                Clears the 7-day cooldown set when dismissing the install banner.
+                Clears the 7-day cooldown set when dismissing the install
+                banner.
               </p>
             </div>
 

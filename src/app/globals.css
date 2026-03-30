@@ -2,9 +2,25 @@
 
 @plugin 'tailwind-scrollbar';
 
+/* ── Theme variables ─────────────────────────── */
 :root {
   --background: #fafafa;
   --foreground: #0f172a;
+}
+
+/* ── Dark mode ─────────────────────────── */
+/* @media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0b1220;
+    --foreground: #e2e8f0;
+  }
+} */
+
+/* ── Base styles ─────────────────────────── */
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sarabun), sans-serif;
 }
 
 /* ── Animation keyframes ─────────────────────────── */
@@ -151,6 +167,7 @@
   }
 }
 
+/* ── Theme variables ─────────────────────────── */
 @theme inline {
   /* Modal animations */
   --animate-modal-backdrop-in: modal-backdrop-in 0.2s ease-out;
@@ -249,17 +266,4 @@
   --color-border-200: #e2e8f0;
 
   --radius-lg: 0.75rem;
-}
-
-/* @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0b1220;
-    --foreground: #e2e8f0;
-  }
-} */
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sarabun), sans-serif;
 }

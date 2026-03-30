@@ -231,7 +231,7 @@ export function ProductGrid({
               No products matched this search/filter.
             </div>
           ) : (
-            <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 2xl:grid-cols-4">
+            <div className="grid gap-3 grid-cols-2 md:grid-cols-3 2xl:grid-cols-4">
               {filteredProducts.map((product) => {
                 const outOfStock = product.stock_qty <= 0;
 

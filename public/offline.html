@@ -21,8 +21,16 @@
         padding: 24px;
         font-family: "Sarabun", "IBM Plex Sans Thai", "Segoe UI", sans-serif;
         background:
-          radial-gradient(900px 380px at 20% -10%, rgba(15, 118, 110, 0.24), transparent),
-          radial-gradient(760px 340px at 95% 12%, rgba(3, 105, 161, 0.2), transparent),
+          radial-gradient(
+            900px 380px at 20% -10%,
+            rgba(15, 118, 110, 0.24),
+            transparent
+          ),
+          radial-gradient(
+            760px 340px at 95% 12%,
+            rgba(3, 105, 161, 0.2),
+            transparent
+          ),
           linear-gradient(180deg, #f6fffd 0%, #f8fafc 100%);
       }
 
@@ -62,12 +70,15 @@
   </head>
   <body>
     <main class="card">
-      <h1>คุณกำลังออฟไลน์อยู่</h1>
+      <h1>You are offline</h1>
       <p>
-        แอปยังเปิดใช้งานได้บางส่วนจากข้อมูลที่แคชไว้แล้ว
-        แต่บางหน้าจะต้องเชื่อมต่ออินเทอร์เน็ตก่อน
+        The app is partially available from cached data, but some pages require
+        an internet connection.
       </p>
-      <p class="meta"><span class="dot">●</span> เมื่อกลับมาออนไลน์ ให้รีเฟรชอีกครั้ง</p>
+      <p class="meta">
+        <span class="dot">●</span> When you are back online, please refresh the
+        page.
+      </p>
     </main>
   </body>
 </html>

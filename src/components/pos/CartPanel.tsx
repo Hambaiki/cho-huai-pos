@@ -12,8 +12,6 @@ import {
   ShoppingCart,
   Trash,
   Barcode,
-  ChevronDown,
-  ChevronUp,
 } from "lucide-react";
 import {
   Modal,
@@ -50,9 +48,6 @@ export function CartPanel({
   className,
 }: CartPanelProps) {
   const [showClearConfirm, setShowClearConfirm] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(true);
-
-  const cartContentHidden = isCollapsed;
 
   return (
     <>
@@ -80,32 +75,10 @@ export function CartPanel({
                 Scan product
               </Button>
             )}
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              onClick={() => setIsCollapsed((prev) => !prev)}
-              aria-expanded={!isCollapsed}
-              aria-label={isCollapsed ? "Expand cart" : "Collapse cart"}
-              title={isCollapsed ? "Expand cart" : "Collapse cart"}
-              className="lg:hidden"
-              icon={
-                isCollapsed ? (
-                  <ChevronDown size={16} />
-                ) : (
-                  <ChevronUp size={16} />
-                )
-              }
-            />
           </div>
         </div>
 
-        <div
-          className={cn(
-            "min-h-0 flex-1 overflow-y-auto pr-1 lg:block",
-            cartContentHidden ? "hidden" : "block",
-          )}
-        >
+        <div className={cn("min-h-0 flex-1 overflow-y-auto pr-1 lg:block")}>
           <div className="p-3">
             {items.length === 0 ? (
               <p className="text-sm text-neutral-500">No items yet.</p>
@@ -186,13 +159,7 @@ export function CartPanel({
           </div>
         </div>
 
-        <div
-          className={cn(
-            "p-3",
-            "border-t border-border lg:block",
-            cartContentHidden ? "hidden" : "block",
-          )}
-        >
+        <div className={cn("p-3", "border-t border-border lg:block")}>
           <div className="flex items-center justify-between text-sm">
             <span className="text-neutral-600">Total</span>
             <strong className="text-neutral-900">

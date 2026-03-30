@@ -166,7 +166,7 @@ export function InventoryDetailClient({
         }
         actions={
           canManage ? (
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <Button
                 variant="outline"
                 icon={<PencilLine size={16} />}

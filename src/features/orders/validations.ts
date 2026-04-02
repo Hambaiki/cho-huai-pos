@@ -4,6 +4,8 @@ export const createOrderSchema = z.object({
   storeId: z.uuid(),
   paymentMethod: z.enum(["cash", "qr_transfer", "split", "bnpl"]),
   amountTendered: z.number().nonnegative().optional(),
+  orderDiscount: z.number().nonnegative().default(0),
+  promoCode: z.string().trim().max(32).optional(),
   qrChannelId: z.uuid().optional(),
   qrReference: z.string().optional(),
   bnplAccountId: z.uuid().optional(),
@@ -29,6 +31,7 @@ export type CreateOrderResult =
         orderId: string;
         subtotal: number;
         discount: number;
+        taxAmount: number;
         total: number;
         amountTendered: number | null;
         changeAmount: number;

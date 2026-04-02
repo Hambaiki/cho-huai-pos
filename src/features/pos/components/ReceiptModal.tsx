@@ -14,6 +14,7 @@ interface ReceiptModalProps {
   items: ReceiptItem[];
   subtotal: number;
   discount: number;
+  taxAmount: number;
   total: number;
   amountTendered: number | null;
   changeAmount: number;
@@ -30,6 +31,7 @@ export function ReceiptModal({
   items,
   subtotal,
   discount,
+  taxAmount,
   total,
   amountTendered,
   changeAmount,
@@ -139,6 +141,10 @@ export function ReceiptModal({
                 <span>-{formatCurrency(discount, currency)}</span>
               </div>
             )}
+            <div className="flex justify-between text-neutral-700">
+              <span>Tax:</span>
+              <span>{formatCurrency(taxAmount, currency)}</span>
+            </div>
             <div className="flex justify-between border-t border-dashed border-neutral-200 pt-2 font-bold text-neutral-900">
               <span>Total:</span>
               <span className="text-lg">{formatCurrency(total, currency)}</span>

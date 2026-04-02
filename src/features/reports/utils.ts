@@ -12,7 +12,7 @@ export type PeriodFinancials = {
 
 export type ReportOrder = Pick<
   Tables<"orders">,
-  "total" | "payment_method" | "created_at"
+  "total" | "discount" | "payment_method" | "created_at"
 >;
 
 export type ReportOrderItem = Pick<
@@ -24,6 +24,14 @@ export type OverdueInstallment = Pick<
   Tables<"bnpl_installments">,
   "id" | "amount" | "due_date" | "account_id"
 > & { bnpl_accounts: { customer_name: string } };
+
+export type ReportPromotionRedemption = Pick<
+  Tables<"promotion_redemptions">,
+  "discount_amount"
+> & {
+  orders: { created_at: string };
+  store_promotions: { applies_automatically: boolean };
+};
 
 export function formatDelta(delta: number): string {
   if (delta === 0) return "0%";

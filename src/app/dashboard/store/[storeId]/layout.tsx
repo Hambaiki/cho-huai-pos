@@ -41,6 +41,7 @@ export default async function StoreScopedLayout({
       currency_decimals: data.store.currency_decimals,
       symbol_position: data.store.symbol_position,
     },
+    taxRate: Number(data.store.tax_rate ?? 0),
   };
 
   return (

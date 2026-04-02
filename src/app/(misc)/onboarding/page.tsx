@@ -1,6 +1,8 @@
 "use client";
 
-import { CreateStoreForm } from "@/features/stores/components/CreateStoreForm";
+import { buttonVariants } from "@/components/ui/Button";
+import { cn } from "@/lib/utils/cn";
+import Link from "next/link";
 
 export default function OnboardingPage() {
   return (
@@ -12,9 +14,18 @@ export default function OnboardingPage() {
         Configure store identity and currency defaults for all prices.
       </p>
 
-      <div className="mt-8">
-        <CreateStoreForm />
-      </div>
+      <Link
+        href="/dashboard/stores/"
+        className={cn(
+          buttonVariants({
+            variant: "primary",
+            size: "lg",
+          }),
+          "mt-6",
+        )}
+      >
+        Create store
+      </Link>
     </main>
   );
 }

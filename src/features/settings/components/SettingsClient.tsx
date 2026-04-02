@@ -173,6 +173,37 @@ function GeneralSettingsTab({
                 disabled={!isOwner}
               />
             </FormField>
+
+            <FormField>
+              <FormLabel htmlFor="maxCashierOrderDiscountAmount">
+                Max cashier order discount amount
+              </FormLabel>
+              <FormInput
+                id="maxCashierOrderDiscountAmount"
+                name="maxCashierOrderDiscountAmount"
+                type="number"
+                min={0}
+                step={0.01}
+                defaultValue={store.max_cashier_order_discount_amount}
+                disabled={!isOwner}
+              />
+            </FormField>
+
+            <FormField>
+              <FormLabel htmlFor="maxCashierOrderDiscountPercentage">
+                Max cashier discount percentage (%)
+              </FormLabel>
+              <FormInput
+                id="maxCashierOrderDiscountPercentage"
+                name="maxCashierOrderDiscountPercentage"
+                type="number"
+                min={0}
+                max={100}
+                step={0.01}
+                defaultValue={store.max_cashier_order_discount_percentage}
+                disabled={!isOwner}
+              />
+            </FormField>
           </div>
 
           <FormField className="mt-4">

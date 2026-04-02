@@ -10,6 +10,7 @@ export interface StoreContextValue {
   storeName: string;
   role: MemberRole;
   currency: CurrencyStore;
+  taxRate: number;
 }
 
 const StoreContext = createContext<StoreContextValue | null>(null);
@@ -34,6 +35,7 @@ export function useStoreContext() {
       storeName: "",
       role: "viewer" as MemberRole,
       currency: DEFAULT_CURRENCY,
+      taxRate: 0,
     };
   }
 

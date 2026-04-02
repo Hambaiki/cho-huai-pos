@@ -398,6 +398,8 @@ const updateStoreSchema = z.object({
   name: z.string().min(1).max(100).trim(),
   address: z.string().max(300).trim().optional(),
   taxRate: z.number().min(0).max(100),
+  maxCashierOrderDiscountAmount: z.number().min(0),
+  maxCashierOrderDiscountPercentage: z.number().min(0).max(100),
   receiptHeader: z.string().max(500).trim().optional(),
   receiptFooter: z.string().max(500).trim().optional(),
   currencyCode: z.string().length(3).trim().toUpperCase(),
@@ -416,6 +418,11 @@ export async function updateStoreSettingsAction(
     name: formData.get("name"),
     address: formData.get("address") || undefined,
     taxRate: parseFloat(formData.get("taxRate") as string) || 0,
+    maxCashierOrderDiscountAmount:
+      parseFloat(formData.get("maxCashierOrderDiscountAmount") as string) || 0,
+    maxCashierOrderDiscountPercentage:
+      parseFloat(formData.get("maxCashierOrderDiscountPercentage") as string) ||
+      0,
     receiptHeader: formData.get("receiptHeader") || undefined,
     receiptFooter: formData.get("receiptFooter") || undefined,
     currencyCode: formData.get("currencyCode"),
@@ -453,6 +460,10 @@ export async function updateStoreSettingsAction(
       name: parsed.data.name,
       address: parsed.data.address ?? null,
       tax_rate: parsed.data.taxRate,
+      max_cashier_order_discount_amount:
+        parsed.data.maxCashierOrderDiscountAmount,
+      max_cashier_order_discount_percentage:
+        parsed.data.maxCashierOrderDiscountPercentage,
       receipt_header: parsed.data.receiptHeader ?? null,
       receipt_footer: parsed.data.receiptFooter ?? null,
       currency_code: parsed.data.currencyCode,

@@ -8,6 +8,8 @@ import { Drawer, DrawerBody, DrawerHeader } from "@/components/ui/Drawer";
 import type { BnplAccountSummary } from "@/features/bnpl/types";
 import { createOrderAction } from "@/features/orders/action";
 import type { CreateOrderResult } from "@/features/orders/validations";
+import { validatePromoCodeAction } from "@/features/promotions/actions";
+import type { CartItem } from "@/features/pos/store/cart";
 import { CartPanel } from "@/features/pos/components/CartPanel";
 import { PaymentModal } from "@/features/pos/components/PaymentModal";
 import {
@@ -16,7 +18,6 @@ import {
 } from "@/features/pos/components/ProductGrid";
 import { ReceiptModal } from "@/features/pos/components/ReceiptModal";
 import { useStoreContext } from "@/features/pos/store-context";
-import type { CartItem } from "@/features/pos/store/cart";
 import { useCartStore } from "@/features/pos/store/cart";
 import { useSyncPendingAction } from "@/features/shell/pending/PendingActionProvider";
 import { toast } from "@/features/shell/toaster/toaster";
@@ -24,10 +25,15 @@ import { useBarcodeScanner } from "@/hooks/useBarcodeScanner";
 import { cn } from "@/lib/utils/cn";
 import { formatCurrency } from "@/lib/utils/currency";
 import { ChevronUp, ShoppingCart } from "lucide-react";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 
 interface PosTerminalProps {
   products: PosProduct[];
+  availablePromotions?: Array<{
+    code: string | null;
+    name: string;
+    isAutomatic: boolean;
+  }>;
   qrChannels?: QrChannel[];
   bnplAccounts?: BnplAccountSummary[];
   canCreateBnplAccount?: boolean;
@@ -35,6 +41,7 @@ interface PosTerminalProps {
 
 export function PosTerminal({
   products: initialProducts,
+  availablePromotions: initialAvailablePromotions = [],
   qrChannels = [],
   bnplAccounts = [],
   canCreateBnplAccount = false,
@@ -53,11 +60,91 @@ export function PosTerminal({
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
+  // Promo code validation state
+  const [availablePromotions] = useState<
+    Array<{ code: string | null; name: string; isAutomatic: boolean }>
+  >(initialAvailablePromotions);
+  const [promoCodeDiscount, setPromoCodeDiscount] = useState(0);
+  const [promoCodeMessage, setPromoCodeMessage] = useState<string>();
+  const [promoCodeError, setPromoCodeError] = useState<string>();
+  const [isValidatingPromoCode, setIsValidatingPromoCode] = useState(false);
+  const promoValidationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   useSyncPendingAction(isPending, {
     message: "Recording order…",
   });
 
   const { items, addItem, setQuantity, removeItem, clearCart } = useCartStore();
+
+  const {
+    setItemDiscount,
+    setOrderDiscount,
+    setPromoCode,
+    orderDiscount,
+    promoCode,
+    subtotal,
+    itemDiscountTotal,
+  } = useCartStore();
+
+  // Validate promo code when it changes (with debounce)
+  useEffect(() => {
+    if (promoValidationTimeoutRef.current) {
+      clearTimeout(promoValidationTimeoutRef.current);
+    }
+
+    if (!promoCode || promoCode.trim() === "") {
+      setIsValidatingPromoCode(false);
+      setPromoCodeDiscount(0);
+      setPromoCodeMessage(undefined);
+      setPromoCodeError(undefined);
+      return;
+    }
+
+    setIsValidatingPromoCode(true);
+
+    promoValidationTimeoutRef.current = setTimeout(async () => {
+      const subtotalAmount = items.reduce(
+        (sum, item) => sum + item.unitPrice * item.quantity,
+        0,
+      );
+      const itemDiscountAmount = items.reduce(
+        (sum, item) => sum + item.discount * item.quantity,
+        0,
+      );
+      const discountBeforeTax = Math.max(0, itemDiscountAmount + orderDiscount);
+      const orderTotal = Math.max(0, subtotalAmount - discountBeforeTax);
+
+      try {
+        const result = await validatePromoCodeAction({
+          storeId: store.storeId,
+          promoCode,
+          orderTotal,
+        });
+
+        if (result.isValid) {
+          setPromoCodeDiscount(result.discount);
+          setPromoCodeMessage(result.message);
+          setPromoCodeError(undefined);
+        } else {
+          setPromoCodeDiscount(0);
+          setPromoCodeMessage(undefined);
+          setPromoCodeError(result.error);
+        }
+      } catch {
+        setPromoCodeDiscount(0);
+        setPromoCodeMessage(undefined);
+        setPromoCodeError("Failed to validate promo code.");
+      } finally {
+        setIsValidatingPromoCode(false);
+      }
+    }, 800);
+
+    return () => {
+      if (promoValidationTimeoutRef.current) {
+        clearTimeout(promoValidationTimeoutRef.current);
+      }
+    };
+  }, [promoCode, items, orderDiscount, store.storeId]);
 
   useEffect(() => {
     if (isReceiptOpen || !receipt) return;
@@ -69,13 +156,19 @@ export function PosTerminal({
     return () => window.clearTimeout(timer);
   }, [isReceiptOpen, receipt]);
 
-  const payable = Math.max(
+  const subtotalAmount = subtotal();
+  const itemDiscountAmount = itemDiscountTotal();
+  const discountBeforeTax = Math.max(
     0,
-    items.reduce(
-      (sum, item) => sum + (item.unitPrice - item.discount) * item.quantity,
-      0,
+    itemDiscountAmount + orderDiscount + promoCodeDiscount,
+  );
+  const taxableBase = Math.max(0, subtotalAmount - discountBeforeTax);
+  const taxAmount = Number(
+    (taxableBase * (store.taxRate / 100)).toFixed(
+      store.currency.currency_decimals,
     ),
   );
+  const payable = Math.max(0, taxableBase + taxAmount);
 
   const handleAddItem = (product: PosProduct) => {
     toast.success(`${product.name} added to cart`);
@@ -141,9 +234,22 @@ export function PosTerminal({
         className="hidden lg:flex"
         currency={store.currency}
         items={items}
+        subtotal={subtotalAmount}
+        itemDiscountTotal={itemDiscountAmount}
+        orderDiscount={orderDiscount}
+        promoCode={promoCode}
+        promoCodeDiscount={promoCodeDiscount}
+        promoCodeMessage={promoCodeMessage}
+        promoCodeError={promoCodeError}
+        isValidatingPromoCode={isValidatingPromoCode}
+        availablePromotions={availablePromotions}
+        taxAmount={taxAmount}
         onClearAll={clearCart}
         onCheckout={handleCheckout}
         onQuantityChange={setQuantity}
+        onItemDiscountChange={setItemDiscount}
+        onOrderDiscountChange={setOrderDiscount}
+        onPromoCodeChange={setPromoCode}
         onRemove={handleRemoveItem}
         total={payable}
         products={products}
@@ -190,9 +296,22 @@ export function PosTerminal({
             className="h-full rounded-xl min-h-96"
             currency={store.currency}
             items={items}
+            subtotal={subtotalAmount}
+            itemDiscountTotal={itemDiscountAmount}
+            orderDiscount={orderDiscount}
+            promoCode={promoCode}
+            promoCodeDiscount={promoCodeDiscount}
+            promoCodeMessage={promoCodeMessage}
+            promoCodeError={promoCodeError}
+            isValidatingPromoCode={isValidatingPromoCode}
+            availablePromotions={availablePromotions}
+            taxAmount={taxAmount}
             onClearAll={clearCart}
             onCheckout={handleCheckout}
             onQuantityChange={setQuantity}
+            onItemDiscountChange={setItemDiscount}
+            onOrderDiscountChange={setOrderDiscount}
+            onPromoCodeChange={setPromoCode}
             onRemove={handleRemoveItem}
             total={payable}
             products={products}
@@ -218,6 +337,8 @@ export function PosTerminal({
               qrReference: payment.qrReference,
               bnplAccountId: payment.bnplAccountId,
               bnplDueDate: payment.bnplDueDate,
+              orderDiscount,
+              promoCode: promoCode || undefined,
               items: items.map((item) => ({
                 productId: item.productId,
                 productName: item.name,
@@ -281,6 +402,7 @@ export function PosTerminal({
           items={receipt.items}
           subtotal={receipt.subtotal}
           discount={receipt.discount}
+          taxAmount={receipt.taxAmount}
           total={receipt.total}
           amountTendered={receipt.amountTendered}
           changeAmount={receipt.changeAmount}

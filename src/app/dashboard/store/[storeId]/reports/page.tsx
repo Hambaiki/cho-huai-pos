@@ -56,6 +56,7 @@ export default async function ReportsPage({
     currency,
     completedOrders: orderList,
     completedOrderItems: orderItems,
+    promotionRedemptions,
     bnplSummary,
     overdueInstallments: overdueList,
   } = data;
@@ -120,6 +121,10 @@ export default async function ReportsPage({
   );
   const total30d = orders30d.reduce(
     (sum, order) => sum + Number(order.total),
+    0,
+  );
+  const totalDiscount30d = orders30d.reduce(
+    (sum, order) => sum + Number(order.discount ?? 0),
     0,
   );
   const prev30dRevenue = ordersPrev30d.reduce(
@@ -204,6 +209,25 @@ export default async function ReportsPage({
   });
   const paymentMethodEntries = Object.entries(methodTotals).sort(
     (a, b) => b[1] - a[1],
+  );
+
+  const redemptions30d = promotionRedemptions.filter((redemption) =>
+    isWithinRange(redemption.orders.created_at, startOf30Days),
+  );
+  const totalPromoDiscount30d = redemptions30d.reduce(
+    (sum, redemption) => sum + Number(redemption.discount_amount),
+    0,
+  );
+  const automaticPromoDiscount30d = redemptions30d
+    .filter((redemption) => redemption.store_promotions.applies_automatically)
+    .reduce((sum, redemption) => sum + Number(redemption.discount_amount), 0);
+  const codePromoDiscount30d = Math.max(
+    0,
+    totalPromoDiscount30d - automaticPromoDiscount30d,
+  );
+  const nonPromoDiscount30d = Math.max(
+    0,
+    totalDiscount30d - totalPromoDiscount30d,
   );
 
   // Top products
@@ -318,6 +342,18 @@ export default async function ReportsPage({
             value: formatCurrency(financials30d.profit, currency),
             sub: `Coverage ${financials30d.coveragePct.toFixed(0)}%`,
             icon: HandCoins,
+          },
+          {
+            label: "30-Day Promo Discounts",
+            value: formatCurrency(totalPromoDiscount30d, currency),
+            sub: `Code ${formatCurrency(codePromoDiscount30d, currency)} • Auto ${formatCurrency(automaticPromoDiscount30d, currency)}`,
+            icon: BadgeDollarSign,
+          },
+          {
+            label: "30-Day Non-Promo Discounts",
+            value: formatCurrency(nonPromoDiscount30d, currency),
+            sub: `Total discounts ${formatCurrency(totalDiscount30d, currency)}`,
+            icon: Receipt,
           },
           {
             label: "BNPL Receivable",

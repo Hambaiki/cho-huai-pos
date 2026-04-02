@@ -25,7 +25,7 @@ export async function getSettingsPageData({
       supabase
         .from("stores")
         .select(
-          "id, name, address, tax_rate, receipt_header, receipt_footer, currency_code, currency_symbol, currency_decimals, symbol_position, cost_method",
+          "id, name, address, tax_rate, max_cashier_order_discount_amount, max_cashier_order_discount_percentage, receipt_header, receipt_footer, currency_code, currency_symbol, currency_decimals, symbol_position, cost_method",
         )
         .eq("id", storeId)
         .maybeSingle(),
@@ -99,7 +99,7 @@ export async function getStoreLayoutData({
   const { data: store } = await supabase
     .from("stores")
     .select(
-      "id, name, is_suspended, currency_code, currency_symbol, currency_decimals, symbol_position",
+      "id, name, is_suspended, currency_code, currency_symbol, currency_decimals, symbol_position, tax_rate",
     )
     .eq("id", storeId)
     .maybeSingle();

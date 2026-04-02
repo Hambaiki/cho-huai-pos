@@ -1,7 +1,7 @@
 "use client";
 
 import { PageHeader } from "@/components/content/PageHeader";
-import { Button } from "@/components/ui/Button";
+import { Button, buttonVariants } from "@/components/ui/Button";
 import { cn } from "@/lib/utils/cn";
 import { ArrowRight, CirclePlus, ShieldAlert, Store } from "lucide-react";
 import Link from "next/link";
@@ -110,10 +110,13 @@ export function StoresHubClient({ stores }: StoresHubClientProps) {
                 ) : (
                   <Link
                     href={`/dashboard/store/${store.id}`}
-                    className="inline-flex items-center gap-1 rounded-lg bg-brand-600 px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-brand-700"
+                    className={cn(
+                      buttonVariants({ variant: "primary", size: "sm" }),
+                      "px-2",
+                    )}
                   >
                     Open workspace
-                    <ArrowRight size={14} />
+                    <ArrowRight size={14} className="ml-1"/>
                   </Link>
                 )}
               </div>

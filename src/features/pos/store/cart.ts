@@ -12,17 +12,25 @@ export interface CartItem {
 
 interface CartStore {
   items: CartItem[];
+  orderDiscount: number;
+  promoCode: string;
   addItem: (item: Omit<CartItem, "quantity" | "discount">) => void;
   removeItem: (productId: string) => void;
   setQuantity: (productId: string, quantity: number) => void;
+  setItemDiscount: (productId: string, discount: number) => void;
+  setOrderDiscount: (discount: number) => void;
+  setPromoCode: (promoCode: string) => void;
   clearCart: () => void;
   subtotal: () => number;
+  itemDiscountTotal: () => number;
   totalDiscount: () => number;
-  total: () => number;
+  totalBeforeTax: () => number;
 }
 
 export const useCartStore = create<CartStore>((set, get) => ({
   items: [],
+  orderDiscount: 0,
+  promoCode: "",
   addItem: (item) => {
     set((state) => {
       const existing = state.items.find((i) => i.productId === item.productId);
@@ -66,12 +74,32 @@ export const useCartStore = create<CartStore>((set, get) => ({
       }),
     }));
   },
-  clearCart: () => set({ items: [] }),
+  setItemDiscount: (productId, discount) => {
+    set((state) => ({
+      items: state.items.map((item) => {
+        if (item.productId !== productId) {
+          return item;
+        }
+
+        const safeDiscount = Math.max(0, Math.min(discount, item.unitPrice));
+        return { ...item, discount: safeDiscount };
+      }),
+    }));
+  },
+  setOrderDiscount: (discount) => {
+    set(() => ({ orderDiscount: Math.max(0, discount) }));
+  },
+  setPromoCode: (promoCode) => {
+    set(() => ({ promoCode: promoCode.trim().toUpperCase() }));
+  },
+  clearCart: () => set({ items: [], orderDiscount: 0, promoCode: "" }),
   subtotal: () =>
     get().items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0),
-  totalDiscount: () =>
+  itemDiscountTotal: () =>
     get().items.reduce((sum, item) => sum + item.discount * item.quantity, 0),
-  total: () => {
+  totalDiscount: () =>
+    get().itemDiscountTotal() + get().orderDiscount,
+  totalBeforeTax: () => {
     const subtotal = get().subtotal();
     const discount = get().totalDiscount();
     return Math.max(0, subtotal - discount);

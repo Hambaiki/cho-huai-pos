@@ -4,6 +4,7 @@ import type {
   OverdueInstallment,
   ReportOrder,
   ReportOrderItem,
+  ReportPromotionRedemption,
 } from "@/features/reports/utils";
 import { DEFAULT_CURRENCY } from "@/lib/utils/currency";
 
@@ -38,12 +39,13 @@ export async function getReportsPageData({
   const [
     { data: completedOrders },
     { data: completedOrderItems },
+    { data: promotionRedemptions },
     { data: bnplSummary },
     { data: overdueInstallments },
   ] = await Promise.all([
     supabase
       .from("orders")
-      .select("total, payment_method, created_at")
+      .select("total, discount, payment_method, created_at")
       .eq("store_id", storeId)
       .eq("status", "completed")
       .gte("created_at", since.toISOString()),
@@ -52,6 +54,15 @@ export async function getReportsPageData({
       .from("order_items")
       .select(
         "product_name, quantity, subtotal, unit_cost, orders!inner(store_id, status, created_at)",
+      )
+      .eq("orders.store_id", storeId)
+      .eq("orders.status", "completed")
+      .gte("orders.created_at", since.toISOString()),
+
+    supabase
+      .from("promotion_redemptions")
+      .select(
+        "discount_amount, orders!inner(store_id, status, created_at), store_promotions!inner(applies_automatically)",
       )
       .eq("orders.store_id", storeId)
       .eq("orders.status", "completed")
@@ -77,6 +88,8 @@ export async function getReportsPageData({
     completedOrders: (completedOrders ?? []) as ReportOrder[],
     completedOrderItems: (completedOrderItems ??
       []) as unknown as ReportOrderItem[],
+    promotionRedemptions: (promotionRedemptions ??
+      []) as unknown as ReportPromotionRedemption[],
     bnplSummary: bnplSummary ?? [],
     overdueInstallments: (overdueInstallments ??
       []) as unknown as OverdueInstallment[],

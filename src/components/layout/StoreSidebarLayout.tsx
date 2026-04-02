@@ -15,6 +15,7 @@ import {
   Package,
   Settings,
   ShoppingCart,
+  TicketPercent,
   Users,
 } from "lucide-react";
 
@@ -37,6 +38,7 @@ const NAV_SECTIONS: AppSidebarNavSection[] = [
       { href: "/orders", label: "Orders", icon: ClipboardList },
       { href: "/inventory", label: "Inventory", icon: Package },
       { href: "/bnpl", label: "BNPL", icon: DollarSign },
+      { href: "/promotions", label: "Promotions", icon: TicketPercent },
     ],
   },
   {
@@ -99,6 +101,8 @@ function getBreadcrumbs(
     return [dashboardRoot, storeRoot, { label: "Reports" }];
   if (rel === "/stores") return [dashboardRoot, storeRoot, { label: "Stores" }];
   if (rel === "/team") return [dashboardRoot, storeRoot, { label: "Team" }];
+  if (rel === "/promotions")
+    return [dashboardRoot, storeRoot, { label: "Promotions" }];
   if (rel === "/settings")
     return [dashboardRoot, storeRoot, { label: "Settings" }];
 

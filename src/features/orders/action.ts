@@ -8,6 +8,40 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
+const DEFAULT_MAX_ORDER_DISCOUNT_AMOUNT = 300;
+const DEFAULT_MAX_ORDER_DISCOUNT_PERCENTAGE = 10;
+
+function roundMoney(value: number) {
+  return Number(value.toFixed(2));
+}
+
+type StorePromotion = {
+  id: string;
+  code: string | null;
+  type: "fixed_amount" | "percentage";
+  value: number;
+  min_order_total: number;
+  max_discount_amount: number | null;
+  max_redemptions: number | null;
+  applies_automatically: boolean;
+};
+
+function calculatePromotionDiscount(promotion: StorePromotion, amount: number) {
+  if (amount <= 0) return 0;
+
+  const rawDiscount =
+    promotion.type === "percentage"
+      ? (amount * promotion.value) / 100
+      : promotion.value;
+
+  const withCap =
+    promotion.max_discount_amount !== null
+      ? Math.min(rawDiscount, promotion.max_discount_amount)
+      : rawDiscount;
+
+  return roundMoney(Math.max(0, Math.min(withCap, amount)));
+}
+
 export async function createOrderAction(
   input: CreateOrderInput,
 ): Promise<CreateOrderResult> {
@@ -27,18 +61,216 @@ export async function createOrderAction(
     return { data: null, error: "Please sign in again." };
   }
 
-  const subtotal = parsed.data.items.reduce(
+  const { data: store, error: storeError } = await supabase
+    .from("stores")
+    .select(
+      "id, tax_rate, max_cashier_order_discount_amount, max_cashier_order_discount_percentage",
+    )
+    .eq("id", parsed.data.storeId)
+    .single();
+
+  if (storeError || !store) {
+    return { data: null, error: storeError?.message ?? "Store not found." };
+  }
+
+  const maxOrderDiscountAmountSetting = Number(
+    store.max_cashier_order_discount_amount ??
+      DEFAULT_MAX_ORDER_DISCOUNT_AMOUNT,
+  );
+
+  const maxOrderDiscountPercentageSetting = Number(
+    store.max_cashier_order_discount_percentage ??
+      DEFAULT_MAX_ORDER_DISCOUNT_PERCENTAGE,
+  );
+
+  const subtotal = roundMoney(
+    parsed.data.items.reduce(
     (sum, item) => sum + item.unitPrice * item.quantity,
     0,
+    ),
   );
 
-  const discount = parsed.data.items.reduce(
-    (sum, item) => sum + item.discount * item.quantity,
+  const now = new Date();
+
+  const { data: activePromotions, error: promotionsError } = await supabase
+    .from("store_promotions")
+    .select(
+      "id, code, type, value, min_order_total, max_discount_amount, max_redemptions, applies_automatically, starts_at, ends_at",
+    )
+    .eq("store_id", parsed.data.storeId)
+    .eq("is_active", true);
+
+  if (promotionsError) {
+    const errorCode = (promotionsError as { code?: string }).code;
+    if (!["PGRST205", "42P01"].includes(errorCode ?? "")) {
+      return { data: null, error: promotionsError.message };
+    }
+  }
+
+  const promotions = (((promotionsError ? [] : activePromotions) ?? []) as Array<
+    StorePromotion & { starts_at: string | null; ends_at: string | null }
+  >).filter((promotion) => {
+    const startsAt = promotion.starts_at ? new Date(promotion.starts_at) : null;
+    const endsAt = promotion.ends_at ? new Date(promotion.ends_at) : null;
+
+    if (startsAt && startsAt > now) return false;
+    if (endsAt && endsAt < now) return false;
+
+    return true;
+  });
+
+  const hasInvalidItemDiscount = parsed.data.items.some(
+    (item) => item.discount > item.unitPrice,
+  );
+
+  if (hasInvalidItemDiscount) {
+    return {
+      data: null,
+      error: "Item discount cannot exceed unit price.",
+    };
+  }
+
+  const itemDiscountTotal = roundMoney(
+    parsed.data.items.reduce((sum, item) => sum + item.discount * item.quantity, 0),
+  );
+
+  const requestedOrderDiscount = roundMoney(parsed.data.orderDiscount ?? 0);
+  const maxOrderDiscountByAmount = Number.isFinite(maxOrderDiscountAmountSetting)
+    ? Math.max(0, maxOrderDiscountAmountSetting)
+    : DEFAULT_MAX_ORDER_DISCOUNT_AMOUNT;
+  const maxOrderDiscountByPercent =
+    Number.isFinite(maxOrderDiscountPercentageSetting) &&
+    maxOrderDiscountPercentageSetting >= 0
+      ? roundMoney((subtotal * maxOrderDiscountPercentageSetting) / 100)
+      : roundMoney((subtotal * DEFAULT_MAX_ORDER_DISCOUNT_PERCENTAGE) / 100);
+  const maxOrderDiscount = Math.min(
+    maxOrderDiscountByAmount,
+    maxOrderDiscountByPercent,
+  );
+
+  if (requestedOrderDiscount > maxOrderDiscount) {
+    return {
+      data: null,
+      error: `Order discount exceeds cashier limit (${roundMoney(maxOrderDiscount)}).`,
+    };
+  }
+
+  const baseAfterManualDiscount = Math.max(
     0,
+    roundMoney(subtotal - itemDiscountTotal - requestedOrderDiscount),
   );
 
-  const total = Math.max(0, subtotal - discount);
+  const eligibleAutomaticPromotions = promotions.filter(
+    (promotion) =>
+      promotion.applies_automatically &&
+      baseAfterManualDiscount >= Number(promotion.min_order_total ?? 0),
+  );
+
+  let appliedAutomaticPromotion: StorePromotion | null = null;
+  let automaticDiscount = 0;
+
+  for (const promotion of eligibleAutomaticPromotions) {
+    const candidateDiscount = calculatePromotionDiscount(
+      {
+        ...promotion,
+        value: Number(promotion.value ?? 0),
+        min_order_total: Number(promotion.min_order_total ?? 0),
+        max_discount_amount:
+          promotion.max_discount_amount === null
+            ? null
+            : Number(promotion.max_discount_amount),
+      },
+      baseAfterManualDiscount,
+    );
+
+    if (candidateDiscount > automaticDiscount) {
+      automaticDiscount = candidateDiscount;
+      appliedAutomaticPromotion = promotion;
+    }
+  }
+
+  const baseAfterAutomatic = Math.max(
+    0,
+    roundMoney(baseAfterManualDiscount - automaticDiscount),
+  );
+
+  const normalizedPromoCode = parsed.data.promoCode?.trim().toUpperCase();
+  let appliedCodePromotion: StorePromotion | null = null;
+  let promoCodeDiscount = 0;
+
+  if (normalizedPromoCode) {
+    const matchingCodePromotion = promotions.find(
+      (promotion) =>
+        !promotion.applies_automatically &&
+        promotion.code?.toUpperCase() === normalizedPromoCode,
+    );
+
+    if (!matchingCodePromotion) {
+      return { data: null, error: "Promo code is invalid or inactive." };
+    }
+
+    if (baseAfterAutomatic < Number(matchingCodePromotion.min_order_total ?? 0)) {
+      return {
+        data: null,
+        error: "Promo code requirements are not met for this order total.",
+      };
+    }
+
+    const maxRedemptions =
+      matchingCodePromotion.max_redemptions === null
+        ? null
+        : Number(matchingCodePromotion.max_redemptions);
+
+    if (maxRedemptions !== null) {
+      const { count: redemptionCount, error: redemptionCountError } = await supabase
+        .from("promotion_redemptions")
+        .select("id", { count: "exact", head: true })
+        .eq("promotion_id", matchingCodePromotion.id);
+
+      if (redemptionCountError) {
+        return { data: null, error: redemptionCountError.message };
+      }
+
+      if ((redemptionCount ?? 0) >= maxRedemptions) {
+        return {
+          data: null,
+          error: "Promo code usage limit has been reached.",
+        };
+      }
+    }
+
+    appliedCodePromotion = matchingCodePromotion;
+    promoCodeDiscount = calculatePromotionDiscount(
+      {
+        ...matchingCodePromotion,
+        value: Number(matchingCodePromotion.value ?? 0),
+        min_order_total: Number(matchingCodePromotion.min_order_total ?? 0),
+        max_discount_amount:
+          matchingCodePromotion.max_discount_amount === null
+            ? null
+            : Number(matchingCodePromotion.max_discount_amount),
+      },
+      baseAfterAutomatic,
+    );
+  }
+
+  const discount = roundMoney(
+    itemDiscountTotal + requestedOrderDiscount + automaticDiscount + promoCodeDiscount,
+  );
+  const taxableBase = Math.max(0, roundMoney(subtotal - discount));
+  const taxRate = Number(store.tax_rate ?? 0);
+  const taxAmount = roundMoney(
+    taxableBase * ((Number.isFinite(taxRate) ? taxRate : 0) / 100),
+  );
+  const total = roundMoney(taxableBase + taxAmount);
   const isBnpl = parsed.data.paymentMethod === "bnpl";
+
+  if (
+    parsed.data.paymentMethod === "cash" &&
+    (parsed.data.amountTendered === undefined || parsed.data.amountTendered < total)
+  ) {
+    return { data: null, error: "Cash amount tendered is less than total." };
+  }
 
   if (isBnpl && !parsed.data.bnplAccountId) {
     return { data: null, error: "Select a BNPL account before checkout." };
@@ -116,14 +348,14 @@ export async function createOrderAction(
       cashier_id: user.id,
       subtotal,
       discount,
-      tax_amount: 0,
+      tax_amount: taxAmount,
       total,
       amount_tendered: isBnpl ? null : (parsed.data.amountTendered ?? null),
       change_amount:
         !isBnpl &&
         parsed.data.amountTendered &&
         parsed.data.amountTendered > total
-          ? parsed.data.amountTendered - total
+          ? roundMoney(parsed.data.amountTendered - total)
           : 0,
       payment_method: parsed.data.paymentMethod,
       qr_channel_id: parsed.data.qrChannelId ?? null,
@@ -162,6 +394,39 @@ export async function createOrderAction(
   if (itemError) {
     await rollbackOrder();
     return { data: null, error: itemError.message };
+  }
+
+  const redemptionRows: Array<{
+    promotion_id: string;
+    order_id: string;
+    discount_amount: number;
+  }> = [];
+
+  if (appliedAutomaticPromotion && automaticDiscount > 0) {
+    redemptionRows.push({
+      promotion_id: appliedAutomaticPromotion.id,
+      order_id: order.id,
+      discount_amount: automaticDiscount,
+    });
+  }
+
+  if (appliedCodePromotion && promoCodeDiscount > 0) {
+    redemptionRows.push({
+      promotion_id: appliedCodePromotion.id,
+      order_id: order.id,
+      discount_amount: promoCodeDiscount,
+    });
+  }
+
+  if (redemptionRows.length > 0) {
+    const { error: redemptionError } = await supabase
+      .from("promotion_redemptions")
+      .insert(redemptionRows);
+
+    if (redemptionError) {
+      await rollbackOrder();
+      return { data: null, error: redemptionError.message };
+    }
   }
 
   let bnplInstallmentId: string | null = null;
@@ -237,13 +502,14 @@ export async function createOrderAction(
       orderId: order.id,
       subtotal,
       discount,
+      taxAmount,
       total,
       amountTendered: isBnpl ? null : (parsed.data.amountTendered ?? null),
       changeAmount:
         !isBnpl &&
         parsed.data.amountTendered &&
         parsed.data.amountTendered > total
-          ? parsed.data.amountTendered - total
+          ? roundMoney(parsed.data.amountTendered - total)
           : 0,
       paymentMethod: parsed.data.paymentMethod,
       items: parsed.data.items.map((item) => ({

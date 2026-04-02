@@ -12,6 +12,8 @@ export type StoreData = Pick<
   | "name"
   | "address"
   | "tax_rate"
+  | "max_cashier_order_discount_amount"
+  | "max_cashier_order_discount_percentage"
   | "receipt_header"
   | "receipt_footer"
   | "currency_code"

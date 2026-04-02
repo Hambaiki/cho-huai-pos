@@ -1,7 +1,7 @@
-import Link from "next/link";
+import { Logo } from "@/components/content/Logo";
+import { getCurrentUser } from "@/features/auth/queries";
 import { cn } from "@/lib/utils/cn";
-import { Logo } from "@/components/ui/Logo";
-import { getCurrentUser } from "@/lib/queries/auth";
+import Link from "next/link";
 
 export default async function Home() {
   const user = await getCurrentUser();
@@ -32,7 +32,7 @@ export default async function Home() {
             <>
               <Link
                 className="rounded-xl bg-brand-700 px-5 py-3 text-sm font-medium text-white transition hover:bg-brand-800"
-                href="/dashboard"
+                href="/dashboard/stores"
               >
                 Go to my stores
               </Link>

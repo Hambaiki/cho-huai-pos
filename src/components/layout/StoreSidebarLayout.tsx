@@ -1,6 +1,12 @@
 "use client";
 
 import {
+  AppSidebarFooterLink,
+  AppSidebarLayout,
+  type AppSidebarNavSection,
+  type BreadcrumbItem,
+} from "@/components/layout/AppSidebarLayout";
+import {
   ArrowLeft,
   BarChart2,
   ClipboardList,
@@ -11,12 +17,6 @@ import {
   ShoppingCart,
   Users,
 } from "lucide-react";
-import {
-  AppSidebarFooterLink,
-  AppSidebarLayout,
-  type AppSidebarNavSection,
-  type BreadcrumbItem,
-} from "@/components/layout/AppSidebarLayout";
 
 const NAV_SECTIONS: AppSidebarNavSection[] = [
   {

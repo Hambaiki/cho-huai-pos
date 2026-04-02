@@ -1,22 +1,22 @@
 "use client";
 
-import Link from "next/link";
-import { useActionState } from "react";
-import { signUpAction, type AuthActionState } from "@/lib/actions/auth";
 import { Button } from "@/components/ui/Button";
 import {
-  FormField,
-  FormLabel,
-  FormInput,
   FormError,
+  FormField,
+  FormInput,
+  FormLabel,
+  PasswordStrengthMeter,
 } from "@/components/ui/form";
+import { signUpAction } from "@/features/auth/actions";
+import { useSyncPendingAction } from "@/features/shell/pending/PendingActionProvider";
 import { cn } from "@/lib/utils/cn";
-import { useSyncPendingAction } from "@/components/ui/PendingActionProvider";
-
-const initialState: AuthActionState = { error: null };
+import Link from "next/link";
+import { useActionState, useState } from "react";
 
 export default function SignupPage() {
-  const [state, action, isPending] = useActionState(signUpAction, initialState);
+  const [state, action, isPending] = useActionState(signUpAction, null);
+  const [password, setPassword] = useState("");
 
   useSyncPendingAction(isPending, {
     message: "Creating a new account...",
@@ -73,10 +73,24 @@ export default function SignupPage() {
               type="password"
               autoComplete="new-password"
               required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <PasswordStrengthMeter password={password} />
+          </FormField>
+
+          <FormField>
+            <FormLabel htmlFor="confirmPassword">Confirm password</FormLabel>
+            <FormInput
+              id="confirmPassword"
+              name="confirmPassword"
+              type="password"
+              autoComplete="new-password"
+              required
             />
           </FormField>
 
-          <FormError message={state.error} />
+          <FormError message={!state?.ok ? state?.error : null} />
 
           <Button
             className="w-full"
@@ -97,7 +111,6 @@ export default function SignupPage() {
             Sign in
           </Link>
         </p>
-
       </main>
     </div>
   );

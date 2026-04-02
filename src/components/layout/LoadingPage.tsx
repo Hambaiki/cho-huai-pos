@@ -1,5 +1,5 @@
+import { Loader } from "@/components/content/Loader";
 import { cn } from "@/lib/utils/cn";
-import { Loader } from "@/components/ui/Loader";
 
 interface LoadingPageProps {
   variant?: "default" | "fullscreen";

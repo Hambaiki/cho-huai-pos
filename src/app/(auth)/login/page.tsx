@@ -1,22 +1,20 @@
 "use client";
 
-import Link from "next/link";
-import { useActionState } from "react";
-import { signInAction, type AuthActionState } from "@/lib/actions/auth";
-import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/Button";
 import {
-  FormField,
-  FormLabel,
-  FormInput,
   FormError,
+  FormField,
+  FormInput,
+  FormLabel,
 } from "@/components/ui/form";
-import { useSyncPendingAction } from "@/components/ui/PendingActionProvider";
-
-const initialState: AuthActionState = { error: null };
+import { signInAction } from "@/features/auth/actions";
+import { useSyncPendingAction } from "@/features/shell/pending/PendingActionProvider";
+import { cn } from "@/lib/utils/cn";
+import Link from "next/link";
+import { useActionState } from "react";
 
 export default function LoginPage() {
-  const [state, action, isPending] = useActionState(signInAction, initialState);
+  const [state, action, isPending] = useActionState(signInAction, null);
 
   useSyncPendingAction(isPending, {
     message: "Signing in...",
@@ -63,7 +61,7 @@ export default function LoginPage() {
             />
           </FormField>
 
-          <FormError message={state.error} />
+          <FormError message={!state?.ok ? state?.error : null} />
 
           <Button
             className="w-full"

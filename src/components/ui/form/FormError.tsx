@@ -1,7 +1,7 @@
 "use client";
 
-import { AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { AlertCircle } from "lucide-react";
 
 interface FormErrorProps {
   message?: string | null;

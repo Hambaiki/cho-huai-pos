@@ -1,8 +1,8 @@
+import { PageHeader } from "@/components/content/PageHeader";
+import { AdminUsersTable } from "@/features/admin/components/AdminUsersTable";
+import { getAllUserProfiles } from "@/features/admin/queries";
+import { getCurrentUser } from "@/features/auth/queries";
 import { redirect } from "next/navigation";
-import { AdminUsersTable } from "@/components/admin/AdminUsersTable";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { getCurrentUser } from "@/lib/queries/auth";
-import { getAllUserProfiles } from "@/lib/queries/admin";
 
 export const metadata = { title: "All Users — Admin" };
 

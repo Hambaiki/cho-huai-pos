@@ -1,8 +1,8 @@
-import { redirect } from "next/navigation";
-import { BnplAccountsPageClient } from "@/components/bnpl/BnplAccountsPageClient";
-import { getCurrentUser } from "@/lib/queries/auth";
-import { getPaginatedBnplAccountsData } from "@/lib/queries/bnpl";
+import { getCurrentUser } from "@/features/auth/queries";
+import { BnplAccountsPageClient } from "@/features/bnpl/components/BnplAccountsPageClient";
+import { getPaginatedBnplAccountsData } from "@/features/bnpl/queries";
 import { parseCsvList, parsePositivePage } from "@/lib/utils/search-params";
+import { redirect } from "next/navigation";
 
 export const metadata = { title: "BNPL Accounts" };
 

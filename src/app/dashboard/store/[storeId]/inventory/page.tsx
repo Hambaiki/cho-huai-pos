@@ -1,5 +1,5 @@
-import { InventoryContent } from "@/components/inventory/InventoryContent";
-import { getInventoryListData } from "@/lib/queries/inventory";
+import { InventoryContent } from "@/features/inventory/components/InventoryContent";
+import { getInventoryListData } from "@/features/inventory/queries";
 import { parseCsvList, parsePositivePage } from "@/lib/utils/search-params";
 
 export const metadata = {
@@ -45,7 +45,9 @@ export default async function InventoryPage({
   if (error) {
     return (
       <section className="rounded-lg border border-danger-200 bg-danger-50 p-6">
-        <h2 className="text-lg font-semibold text-danger-900">Error loading products</h2>
+        <h2 className="text-lg font-semibold text-danger-900">
+          Error loading products
+        </h2>
         <p className="mt-2 text-sm text-danger-700">{error.message}</p>
       </section>
     );

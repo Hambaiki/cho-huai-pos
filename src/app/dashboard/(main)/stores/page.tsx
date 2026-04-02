@@ -1,7 +1,7 @@
+import { getCurrentUser } from "@/features/auth/queries";
+import { getUserStoresMemberships } from "@/features/dashboard/queries";
+import { StoresHubClient } from "@/features/stores/components/StoresHubClient";
 import { redirect } from "next/navigation";
-import { getCurrentUser } from "@/lib/queries/auth";
-import { getUserStoresMemberships } from "@/lib/queries/dashboard";
-import { StoresHubClient } from "@/components/stores/StoresHubClient";
 
 export const metadata = { title: "Your Stores" };
 

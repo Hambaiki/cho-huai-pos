@@ -1,6 +1,6 @@
-import { redirect } from "next/navigation";
 import { AdminSidebarLayout } from "@/components/layout/AdminSidebarLayout";
-import { requireSuperAdminUser } from "@/lib/queries/auth";
+import { requireSuperAdminUser } from "@/features/auth/queries";
+import { redirect } from "next/navigation";
 
 export default async function AdminLayout({
   children,

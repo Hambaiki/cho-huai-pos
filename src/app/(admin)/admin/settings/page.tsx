@@ -1,7 +1,10 @@
+import { PageHeader } from "@/components/content/PageHeader";
+import {
+  getCurrentUserProfile,
+  getSitewideSettings,
+} from "@/features/admin/actions";
+import { SitewideSettingsForm } from "@/features/admin/components/SitewideSettingsForm";
 import { redirect } from "next/navigation";
-import { SitewideSettingsForm } from "@/components/admin/SitewideSettingsForm";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { getSitewideSettings, getCurrentUserProfile } from "@/lib/actions/admin";
 
 export const metadata = { title: "Sitewide Settings — Admin" };
 

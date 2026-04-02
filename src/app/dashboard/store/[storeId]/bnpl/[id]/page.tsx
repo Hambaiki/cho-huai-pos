@@ -1,16 +1,16 @@
-import { notFound, redirect } from "next/navigation";
-import { getCurrentUser } from "@/lib/queries/auth";
-import { getBnplAccountDetailData } from "@/lib/queries/bnpl";
-import { formatCurrency } from "@/lib/utils/currency";
-import AccountStatusControl from "@/components/bnpl/AccountStatusControl";
-import InstallmentList from "@/components/bnpl/InstallmentList";
-import AddInstallmentModal from "@/components/bnpl/AddInstallmentModal";
-import { PageHeader } from "@/components/ui/PageHeader";
+import { PageHeader } from "@/components/content/PageHeader";
 import {
   SectionCard,
   SectionCardBody,
   SectionCardHeader,
-} from "@/components/ui/SectionCard";
+} from "@/components/content/SectionCard";
+import { getCurrentUser } from "@/features/auth/queries";
+import AccountStatusControl from "@/features/bnpl/components/AccountStatusControl";
+import AddInstallmentModal from "@/features/bnpl/components/AddInstallmentModal";
+import InstallmentList from "@/features/bnpl/components/InstallmentList";
+import { getBnplAccountDetailData } from "@/features/bnpl/queries";
+import { formatCurrency } from "@/lib/utils/currency";
+import { notFound, redirect } from "next/navigation";
 
 export const metadata = { title: "BNPL Account" };
 

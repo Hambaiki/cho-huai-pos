@@ -1,7 +1,7 @@
+import { getCurrentUser } from "@/features/auth/queries";
+import { PosTerminal } from "@/features/pos/components/PosTerminal";
+import { getPosPageData } from "@/features/pos/queries";
 import { redirect } from "next/navigation";
-import { PosTerminal } from "@/components/pos/PosTerminal";
-import { getCurrentUser } from "@/lib/queries/auth";
-import { getPosPageData } from "@/lib/queries/pos";
 
 export default async function PosPage({
   params,

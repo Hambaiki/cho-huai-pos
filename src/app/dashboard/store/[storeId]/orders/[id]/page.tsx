@@ -1,7 +1,4 @@
-import { notFound, redirect } from "next/navigation";
-import { getCurrentUser } from "@/lib/queries/auth";
-import { getOrderDetailData } from "@/lib/queries/orders";
-import { formatCurrency } from "@/lib/utils/currency";
+import { PageHeader } from "@/components/content/PageHeader";
 import {
   Table,
   TableBody,
@@ -10,8 +7,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/Table";
-import { PageHeader } from "@/components/ui/PageHeader";
-import VoidOrderButton from "@/components/orders/VoidOrderButton";
+import { getCurrentUser } from "@/features/auth/queries";
+import VoidOrderButton from "@/features/orders/components/VoidOrderButton";
+import { getOrderDetailData } from "@/features/orders/queries";
+import { formatCurrency } from "@/lib/utils/currency";
+import { notFound, redirect } from "next/navigation";
 
 export const metadata = { title: "Order Detail" };
 

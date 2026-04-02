@@ -1,7 +1,10 @@
-import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import { NextResponse, type NextRequest } from "next/server";
 
-function clearSupabaseAuthCookies(request: NextRequest, response: NextResponse) {
+function clearSupabaseAuthCookies(
+  request: NextRequest,
+  response: NextResponse,
+) {
   const requestCookies = request.cookies.getAll();
 
   requestCookies

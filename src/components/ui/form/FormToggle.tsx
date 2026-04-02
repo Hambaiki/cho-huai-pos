@@ -1,7 +1,7 @@
 "use client";
 
-import { forwardRef } from "react";
 import { cn } from "@/lib/utils/cn";
+import { forwardRef } from "react";
 
 export interface FormToggleProps extends Omit<
   React.ButtonHTMLAttributes<HTMLButtonElement>,
@@ -44,6 +44,7 @@ const FormToggle = forwardRef<HTMLButtonElement, FormToggleProps>(
         disabled={disabled}
         onClick={handleClick}
         className={cn(
+          "shrink-0",
           "relative inline-flex h-6 w-10 rounded-full p-0 transition-colors",
           // Enabled state
           value ? "bg-brand-600" : "bg-neutral-300",
@@ -60,6 +61,7 @@ const FormToggle = forwardRef<HTMLButtonElement, FormToggleProps>(
         {/* Toggle indicator */}
         <span
           className={cn(
+            "shrink-0",
             "inline-block h-4 w-4 rounded-full bg-white shadow transition-transform",
             value ? "translate-x-5" : "translate-x-1",
             // Adjust vertical centering

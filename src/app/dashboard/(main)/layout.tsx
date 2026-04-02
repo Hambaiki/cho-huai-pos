@@ -1,5 +1,5 @@
-import { getCurrentUserAdminStatus } from "@/lib/queries/auth";
 import { DashboardSidebarLayout } from "@/components/layout/DashboardSidebarLayout";
+import { getCurrentUserAdminStatus } from "@/features/auth/queries";
 import { redirect } from "next/navigation";
 
 export default async function StoreScopedLayout({

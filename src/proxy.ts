@@ -1,5 +1,5 @@
-import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
+import { NextResponse, type NextRequest } from "next/server";
 
 const authRoutes = ["/login", "/signup"];
 const publicRoutes = ["/confirm-email", "/maintenance"];

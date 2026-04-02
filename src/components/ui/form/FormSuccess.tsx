@@ -1,7 +1,7 @@
 "use client";
 
-import { CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { CheckCircle2 } from "lucide-react";
 
 interface FormSuccessProps {
   message?: string | null;

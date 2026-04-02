@@ -1,7 +1,7 @@
+import { getCurrentUser } from "@/features/auth/queries";
+import SettingsClient from "@/features/settings/components/SettingsClient";
+import { getSettingsPageData } from "@/features/settings/queries";
 import { redirect } from "next/navigation";
-import SettingsClient from "@/components/settings/SettingsClient";
-import { getCurrentUser } from "@/lib/queries/auth";
-import { getSettingsPageData } from "@/lib/queries/settings";
 
 export const metadata = {
   title: "Settings",
@@ -30,4 +30,3 @@ export default async function SettingsPage({
     />
   );
 }
-

@@ -1,8 +1,10 @@
+import { PageHeader } from "@/components/content/PageHeader";
+import {
+  getCurrentUser,
+  getUserProfileForSettings,
+} from "@/features/auth/queries";
+import AccountSettingsClient from "@/features/settings/components/AccountSettingsClient";
 import { redirect } from "next/navigation";
-import AccountSettingsClient from "@/components/settings/AccountSettingsClient";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { getCurrentUser } from "@/lib/queries/auth";
-import { getUserProfileForSettings } from "@/lib/queries/auth";
 
 export const metadata = {
   title: "Account Settings",

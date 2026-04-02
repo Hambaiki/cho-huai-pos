@@ -1,8 +1,8 @@
 "use client";
 
-import { forwardRef } from "react";
 import { cn } from "@/lib/utils/cn";
 import { Check } from "lucide-react";
+import { forwardRef } from "react";
 
 interface FormCheckboxProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: React.ReactNode;

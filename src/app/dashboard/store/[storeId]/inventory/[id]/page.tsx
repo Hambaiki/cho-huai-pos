@@ -1,9 +1,8 @@
-import { notFound, redirect } from "next/navigation";
-import { InventoryDetailClient } from "@/components/inventory/InventoryDetailClient";
-import { getCurrentUser } from "@/lib/queries/auth";
-import { getInventoryDetailData } from "@/lib/queries/inventory";
+import { getCurrentUser } from "@/features/auth/queries";
+import { InventoryDetailClient } from "@/features/inventory/components/InventoryDetailClient";
+import { getInventoryDetailData } from "@/features/inventory/queries";
 import { createClient } from "@/lib/supabase/server";
-
+import { notFound, redirect } from "next/navigation";
 
 export async function generateMetadata({
   params,

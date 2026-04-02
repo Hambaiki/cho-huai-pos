@@ -1,5 +1,13 @@
-import { redirect } from "next/navigation";
-import Link from "next/link";
+import { PageHeader } from "@/components/content/PageHeader";
+import {
+  SectionCard,
+  SectionCardBody,
+  SectionCardHeader,
+} from "@/components/content/SectionCard";
+import { StatCard } from "@/components/content/StatCard";
+import { getAdminDashboardStats } from "@/features/admin/queries";
+import { getCurrentUser } from "@/features/auth/queries";
+import { formatNumberThai } from "@/lib/utils/format";
 import {
   ArrowRight,
   Banknote,
@@ -12,16 +20,8 @@ import {
   Users,
   XCircle,
 } from "lucide-react";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { StatCard } from "@/components/ui/StatCard";
-import {
-  SectionCard,
-  SectionCardBody,
-  SectionCardHeader,
-} from "@/components/ui/SectionCard";
-import { formatNumberThai } from "@/lib/utils/format";
-import { getCurrentUser } from "@/lib/queries/auth";
-import { getAdminDashboardStats } from "@/lib/queries/admin";
+import Link from "next/link";
+import { redirect } from "next/navigation";
 
 export const metadata = { title: "Admin Dashboard" };
 

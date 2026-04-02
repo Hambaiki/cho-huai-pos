@@ -1,20 +1,5 @@
-import { redirect } from "next/navigation";
-import {
-  BadgeDollarSign,
-  CalendarRange,
-  CreditCard,
-  HandCoins,
-  Receipt,
-  TriangleAlert,
-  Wallet,
-} from "lucide-react";
-import { formatCurrency } from "@/lib/utils/currency";
-import {
-  calculateDelta,
-  formatDelta,
-  isWithinRange,
-  summarizeFinancials,
-} from "@/lib/utils/reports";
+import { PageHeader } from "@/components/content/PageHeader";
+import { StatCard } from "@/components/content/StatCard";
 import {
   Table,
   TableBody,
@@ -24,10 +9,25 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/Table";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { StatCard } from "@/components/ui/StatCard";
-import { getCurrentUser } from "@/lib/queries/auth";
-import { getReportsPageData } from "@/lib/queries/reports";
+import { getCurrentUser } from "@/features/auth/queries";
+import { getReportsPageData } from "@/features/reports/queries";
+import {
+  calculateDelta,
+  formatDelta,
+  isWithinRange,
+  summarizeFinancials,
+} from "@/features/reports/utils";
+import { formatCurrency } from "@/lib/utils/currency";
+import {
+  BadgeDollarSign,
+  CalendarRange,
+  CreditCard,
+  HandCoins,
+  Receipt,
+  TriangleAlert,
+  Wallet,
+} from "lucide-react";
+import { redirect } from "next/navigation";
 
 export const metadata = { title: "Reports" };
 
@@ -109,13 +109,19 @@ export default async function ReportsPage({
     isWithinRange(item.orders.created_at, startOfPrev30Days, endOfPrev30Days),
   );
 
-  const todayRevenue = ordersToday.reduce((sum, order) => sum + Number(order.total), 0);
+  const todayRevenue = ordersToday.reduce(
+    (sum, order) => sum + Number(order.total),
+    0,
+  );
   const total7d = orders7d.reduce((sum, order) => sum + Number(order.total), 0);
   const prev7dRevenue = ordersPrev7d.reduce(
     (sum, order) => sum + Number(order.total),
     0,
   );
-  const total30d = orders30d.reduce((sum, order) => sum + Number(order.total), 0);
+  const total30d = orders30d.reduce(
+    (sum, order) => sum + Number(order.total),
+    0,
+  );
   const prev30dRevenue = ordersPrev30d.reduce(
     (sum, order) => sum + Number(order.total),
     0,
@@ -155,8 +161,7 @@ export default async function ReportsPage({
   }
   orders7d.forEach((o) => {
     const day = new Date(o.created_at).toLocaleDateString("en-CA");
-    if (day in dailyFinancials)
-      dailyFinancials[day].revenue += Number(o.total);
+    if (day in dailyFinancials) dailyFinancials[day].revenue += Number(o.total);
   });
 
   items7d.forEach((item) => {
@@ -176,14 +181,17 @@ export default async function ReportsPage({
       revenue: stats.revenue,
       cost: stats.cost,
       profit: stats.profit,
-      coveragePct: stats.revenue > 0 ? (stats.knownRevenue / stats.revenue) * 100 : 100,
+      coveragePct:
+        stats.revenue > 0 ? (stats.knownRevenue / stats.revenue) * 100 : 100,
     }),
   );
   const maxDailySales = dailySalesEntries.reduce(
     (max, day) => Math.max(max, day.revenue),
     0,
   );
-  const bestDay = [...dailySalesEntries].sort((a, b) => b.revenue - a.revenue)[0];
+  const bestDay = [...dailySalesEntries].sort(
+    (a, b) => b.revenue - a.revenue,
+  )[0];
   const weakestDay = [...dailySalesEntries].sort(
     (a, b) => a.revenue - b.revenue,
   )[0];
@@ -270,7 +278,10 @@ export default async function ReportsPage({
       />
 
       {/* KPI row */}
-      <div id="summary" className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
+      <div
+        id="summary"
+        className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4"
+      >
         {[
           {
             label: "Today's Revenue",
@@ -335,16 +346,18 @@ export default async function ReportsPage({
 
       {missingCostSales30d > 0 ? (
         <div className="rounded-xl border border-warning-200 bg-warning-50 px-4 py-3 text-sm text-warning-900">
-          Gross profit is calculated only from items with recorded cost prices. Last 30 days currently have
-          {" "}
-          {formatCurrency(missingCostSales30d, currency)}
-          {" "}
-          in revenue without cost coverage.
+          Gross profit is calculated only from items with recorded cost prices.
+          Last 30 days currently have{" "}
+          {formatCurrency(missingCostSales30d, currency)} in revenue without
+          cost coverage.
         </div>
       ) : null}
 
       <div className="grid gap-6 xl:grid-cols-[1.45fr_1fr]">
-        <div id="sales-trend-7d" className="rounded-xl border border-neutral-200 bg-white p-5">
+        <div
+          id="sales-trend-7d"
+          className="rounded-xl border border-neutral-200 bg-white p-5"
+        >
           <div className="flex items-center justify-between">
             <h2 className="font-semibold text-neutral-800">
               Revenue Trend — Last 7 Days
@@ -424,7 +437,10 @@ export default async function ReportsPage({
         </div>
 
         <div className="space-y-6">
-          <div id="financial-overview-30d" className="rounded-xl border border-neutral-200 bg-white p-5">
+          <div
+            id="financial-overview-30d"
+            className="rounded-xl border border-neutral-200 bg-white p-5"
+          >
             <h2 className="font-semibold text-neutral-800">
               Financial Overview — Last 30 Days
             </h2>
@@ -462,7 +478,10 @@ export default async function ReportsPage({
             </dl>
           </div>
 
-          <div id="payment-mix-30d" className="rounded-xl border border-neutral-200 bg-white p-5">
+          <div
+            id="payment-mix-30d"
+            className="rounded-xl border border-neutral-200 bg-white p-5"
+          >
             <h2 className="font-semibold text-neutral-800">
               Payment Mix — Last 30 Days
             </h2>
@@ -519,36 +538,44 @@ export default async function ReportsPage({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {dailySalesEntries.map(({ date, revenue, cost, profit, coveragePct }) => (
-                <TableRow key={date} className="border-t border-neutral-100">
-                  <TableCell className="py-3 text-neutral-700">
-                    {new Date(date + "T00:00:00").toLocaleDateString(undefined, {
-                      weekday: "short",
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </TableCell>
-                  <TableCell className="py-3 text-right font-medium text-neutral-900">
-                    {formatCurrency(revenue, currency)}
-                  </TableCell>
-                  <TableCell className="py-3 text-right text-neutral-600">
-                    {formatCurrency(cost, currency)}
-                  </TableCell>
-                  <TableCell className="py-3 text-right font-medium text-success-700">
-                    {formatCurrency(profit, currency)}
-                  </TableCell>
-                  <TableCell className="py-3 text-right text-neutral-600">
-                    {coveragePct.toFixed(0)}%
-                  </TableCell>
-                </TableRow>
-              ))}
+              {dailySalesEntries.map(
+                ({ date, revenue, cost, profit, coveragePct }) => (
+                  <TableRow key={date} className="border-t border-neutral-100">
+                    <TableCell className="py-3 text-neutral-700">
+                      {new Date(date + "T00:00:00").toLocaleDateString(
+                        undefined,
+                        {
+                          weekday: "short",
+                          month: "short",
+                          day: "numeric",
+                        },
+                      )}
+                    </TableCell>
+                    <TableCell className="py-3 text-right font-medium text-neutral-900">
+                      {formatCurrency(revenue, currency)}
+                    </TableCell>
+                    <TableCell className="py-3 text-right text-neutral-600">
+                      {formatCurrency(cost, currency)}
+                    </TableCell>
+                    <TableCell className="py-3 text-right font-medium text-success-700">
+                      {formatCurrency(profit, currency)}
+                    </TableCell>
+                    <TableCell className="py-3 text-right text-neutral-600">
+                      {coveragePct.toFixed(0)}%
+                    </TableCell>
+                  </TableRow>
+                ),
+              )}
             </TableBody>
           </Table>
         </TableContainer>
       </div>
 
       {/* Top products */}
-      <div id="top-products-30d" className="rounded-lg border border-neutral-200 bg-white overflow-hidden">
+      <div
+        id="top-products-30d"
+        className="rounded-lg border border-neutral-200 bg-white overflow-hidden"
+      >
         <div className="px-5 py-4 border-b border-neutral-100">
           <h2 className="font-semibold text-neutral-800">
             Top Products — Last 30 Days
@@ -603,7 +630,10 @@ export default async function ReportsPage({
 
       {/* Overdue BNPL installments */}
       {overdueList.length > 0 && (
-        <div id="bnpl-overdue" className="rounded-lg border border-danger-200 bg-white overflow-hidden">
+        <div
+          id="bnpl-overdue"
+          className="rounded-lg border border-danger-200 bg-white overflow-hidden"
+        >
           <div className="px-5 py-4 border-b border-danger-100">
             <h2 className="font-semibold text-danger-800">
               Overdue Installments
@@ -613,8 +643,12 @@ export default async function ReportsPage({
             <Table className="min-w-140">
               <TableHeader className="bg-danger-50 border-danger-100 text-xs text-danger-600 uppercase">
                 <TableRow className="hover:bg-transparent border-danger-100">
-                  <TableHead className="py-2 text-danger-600">Customer</TableHead>
-                  <TableHead className="py-2 text-danger-600">Due Date</TableHead>
+                  <TableHead className="py-2 text-danger-600">
+                    Customer
+                  </TableHead>
+                  <TableHead className="py-2 text-danger-600">
+                    Due Date
+                  </TableHead>
                   <TableHead className="py-2 text-right text-danger-600">
                     Amount
                   </TableHead>
@@ -622,7 +656,10 @@ export default async function ReportsPage({
               </TableHeader>
               <TableBody>
                 {overdueList.map((inst) => (
-                  <TableRow key={inst.id} className="border-t border-danger-100">
+                  <TableRow
+                    key={inst.id}
+                    className="border-t border-danger-100"
+                  >
                     <TableCell className="py-3 text-neutral-800 font-medium">
                       {inst.bnpl_accounts.customer_name}
                     </TableCell>

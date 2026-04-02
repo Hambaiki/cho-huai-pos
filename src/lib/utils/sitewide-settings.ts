@@ -13,7 +13,7 @@ export async function fetchSitewideSettings(): Promise<SitewideSettings> {
   try {
     // This will be called from server components
     // Import here to avoid circular dependencies
-    const { getSitewideSettings } = await import("@/lib/actions/admin");
+    const { getSitewideSettings } = await import("@/features/admin/actions");
     return await getSitewideSettings();
   } catch {
     // Default to safe values if fetch fails

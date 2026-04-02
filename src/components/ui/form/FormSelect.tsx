@@ -1,5 +1,7 @@
 "use client";
 
+import { cn } from "@/lib/utils/cn";
+import { CheckIcon, ChevronDown } from "lucide-react";
 import {
   Children,
   ReactNode,
@@ -15,8 +17,6 @@ import {
   useState,
 } from "react";
 import { createPortal } from "react-dom";
-import { CheckIcon, ChevronDown } from "lucide-react";
-import { cn } from "@/lib/utils/cn";
 import { FormSelectOption, FormSelectOptionProps } from "./FormSelectOption";
 
 export interface SelectOption {

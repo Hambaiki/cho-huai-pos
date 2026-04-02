@@ -1,15 +1,15 @@
 "use client";
 
-import Link from "next/link";
-import { Fragment, useEffect, useRef, useState } from "react";
-import { usePathname } from "next/navigation";
-import { ChevronLeft, ChevronRight, LogOut, Menu, X } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
-import { signOutAction } from "@/lib/actions/auth";
+import { Logo } from "@/components/content/Logo";
+import { Button } from "@/components/ui/Button";
+import { signOutAction } from "@/features/auth/actions";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils/cn";
-import { Button } from "@/components/ui/Button";
-import { Logo } from "@/components/ui/Logo";
+import type { LucideIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight, LogOut, Menu, X } from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Fragment, useEffect, useRef, useState } from "react";
 
 export interface BreadcrumbItem {
   label: string;
@@ -105,7 +105,8 @@ export function AppSidebarLayout({
           <Logo variant="icon" size="sm" />
           <div
             className={cn(
-              "overflow-hidden whitespace-nowrap text-lg font-black uppercase tracking-widest transition-[max-width,opacity] duration-200 ease-out md:max-w-40 md:opacity-100",
+              "overflow-hidden whitespace-nowrap text-lg font-black uppercase tracking-widest md:max-w-40 md:opacity-100",
+              "transition-[max-width,opacity] duration-200 ease-out",
               !isExpanded &&
                 "md:max-w-0 md:opacity-0 xl:max-w-40 xl:opacity-100",
             )}
@@ -115,7 +116,8 @@ export function AppSidebarLayout({
 
           <p
             className={cn(
-              "mt-1 overflow-hidden whitespace-nowrap text-sm font-medium text-neutral-600 transition-[max-width,opacity] duration-200 ease-out md:max-w-40 md:opacity-100",
+              "mt-1 overflow-hidden whitespace-nowrap text-sm font-medium text-neutral-600",
+              "transition-[max-width,opacity] duration-200 ease-out",
               !isExpanded &&
                 "md:max-w-0 md:opacity-0 xl:max-w-40 xl:opacity-100",
             )}
@@ -155,7 +157,8 @@ export function AppSidebarLayout({
           )}
           <span
             className={cn(
-              "overflow-hidden whitespace-nowrap transition-[max-width,opacity] duration-200 ease-out md:max-w-40 md:opacity-100",
+              "overflow-hidden whitespace-nowrap md:max-w-40 md:opacity-100",
+              "transition-[max-width,opacity] duration-200 ease-out",
               !isExpanded &&
                 "md:max-w-0 md:opacity-0 xl:max-w-40 xl:opacity-100",
             )}
@@ -173,7 +176,8 @@ export function AppSidebarLayout({
             {section.title ? (
               <p
                 className={cn(
-                  "overflow-hidden whitespace-nowrap px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-neutral-500 transition-opacity duration-200 ease-out md:min-h-5 md:opacity-100",
+                  "overflow-hidden whitespace-nowrap px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-neutral-500 md:min-h-5 md:opacity-100",
+                  "transition-opacity duration-200 ease-out",
                   !isExpanded && "md:opacity-0 xl:opacity-100",
                 )}
               >
@@ -206,7 +210,8 @@ export function AppSidebarLayout({
                     <Icon size={20} className="shrink-0" />
                     <span
                       className={cn(
-                        "overflow-hidden whitespace-nowrap transition-[max-width,opacity] duration-200 ease-out md:max-w-40 md:opacity-100",
+                        "overflow-hidden whitespace-nowrap md:max-w-40 md:opacity-100",
+                        "transition-[max-width,opacity] duration-200 ease-out",
                         !isExpanded &&
                           "md:max-w-0 md:opacity-0 xl:max-w-40 xl:opacity-100",
                       )}
@@ -239,7 +244,8 @@ export function AppSidebarLayout({
               <Icon size={20} className="shrink-0" />
               <span
                 className={cn(
-                  "overflow-hidden whitespace-nowrap transition-[max-width,opacity] duration-200 ease-out md:max-w-40 md:opacity-100",
+                  "overflow-hidden whitespace-nowrap md:max-w-40 md:opacity-100",
+                  "transition-[max-width,opacity] duration-200 ease-out",
                   !isExpanded &&
                     "md:max-w-0 md:opacity-0 xl:max-w-40 xl:opacity-100",
                 )}
@@ -263,7 +269,8 @@ export function AppSidebarLayout({
             <LogOut size={20} className="shrink-0" />
             <span
               className={cn(
-                "overflow-hidden whitespace-nowrap transition-[max-width,opacity] duration-200 ease-out md:max-w-40 md:opacity-100",
+                "overflow-hidden whitespace-nowrap md:max-w-40 md:opacity-100",
+                "transition-[max-width,opacity] duration-200 ease-out",
                 !isExpanded &&
                   "md:max-w-0 md:opacity-0 xl:max-w-40 xl:opacity-100",
               )}
@@ -301,14 +308,16 @@ export function AppSidebarLayout({
       >
         <div
           className={cn(
-            "absolute inset-0 bg-neutral-900/40 transition-opacity duration-200",
+            "absolute inset-0 bg-neutral-900/40 ",
+            "transition-opacity duration-200 ease-out",
             sidebarOpen ? "opacity-100" : "opacity-0",
           )}
           onClick={() => setSidebarOpen(false)}
         />
         <aside
           className={cn(
-            "relative z-50 flex w-64 flex-col bg-neutral-50 shadow-xl transition-transform duration-250 ease-out",
+            "relative z-50 flex w-64 flex-col bg-neutral-50 shadow-xl",
+            "transition-transform duration-250 ease-out",
             sidebarOpen ? "translate-x-0" : "-translate-x-full",
           )}
         >

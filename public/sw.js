@@ -48,7 +48,9 @@ self.addEventListener("fetch", (event) => {
       fetch(event.request)
         .then((response) => {
           const copy = response.clone();
-          caches.open(RUNTIME_CACHE).then((cache) => cache.put(event.request, copy));
+          caches
+            .open(RUNTIME_CACHE)
+            .then((cache) => cache.put(event.request, copy));
           return response;
         })
         .catch(async () => {
@@ -76,7 +78,9 @@ self.addEventListener("fetch", (event) => {
     (requestUrl.pathname.startsWith("/_next/static/") ||
       requestUrl.pathname.startsWith("/audio/") ||
       requestUrl.pathname.startsWith("/logo/") ||
-      requestUrl.pathname.match(/\.(?:css|js|png|jpg|jpeg|svg|webp|gif|ico|woff2)$/i))
+      requestUrl.pathname.match(
+        /\.(?:css|js|png|jpg|jpeg|svg|webp|gif|ico|woff2)$/i,
+      ))
   ) {
     event.respondWith(
       caches.match(event.request).then((cached) => {
@@ -86,7 +90,9 @@ self.addEventListener("fetch", (event) => {
 
         return fetch(event.request).then((response) => {
           const copy = response.clone();
-          caches.open(RUNTIME_CACHE).then((cache) => cache.put(event.request, copy));
+          caches
+            .open(RUNTIME_CACHE)
+            .then((cache) => cache.put(event.request, copy));
           return response;
         });
       }),
@@ -100,7 +106,9 @@ self.addEventListener("fetch", (event) => {
       fetch(event.request)
         .then((response) => {
           const copy = response.clone();
-          caches.open(RUNTIME_CACHE).then((cache) => cache.put(event.request, copy));
+          caches
+            .open(RUNTIME_CACHE)
+            .then((cache) => cache.put(event.request, copy));
           return response;
         })
         .catch(() => caches.match(event.request)),

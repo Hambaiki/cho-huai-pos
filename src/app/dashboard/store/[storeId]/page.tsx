@@ -1,5 +1,9 @@
-import Link from "next/link";
-import { redirect } from "next/navigation";
+import { PageHeader } from "@/components/content/PageHeader";
+import { StatCard } from "@/components/content/StatCard";
+import { getCurrentUser } from "@/features/auth/queries";
+import { formatDelta } from "@/features/reports/utils";
+import { getStoreDashboardData } from "@/features/store-dashboard/queries";
+import { formatCurrency } from "@/lib/utils/currency";
 import {
   CreditCard,
   DollarSign,
@@ -7,12 +11,8 @@ import {
   Package,
   ShoppingCart,
 } from "lucide-react";
-import { formatCurrency } from "@/lib/utils/currency";
-import { formatDelta } from "@/lib/utils/reports";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { StatCard } from "@/components/ui/StatCard";
-import { getCurrentUser } from "@/lib/queries/auth";
-import { getStoreDashboardData } from "@/lib/queries/store-dashboard";
+import Link from "next/link";
+import { redirect } from "next/navigation";
 
 export const metadata = { title: "Store Dashboard" };
 

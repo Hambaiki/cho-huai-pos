@@ -1,8 +1,8 @@
+import { PageHeader } from "@/components/content/PageHeader";
+import { AdminStoresTable } from "@/features/admin/components/AdminStoresTable";
+import { getAllStores } from "@/features/admin/queries";
+import { getCurrentUser } from "@/features/auth/queries";
 import { redirect } from "next/navigation";
-import { AdminStoresTable } from "@/components/admin/AdminStoresTable";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { getCurrentUser } from "@/lib/queries/auth";
-import { getAllStores } from "@/lib/queries/admin";
 
 export const metadata = { title: "All Stores — Admin" };
 

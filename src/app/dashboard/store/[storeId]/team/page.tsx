@@ -1,8 +1,8 @@
+import { PageHeader } from "@/components/content/PageHeader";
+import { getCurrentUser } from "@/features/auth/queries";
+import { StaffManagement } from "@/features/settings/components/StaffManagement";
+import { getTeamPageData } from "@/features/settings/queries";
 import { redirect } from "next/navigation";
-import { StaffManagement } from "@/components/settings/StaffManagement";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { getCurrentUser } from "@/lib/queries/auth";
-import { getTeamPageData } from "@/lib/queries/settings";
 
 export const metadata = { title: "Team" };
 

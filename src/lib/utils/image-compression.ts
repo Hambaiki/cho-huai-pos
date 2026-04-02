@@ -22,7 +22,10 @@ function loadImageFromFile(file: File): Promise<HTMLImageElement> {
   });
 }
 
-function toWebpBlob(canvas: HTMLCanvasElement, quality: number): Promise<Blob | null> {
+function toWebpBlob(
+  canvas: HTMLCanvasElement,
+  quality: number,
+): Promise<Blob | null> {
   return new Promise((resolve) => {
     canvas.toBlob((blob) => resolve(blob), "image/webp", quality);
   });
@@ -50,7 +53,10 @@ export async function compressImageForUpload(
     let bestBlob: Blob | null = null;
 
     for (const dimension of dimensions) {
-      const scale = Math.min(1, dimension / Math.max(image.width, image.height));
+      const scale = Math.min(
+        1,
+        dimension / Math.max(image.width, image.height),
+      );
       const width = Math.max(1, Math.round(image.width * scale));
       const height = Math.max(1, Math.round(image.height * scale));
 

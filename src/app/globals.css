@@ -166,6 +166,87 @@ body {
     transform: translateX(24px) scale(0.95);
   }
 }
+@keyframes drawer-right-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+@keyframes drawer-right-out {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+@keyframes drawer-left-in {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+@keyframes drawer-left-out {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+@keyframes drawer-bottom-in {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+@keyframes drawer-bottom-out {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
+@keyframes drawer-top-in {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+@keyframes drawer-top-out {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-100%);
+  }
+}
+
+@keyframes modal-backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes modal-backdrop-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
 
 /* ── Theme variables ─────────────────────────── */
 @theme inline {
@@ -183,6 +264,18 @@ body {
   --animate-scanner-badge-pulse: scanner-badge-pulse 1.2s ease-in-out infinite;
   --animate-toast-in: toast-in 0.22s cubic-bezier(0.22, 1, 0.36, 1);
   --animate-toast-out: toast-out 0.18s ease-in forwards;
+  --animate-drawer-right-in: drawer-right-in 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  --animate-drawer-right-out: drawer-right-out 0.25s
+    cubic-bezier(0.32, 0.72, 0, 1);
+  --animate-drawer-left-in: drawer-left-in 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  --animate-drawer-left-out: drawer-left-out 0.25s
+    cubic-bezier(0.32, 0.72, 0, 1);
+  --animate-drawer-bottom-in: drawer-bottom-in 0.3s
+    cubic-bezier(0.32, 0.72, 0, 1);
+  --animate-drawer-bottom-out: drawer-bottom-out 0.25s
+    cubic-bezier(0.32, 0.72, 0, 1);
+  --animate-drawer-top-in: drawer-top-in 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  --animate-drawer-top-out: drawer-top-out 0.25s cubic-bezier(0.32, 0.72, 0, 1);
 
   /* Fonts */
   --font-sans: var(--font-sarabun);

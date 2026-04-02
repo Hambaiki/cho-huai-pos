@@ -1,17 +1,17 @@
 "use client";
 
-import { LayoutDashboard, Shield, Store, UserCog } from "lucide-react";
 import {
   AppSidebarLayout,
   type AppSidebarNavSection,
   type BreadcrumbItem,
 } from "@/components/layout/AppSidebarLayout";
+import { LayoutDashboard, Shield, Store, UserCog } from "lucide-react";
 
 const BASE_NAV_SECTIONS: AppSidebarNavSection[] = [
   {
     items: [
       {
-        href: "/dashboard/",
+        href: "/dashboard",
         label: "Overview",
         icon: LayoutDashboard,
         exact: true,

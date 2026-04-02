@@ -1,8 +1,8 @@
-import { redirect } from "next/navigation";
-import { OrdersPageClient } from "@/components/orders/OrdersPageClient";
-import { getCurrentUser } from "@/lib/queries/auth";
-import { getPaginatedOrdersData } from "@/lib/queries/orders";
+import { getCurrentUser } from "@/features/auth/queries";
+import { OrdersPageClient } from "@/features/orders/components/OrdersPageClient";
+import { getPaginatedOrdersData } from "@/features/orders/queries";
 import { parseCsvList, parsePositivePage } from "@/lib/utils/search-params";
+import { redirect } from "next/navigation";
 
 export const metadata = { title: "Orders" };
 

@@ -1,10 +1,10 @@
+import { AppToaster } from "@/components/interactive/AppToaster";
+import { PendingActionProvider } from "@/features/shell/pending/PendingActionProvider";
+import { PWAInstallPrompt } from "@/features/shell/pwa/components/PWAInstallPrompt";
+import { PWARegister } from "@/features/shell/pwa/components/PWARegister";
+import { cn } from "@/lib/utils/cn";
 import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Sans_Thai, Sarabun } from "next/font/google";
-import { cn } from "@/lib/utils/cn";
-import { AppToaster } from "@/components/ui/AppToaster";
-import { PendingActionProvider } from "@/components/ui/PendingActionProvider";
-import { PWAInstallPrompt } from "@/components/pwa/PWAInstallPrompt";
-import { PWARegister } from "@/components/pwa/PWARegister";
 import "./globals.css";
 
 const sarabun = Sarabun({

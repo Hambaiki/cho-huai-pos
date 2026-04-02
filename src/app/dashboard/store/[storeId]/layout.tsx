@@ -1,12 +1,12 @@
-import { redirect } from "next/navigation";
+import { StoreSidebarLayout } from "@/components/layout/StoreSidebarLayout";
+import { getCurrentUser } from "@/features/auth/queries";
 import {
   StoreProvider,
   type StoreContextValue,
-} from "@/lib/store-context";
-import { StoreSidebarLayout } from "@/components/layout/StoreSidebarLayout";
-import { StoreSuspendedScreen } from "@/components/stores/StoreSuspendedScreen";
-import { getCurrentUser } from "@/lib/queries/auth";
-import { getStoreLayoutData } from "@/lib/queries/settings";
+} from "@/features/pos/store-context";
+import { getStoreLayoutData } from "@/features/settings/queries";
+import { StoreSuspendedScreen } from "@/features/stores/components/StoreSuspendedScreen";
+import { redirect } from "next/navigation";
 
 export default async function StoreScopedLayout({
   children,

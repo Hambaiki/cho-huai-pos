@@ -1,18 +1,18 @@
 "use client";
 
 import {
+  AppSidebarLayout,
+  type AppSidebarFooterLink,
+  type AppSidebarNavSection,
+  type BreadcrumbItem,
+} from "@/components/layout/AppSidebarLayout";
+import {
   ArrowLeft,
   LayoutDashboard,
   Settings,
   Store,
   Users,
 } from "lucide-react";
-import {
-  AppSidebarLayout,
-  type AppSidebarFooterLink,
-  type AppSidebarNavSection,
-  type BreadcrumbItem,
-} from "@/components/layout/AppSidebarLayout";
 
 const NAV_SECTIONS: AppSidebarNavSection[] = [
   {
@@ -37,13 +37,13 @@ const FOOTER_LINKS: AppSidebarFooterLink[] = [
 function getBreadcrumbs(pathname: string): BreadcrumbItem[] {
   if (pathname === "/admin")
     return [{ label: "Dashboard", href: "/dashboard" }, { label: "Admin" }];
-  if (pathname === "/admin/stores")
+  if (pathname === "/admin/stores" || pathname.startsWith("/admin/stores/"))
     return [
       { label: "Dashboard", href: "/dashboard" },
       { label: "Admin", href: "/admin" },
       { label: "Stores" },
     ];
-  if (pathname === "/admin/users")
+  if (pathname === "/admin/users" || pathname.startsWith("/admin/users/"))
     return [
       { label: "Dashboard", href: "/dashboard" },
       { label: "Admin", href: "/admin" },

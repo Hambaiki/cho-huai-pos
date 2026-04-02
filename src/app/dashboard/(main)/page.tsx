@@ -1,16 +1,16 @@
-import { redirect } from "next/navigation";
-import Link from "next/link";
+import { getCurrentUserAdminStatus } from "@/features/auth/queries";
+import { QuickLinkCard } from "@/features/dashboard/components/QuickLinkCard";
+import { getUserDashboardData } from "@/features/dashboard/queries";
 import {
+  BarChart2,
+  CreditCard,
+  Package,
+  ShoppingCart,
   Store,
   UserCog,
-  ShoppingCart,
-  Package,
-  CreditCard,
-  BarChart2,
 } from "lucide-react";
-import { getCurrentUserAdminStatus } from "@/lib/queries/auth";
-import { getUserDashboardData } from "@/lib/queries/dashboard";
-import { QuickLinkCard } from "@/components/dashboard/QuickLinkCard";
+import Link from "next/link";
+import { redirect } from "next/navigation";
 
 export const metadata = { title: "Dashboard" };
 

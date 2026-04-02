@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/Button";
 import {
+  FormDateTimeSelect,
   FormError,
   FormField,
   FormInput,
@@ -31,12 +32,13 @@ export default function CreatePromotionModal({
   const [isPending, startTransition] = useTransition();
 
   return (
-    <Modal open={open} onClose={onClose}>
+    <Modal open={open} onClose={onClose} scrollable>
       <ModalHeader
         title="Create promotion"
         description="Automatic promotions do not need a code and are applied by best value."
       />
       <form
+        className="flex min-h-0 flex-col"
         action={(formData) => {
           startTransition(async () => {
             setError(null);
@@ -162,12 +164,20 @@ export default function CreatePromotionModal({
 
             <FormField>
               <FormLabel htmlFor="startsAt">Start date/time</FormLabel>
-              <FormInput id="startsAt" name="startsAt" type="datetime-local" />
+              <FormDateTimeSelect
+                id="startsAt"
+                name="startsAt"
+                placeholder="Select start date and time"
+              />
             </FormField>
 
             <FormField>
               <FormLabel htmlFor="endsAt">End date/time</FormLabel>
-              <FormInput id="endsAt" name="endsAt" type="datetime-local" />
+              <FormDateTimeSelect
+                id="endsAt"
+                name="endsAt"
+                placeholder="Select end date and time"
+              />
             </FormField>
           </div>
 

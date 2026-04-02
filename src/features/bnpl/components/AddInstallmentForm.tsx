@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  FormDateTimeSelect,
   FormError,
   FormField,
   FormInput,
@@ -45,7 +46,7 @@ export default function AddInstallmentForm({
     }
   }, [state, router, onSuccess]);
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = new Date();
 
   return (
     <form action={formAction} className="grid grid-cols-2 gap-4">
@@ -71,11 +72,12 @@ export default function AddInstallmentForm({
         <FormLabel htmlFor="dueDate" required>
           Due Date
         </FormLabel>
-        <FormInput
+        <FormDateTimeSelect
           id="dueDate"
           name="dueDate"
-          type="date"
-          min={today}
+          mode="date"
+          minDate={today}
+          placeholder="Select due date"
           required
         />
       </FormField>

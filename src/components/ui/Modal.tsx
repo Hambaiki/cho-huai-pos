@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils/cn";
 import { X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 type Phase = "visible" | "exiting" | "hidden";
@@ -14,6 +14,14 @@ const SIZE_MAP: Record<string, string> = {
   xl: "max-w-xl",
   "2xl": "max-w-2xl",
 };
+
+interface ModalLayoutContextValue {
+  scrollable: boolean;
+}
+
+const ModalLayoutContext = createContext<ModalLayoutContextValue>({
+  scrollable: false,
+});
 
 // ── Root ────────────────────────────────────────────────────────────────────
 
@@ -27,6 +35,8 @@ interface ModalProps {
   className?: string;
   /** Render edge-to-edge full-screen panel */
   fullScreen?: boolean;
+  /** Enables a flex + bounded-height layout so ModalBody can scroll by default */
+  scrollable?: boolean;
 }
 
 export function Modal({
@@ -36,6 +46,7 @@ export function Modal({
   size = "md",
   className,
   fullScreen = false,
+  scrollable = false,
 }: ModalProps) {
   const [phase, setPhase] = useState<Phase>(open ? "visible" : "hidden");
 
@@ -96,6 +107,7 @@ export function Modal({
           "w-full overflow-hidden rounded-2xl border border-border bg-surface shadow-xl",
           SIZE_MAP[size] ?? SIZE_MAP.md,
           fullScreen && "h-dvh max-w-none rounded-none border-0 shadow-none",
+          !fullScreen && scrollable && "flex max-h-[calc(100dvh-2rem)] flex-col",
           panelAnimationClass,
           className,
         )}
@@ -103,7 +115,9 @@ export function Modal({
           if (e.currentTarget === e.target && isExiting) setPhase("hidden");
         }}
       >
-        {childrenSnapshot.current}
+        <ModalLayoutContext.Provider value={{ scrollable }}>
+          {childrenSnapshot.current}
+        </ModalLayoutContext.Provider>
       </div>
     </div>,
     document.body,
@@ -125,10 +139,13 @@ export function ModalHeader({
   onClose,
   className,
 }: ModalHeaderProps) {
+  const { scrollable } = useContext(ModalLayoutContext);
+
   return (
     <div
       className={cn(
         "flex items-start justify-between gap-4 border-b border-border px-5 py-4",
+        scrollable && "shrink-0",
         className,
       )}
     >
@@ -160,7 +177,19 @@ interface ModalBodyProps {
 }
 
 export function ModalBody({ children, className }: ModalBodyProps) {
-  return <div className={cn("px-5 py-4", className)}>{children}</div>;
+  const { scrollable } = useContext(ModalLayoutContext);
+
+  return (
+    <div
+      className={cn(
+        "px-5 py-4",
+        scrollable && "min-h-0 flex-1 overflow-y-auto",
+        className,
+      )}
+    >
+      {children}
+    </div>
+  );
 }
 
 // ── Footer ──────────────────────────────────────────────────────────────────
@@ -171,10 +200,13 @@ interface ModalFooterProps {
 }
 
 export function ModalFooter({ children, className }: ModalFooterProps) {
+  const { scrollable } = useContext(ModalLayoutContext);
+
   return (
     <div
       className={cn(
         "flex items-center justify-end gap-2 border-t border-border px-5 py-4",
+        scrollable && "shrink-0",
         className,
       )}
     >

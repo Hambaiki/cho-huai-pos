@@ -13,7 +13,7 @@ import { Modal } from "@/components/ui/Modal";
 import { useSyncPendingAction } from "@/features/shell/pending/PendingActionProvider";
 import { formatCurrency, type CurrencyStore } from "@/lib/utils/currency";
 import type { Result } from "@/types/action";
-import { useActionState, useMemo, useState, useTransition } from "react";
+import { useActionState, useMemo, useState } from "react";
 import { recordGeneralBnplPaymentAction } from "../actions";
 import { PaymentMethod } from "../types";
 
@@ -43,7 +43,6 @@ export default function RecordGeneralPaymentForm({
     null,
   );
   const [showQrScreen, setShowQrScreen] = useState(false);
-  const [, startTransition] = useTransition();
 
   const [state, formAction, isPending] = useActionState(
     recordGeneralBnplPaymentAction,
@@ -105,9 +104,8 @@ export default function RecordGeneralPaymentForm({
           if (reference?.trim()) fd.set("qrReference", reference.trim());
 
           setShowQrScreen(false);
-          startTransition(() => {
-            formAction(fd);
-          });
+
+          formAction(fd);
         }}
         onCancel={() => setShowQrScreen(false)}
       />

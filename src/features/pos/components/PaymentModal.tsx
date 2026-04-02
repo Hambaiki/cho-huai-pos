@@ -3,7 +3,12 @@
 import { Numpad } from "@/components/interactive/Numpad";
 import { QrPaymentScreen, type QrChannel } from "@/components/QrPaymentScreen";
 import { Button } from "@/components/ui/Button";
-import { FormField, FormInput, FormLabel } from "@/components/ui/form";
+import {
+  FormDateTimeSelect,
+  FormField,
+  FormInput,
+  FormLabel,
+} from "@/components/ui/form";
 import { Modal } from "@/components/ui/Modal";
 import { BnplAccountCreateModal } from "@/features/bnpl/components/BnplAccountCreateModal";
 import type { BnplAccountSummary } from "@/features/bnpl/types";
@@ -376,11 +381,12 @@ export function PaymentModal({
             <div className="rounded-xl border border-border bg-neutral-50 px-4 py-3">
               <FormField>
                 <FormLabel htmlFor="bnplDueDate">Due date</FormLabel>
-                <FormInput
+                <FormDateTimeSelect
                   id="bnplDueDate"
-                  type="date"
+                  mode="date"
+                  placeholder="Select due date"
                   value={bnplDueDate}
-                  onChange={(event) => setBnplDueDate(event.target.value)}
+                  onChange={(value) => setBnplDueDate(value)}
                 />
               </FormField>
               <p className="mt-2 text-xs text-neutral-500">

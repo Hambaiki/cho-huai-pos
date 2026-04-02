@@ -19,6 +19,8 @@ import {
 import { createPortal } from "react-dom";
 import { FormSelectOption, FormSelectOptionProps } from "./FormSelectOption";
 
+export const FORM_OVERLAY_ROOT_ATTR = "data-form-overlay-root";
+
 export interface SelectOption {
   value: string;
   label: ReactNode;
@@ -40,6 +42,7 @@ export interface FormSelectProps {
   disabled?: boolean;
   isLoading?: boolean;
   required?: boolean;
+  hideCheckmark?: boolean;
   children?: ReactNode;
 }
 
@@ -67,6 +70,7 @@ const FormSelect = forwardRef<HTMLButtonElement, FormSelectProps>(
       error,
       disabled,
       isLoading,
+      hideCheckmark = false,
       placeholder = "Select...",
       options = [],
       className,
@@ -298,6 +302,7 @@ const FormSelect = forwardRef<HTMLButtonElement, FormSelectProps>(
       <div
         ref={containerRef}
         onKeyDown={handleDropdownKeyDown}
+        data-form-overlay-root="true"
         className={cn("w-full flex flex-col", wrapperClassName)}
       >
         <input type="hidden" name={name} value={selectedValue} />
@@ -361,6 +366,7 @@ const FormSelect = forwardRef<HTMLButtonElement, FormSelectProps>(
                 ref={dropdownRef}
                 id={`${inputId}-listbox`}
                 role="listbox"
+                data-form-overlay-root="true"
                 style={{
                   position: "fixed",
                   top: dropdownPosition.top,
@@ -396,7 +402,8 @@ const FormSelect = forwardRef<HTMLButtonElement, FormSelectProps>(
                         onMouseDown={(e) => e.preventDefault()}
                         onClick={() => select(opt)}
                         className={cn(
-                          "flex items-center gap-2 px-3 py-2 text-sm",
+                          "flex items-center px-3 py-2 text-sm",
+                          hideCheckmark ? "gap-0" : "gap-2",
                           "rounded cursor-pointer select-none transition-colors",
                           isSelected &&
                             !opt.disabled &&
@@ -407,11 +414,13 @@ const FormSelect = forwardRef<HTMLButtonElement, FormSelectProps>(
                           !opt.disabled && "text-neutral-900",
                         )}
                       >
-                        <span className="w-4 h-4 flex items-center justify-center shrink-0">
-                          {isSelected && (
-                            <CheckIcon size={16} className="text-brand-600" />
-                          )}
-                        </span>
+                        {!hideCheckmark && (
+                          <span className="w-4 h-4 flex items-center justify-center shrink-0">
+                            {isSelected && (
+                              <CheckIcon size={16} className="text-brand-600" />
+                            )}
+                          </span>
+                        )}
                         <span className="flex-1">{opt.label}</span>
                       </li>
                     );

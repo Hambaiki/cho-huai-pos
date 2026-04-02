@@ -1,4 +1,6 @@
 export { FormCheckbox } from "./FormCheckbox";
+export { FormDateTimeSelect } from "./FormDateTimeSelect";
+export type { FormDateTimeSelectProps } from "./FormDateTimeSelect";
 export { FormError } from "./FormError";
 export { FormField } from "./FormField";
 export { FormFileUpload } from "./FormFileUpload";
